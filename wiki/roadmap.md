@@ -9,10 +9,12 @@
 
 - [ ] capire url kibana
 - [ ] capire l'intento dell'utente per filtrare i vari dati come pod name
-  esempio: dammi i log di database di [ask stella]
-			      ^
-	                      |
-		capire cosa intende come database
+
+{
+- esempio: dammi i log di database di [ask stella]
+- capire cosa intende come database
+
+}
 
 - [ ] poi per ampliare accorgersi di che database e chiederlo come risposta
 
