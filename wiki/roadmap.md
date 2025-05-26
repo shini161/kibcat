@@ -17,5 +17,3 @@
 - [ ] poi per ampliare accorgersi di che database e chiederlo come risposta
 
 - [ ] piccolo oggetto per capire che tipo di database girano, per esempio
-
-- [ ] 8.5 / 12.5 - 13.5 / 17.5
