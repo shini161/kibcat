@@ -23,6 +23,8 @@ services:
       - OLLAMA_KEEP_ALIVE=1h
     pull_policy: always
     tty: true
+    expose:
+      - 11434
     restart: unless-stopped
     deploy:
       resources:
