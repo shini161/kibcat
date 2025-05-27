@@ -7,15 +7,18 @@ import re
 
 def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
-    Parses a Kibana URL containing Rison-encoded _g and _a parameters in the fragment,
-    decodes and converts them to Python objects, and saves the result as JSON to a file.
+    Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
+    decodes them into Python dictionaries, and optionally saves the result to a JSON file.
 
     Args:
         url (str): The full Kibana URL to parse.
-        path (str): The file path where the decoded JSON should be saved.
+        path (str, optional): If provided, the decoded data will be saved to this file path as JSON.
 
     Returns:
-        dict: A dictionary with base_url, decoded _g, and decoded _a.
+        dict: A dictionary with the following keys:
+            - base_url (str): The part of the URL before the fragment.
+            - _g (dict or None): Decoded `_g` parameter, or None if not present or failed to decode.
+            - _a (dict or None): Decoded `_a` parameter, or None if not present or failed to decode.
     """
 
     parsed_url = urlparse(url)
@@ -49,6 +52,7 @@ def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
         "_a": a_parsed
     }
 
+    # if path is passed, save to path
     if path:
         with open(path, "w") as file:
             json.dump(output, file, indent=2)
@@ -60,22 +64,26 @@ def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
 
 def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None) -> str:
     """
-    Reads a JSON file with base_url, _g, and _a data,
-    converts _g and _a back into Rison strings,
-    and reconstructs the full Kibana URL with Rison-encoded fragment.
+    Reconstructs a Kibana URL with Rison-encoded _g and _a fragments from a JSON file or dictionary.
 
     Args:
-        path (str): Path to the JSON file containing base_url, _g, and _a.
+        path (str, optional): Path to the JSON file containing base_url, _g, and _a. Defaults to None.
+        json_dict (Dict, optional): Dictionary with base_url, _g, and _a. Used if path is not provided.
 
     Returns:
         str: The reconstructed Kibana URL with Rison-encoded _g and _a in the fragment.
+
+    Raises:
+        ValueError: If neither path nor json_dict is provided or if they contain invalid data.
     """
 
     data = None
 
+    # if path is passed read and load from file
     if path:
         with open(path, "r") as file:
             data = json.load(file)
+    # otherwise load from json_dict
     else:
         data = json_dict
 
