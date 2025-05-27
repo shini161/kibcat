@@ -174,3 +174,8 @@ test/
 ollama/
 
 url_*
+
+!/local_dataset/container/.env
+local_dataset/downloaded_dataset
+
+kibana/
