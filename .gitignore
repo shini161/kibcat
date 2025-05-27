@@ -173,4 +173,5 @@ kibana/data/
 test/
 ollama/
 
-url_*
+
+data
