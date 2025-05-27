@@ -1,6 +1,6 @@
 ## kib-cat ![Tests](https://github.com/shini161/kib-cat/actions/workflows/python-ci.yml/badge.svg?branch=main)
 
-Kit-Kat, best chocolate
+Kib-Kat, the best chocolate
 
 ----
 
