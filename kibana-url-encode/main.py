@@ -3,8 +3,8 @@ import json
 from helper import decode_kibana_url, encode_kibana_url
 
 
-ENCODE_URL = True # Change this to encode or decode the url here
-KIBANA_URL = "https://***REMOVED***/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T08:41:12.862Z',to:'2025-05-10T10:20:52.276Z'))&_a=(columns:!(agent.id,***REMOVED***,***REMOVED***,***REMOVED***),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),***REMOVED***:(width:249),***REMOVED***:(width:202))),interval:auto,query:(language:kuery,query:'***REMOVED***%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
+ENCODE_URL = False # Change this to encode or decode the url here
+KIBANA_URL = "https://***REMOVED***/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a=(columns:!(agent.id,***REMOVED***,***REMOVED***,***REMOVED***),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),***REMOVED***:(width:249),***REMOVED***:(width:202))),interval:auto,query:(language:kuery,query:'***REMOVED***%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
 
 
 if __name__ == "__main__":
