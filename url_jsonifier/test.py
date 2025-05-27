@@ -9,7 +9,7 @@ URL_DECODE_PATH = os.path.join(DATA_FOLDER, "decode.json")
 # Creates dir "data" if it doesnt exist
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
-KIBANA_URL = "https://***REMOVED***/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a=(columns:!(agent.id,***REMOVED***,***REMOVED***,***REMOVED***),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),***REMOVED***:(width:249),***REMOVED***:(width:202))),interval:auto,query:(language:kuery,query:'***REMOVED***%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
+KIBANA_URL = "https://***REMOVED***/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a=(columns:!(agent.id,***REMOVED***,***REMOVED***,***REMOVED***),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,field:***REMOVED***,index:'container-log*',key:***REMOVED***,negate:!f,params:(query:qa),type:phrase),query:(match_phrase:(***REMOVED***:qa)))),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),***REMOVED***:(width:249),***REMOVED***:(width:202))),interval:auto,query:(language:kuery,query:'***REMOVED***%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
 
 COLOR_RED = "\033[91m"
 COLOR_RESET = "\033[0m"
