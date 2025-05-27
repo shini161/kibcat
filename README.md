@@ -9,3 +9,5 @@ Interrogazione database su elasticsearch tramite kibana, con filtraggio facilita
 [Diario](https://github.com/shini161/kib-cat/blob/main/wiki/diary.md)
 <br/>
 [Conclusioni](https://github.com/shini161/kib-cat/blob/main/wiki/conclusions.md)
+<br/>
+![Tests](https://github.com/shini161/kib-cat/actions/workflows/python-app.yml/badge.svg?branch=main)
