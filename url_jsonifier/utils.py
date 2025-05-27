@@ -58,7 +58,7 @@ def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     return output
 
 
-def build_rison_url_from_json(path: str | None, json_dict: Dict | None = None) -> str:
+def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None) -> str:
     """
     Reads a JSON file with base_url, _g, and _a data,
     converts _g and _a back into Rison strings,
