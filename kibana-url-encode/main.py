@@ -3,8 +3,8 @@ import json
 from helper import decode_kibana_url, encode_kibana_url
 
 
-ENCODE_URL = True # Change this to encode or decode the url here
-KIBANA_URL = "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T08:41:12.862Z',to:'2025-05-10T10:20:52.276Z'))&_a=(columns:!(agent.id,cometa.log.message,kubernetes.namespace,kubernetes.pod.name),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),cometa.log.message:(width:249),kubernetes.namespace:(width:202))),interval:auto,query:(language:kuery,query:'kubernetes.pod.name%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
+ENCODE_URL = False # Change this to encode or decode the url here
+KIBANA_URL = "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a=(columns:!(agent.id,cometa.log.message,kubernetes.namespace,kubernetes.pod.name),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),cometa.log.message:(width:249),kubernetes.namespace:(width:202))),interval:auto,query:(language:kuery,query:'kubernetes.pod.name%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
 
 
 if __name__ == "__main__":
