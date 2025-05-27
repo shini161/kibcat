@@ -1,5 +1,4 @@
 import requests
-import json
 from kibana_api import Kibana
 
 
@@ -71,3 +70,20 @@ if __name__ == "__main__":
     else:
         print(
             f"Cant get data views: {response.status_code}")
+
+    fields_request_url = f"/s/{SPACE_ID}/internal/data_views/fields?pattern={DATA_VIEW_ID}"
+    # &meta_fields=_source&meta_fields=_id&meta_fields=_index&meta_fields=_score&meta_fields=_ignored&allow_no_index=true&apiVersion=1
+
+    fields_request = kibana.get(fields_request_url)
+
+    if fields_request.status_code == 200:
+        fields_json = fields_request.json()
+        fields_list = fields_json["fields"]
+
+        # import here just because its a test
+        import json
+
+        print(json.dumps(fields_list, indent=4))
+
+    else:
+        print(f"Error getting fields list: {fields_request.status_code}")
