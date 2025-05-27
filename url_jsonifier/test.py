@@ -1,5 +1,4 @@
-from encoder import encode_kibana_url
-from decoder import decode_kibana_url
+from utils import parse_rison_url_to_json, build_rison_url_from_json
 import os
 import json
 
@@ -7,18 +6,21 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FOLDER = os.path.join(BASE_DIR, "data")
 URL_DECODE_PATH = os.path.join(DATA_FOLDER, "decode.json")
 
-os.makedirs(DATA_FOLDER, exist_ok=True) # Creates dir "data" if it doesnt exist
+# Creates dir "data" if it doesnt exist
+os.makedirs(DATA_FOLDER, exist_ok=True)
 
 KIBANA_URL = "https://***REMOVED***/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a=(columns:!(agent.id,***REMOVED***,***REMOVED***,***REMOVED***),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),grid:(columns:('@timestamp':(width:127),agent.id:(width:159),***REMOVED***:(width:249),***REMOVED***:(width:202))),interval:auto,query:(language:kuery,query:'***REMOVED***%20:%20%22backend%22'),sort:!(!('@timestamp',desc)))"
 
+COLOR_RED = "\033[91m"
+COLOR_RESET = "\033[0m"
 
-# Decode URL
-print("\033[91m---- DECODE URL ----\033[0m")
-url_to_json = decode_kibana_url(KIBANA_URL, URL_DECODE_PATH)
+# Parse Kibana URL to JSON
+print(f"{COLOR_RED}---- PARSE URL ----{COLOR_RESET}")
+url_to_json = parse_rison_url_to_json(KIBANA_URL, URL_DECODE_PATH)
 print(json.dumps(url_to_json, indent=2))
 
 
-# Encode URL
-print("\033[91m---- ENCODE URL ----\033[0m")
-json_to_url = encode_kibana_url(URL_DECODE_PATH)
+# Rebuild Kibana URL from JSON
+print(f"{COLOR_RED}---- BUILD URL ----{COLOR_RESET}")
+json_to_url = build_rison_url_from_json(URL_DECODE_PATH)
 print(f"{json_to_url}")
