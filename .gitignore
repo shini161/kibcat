@@ -175,3 +175,5 @@ ollama/
 
 
 data
+kibana-api/fields.json
+local_dataset/downloaded_dataset

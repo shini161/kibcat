@@ -1,10 +1,11 @@
 from urllib.parse import urlparse, unquote, quote
+from typing import Dict
 import prison
 import json
 import re
 
 
-def parse_rison_url_to_json(url: str, path: str) -> dict:
+def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
     Parses a Kibana URL containing Rison-encoded _g and _a parameters in the fragment,
     decodes and converts them to Python objects, and saves the result as JSON to a file.
@@ -43,19 +44,21 @@ def parse_rison_url_to_json(url: str, path: str) -> dict:
         a_parsed = None
 
     output = {
-        "base_url": url.split("#")[0], # URL before the fragment
+        "base_url": url.split("#")[0],  # URL before the fragment
         "_g": g_parsed,
         "_a": a_parsed
     }
 
-    with open(path, "w") as file:
-        json.dump(output, file, indent=2)
+    if path:
+        with open(path, "w") as file:
+            json.dump(output, file, indent=2)
 
-    print(f"✅ Saved decoded URL to {path}")
+        print(f"✅ Saved decoded URL to {path}")
+
     return output
 
 
-def build_rison_url_from_json(path: str) -> str:
+def build_rison_url_from_json(path: str | None, json_dict: Dict | None = None) -> str:
     """
     Reads a JSON file with base_url, _g, and _a data,
     converts _g and _a back into Rison strings,
@@ -68,8 +71,16 @@ def build_rison_url_from_json(path: str) -> str:
         str: The reconstructed Kibana URL with Rison-encoded _g and _a in the fragment.
     """
 
-    with open(path, "r") as file:
-        data = json.load(file)
+    data = None
+
+    if path:
+        with open(path, "r") as file:
+            data = json.load(file)
+    else:
+        data = json_dict
+
+    if not data:
+        raise ValueError("Nor data nor path found")
 
     base_url = data.get("base_url")
     g_data = data.get("_g")
