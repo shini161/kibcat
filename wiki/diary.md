@@ -2,6 +2,8 @@
 
 Inizio analisi dell'URL di Kibana, encoder e decoder.
 
+*Ora non esistente, in quanto non funzionante correttamente e sostituito da quello svolto nel [giorno 27/05/2025](#27052025).*
+
 [url encoder](/kibana-url-encode)
 ```python
 import os
@@ -166,18 +168,14 @@ class NotCertifiedKibana(Kibana):
 
 Inoltre per poter ottenere la lista delle field per il filtraggio dei dati (quelle che sono circa 270 sull UI di Kibana) è stato trovato l'indirizzo dell'API: `"/s/{SPACE_ID}/internal/data_views/fields?pattern={DATA_VIEW_ID}"` dove `SPACE_ID` indica l'ID dello space, solitamente `default`, e `DATA_VIEW_ID` indica l'ID del data view da utilizzare, che al momento è `container-log*`
 
+---
 
-URL JSONifier è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON e viceversa
-è stata utilizzata la libreria di prison, e i regex per identificare gli argomenti dell'URL
+[URL JSONifier](/url_jsonifier/) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
+
+È stata utilizzata la libreria [`prison`](https://pypi.org/project/prison/) per parsare il rison, regex per identificare gli argomenti dell'URL (ovvero la parte `_g` e la parte `_a`)
+
 [url_jsonifier/utils.py](/url_jsonifier/utils.py)
 ```py
-from urllib.parse import urlparse, unquote, quote
-from typing import Dict
-import prison
-import json
-import re
-
-
 def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
@@ -194,47 +192,6 @@ def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
             - _a (dict or None): Decoded `_a` parameter, or None if not present or failed to decode.
     """
 
-    parsed_url = urlparse(url)
-    # Extract the fragment part and strip leading '?' if present
-    fragment = parsed_url.fragment.lstrip("?")
-
-    # Use regex to find the _g and _a Rison parts in the fragment
-    match_g = re.search(r"_g=([^&]+)", fragment)
-    match_a = re.search(r"_a=([^&]+)", fragment)
-
-    # URL decode the matched Rison strings
-    g_raw = unquote(match_g.group(1)) if match_g else ""
-    a_raw = unquote(match_a.group(1)) if match_a else ""
-
-    # Parse the Rison strings into Python objects
-    try:
-        g_parsed = prison.loads(g_raw) if g_raw else None
-    except Exception as e:
-        print("⚠️ Failed to parse _g:", e)
-        g_parsed = None
-
-    try:
-        a_parsed = prison.loads(a_raw) if a_raw else None
-    except Exception as e:
-        print("⚠️ Failed to parse _a:", e)
-        a_parsed = None
-
-    output = {
-        "base_url": url.split("#")[0],  # URL before the fragment
-        "_g": g_parsed,
-        "_a": a_parsed
-    }
-
-    # if path is passed, save to path
-    if path:
-        with open(path, "w") as file:
-            json.dump(output, file, indent=2)
-
-        print(f"✅ Saved decoded URL to {path}")
-
-    return output
-
-
 def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None) -> str:
     """
     Reconstructs a Kibana URL with Rison-encoded _g and _a fragments from a JSON file or dictionary.
@@ -249,39 +206,6 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
     Raises:
         ValueError: If neither path nor json_dict is provided or if they contain invalid data.
     """
-
-    data = None
-
-    # if path is passed read and load from file
-    if path:
-        with open(path, "r") as file:
-            data = json.load(file)
-    # otherwise load from json_dict
-    else:
-        data = json_dict
-
-    if not data:
-        raise ValueError("Nor data nor path found")
-
-    base_url = data.get("base_url")
-    g_data = data.get("_g")
-    a_data = data.get("_a")
-
-    # Convert Python objects back to Rison strings, then URL encode them
-    g_encoded = quote(prison.dumps(g_data)) if g_data else ""
-    a_encoded = quote(prison.dumps(a_data)) if a_data else ""
-
-    # Build the fragment string with _g and _a
-    fragment_parts = []
-    if g_encoded:
-        fragment_parts.append(f"_g={g_encoded}")
-    if a_encoded:
-        fragment_parts.append(f"_a={a_encoded}")
-    fragment = "/?" + "&".join(fragment_parts)
-
-    # Reconstruct the full URL with the fragment
-    full_url = f"{base_url}#{fragment}"
-    return full_url
 ```
 
-Sono stati aggiunti test automatici di workflow su github sul modulo di "url_jsonifier"
+Sono stati aggiunti [test automatici](/tests/) di workflow su github sul modulo di `url_jsonifier`
