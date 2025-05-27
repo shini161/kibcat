@@ -1,4 +1,4 @@
-## kib-cat ![Tests](https://github.com/shini161/kib-cat/actions/workflows/python-app.yml/badge.svg?branch=main)
+## kib-cat ![Tests](https://github.com/shini161/kib-cat/actions/workflows/python-ci.yml/badge.svg?branch=main)
 
 Kit-Kat, best chocolate
 
