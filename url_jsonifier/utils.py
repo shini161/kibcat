@@ -5,7 +5,7 @@ import json
 import re
 
 
-def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
+def parse_rison_url_to_json(url: str, path: str | None = None, LOGGER=None) -> Dict:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
     decodes them into Python dictionaries, and optionally saves the result to a JSON file.
@@ -37,13 +37,15 @@ def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     try:
         g_parsed = prison.loads(g_raw) if g_raw else None
     except Exception as e:
-        print("⚠️ Failed to parse _g:", e)
+        if LOGGER:
+            LOGGER.warning(f"⚠️ Failed to parse _g: {e}")
         g_parsed = None
 
     try:
         a_parsed = prison.loads(a_raw) if a_raw else None
     except Exception as e:
-        print("⚠️ Failed to parse _a:", e)
+        if LOGGER:
+            LOGGER.warning(f"⚠️ Failed to parse _a: {e}")
         a_parsed = None
 
     output = {
@@ -57,12 +59,13 @@ def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
         with open(path, "w") as file:
             json.dump(output, file, indent=2)
 
-        print(f"✅ Saved decoded URL to {path}")
+        if LOGGER:
+            LOGGER.message(f"✅ Saved decoded URL to {path}")
 
     return output
 
 
-def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None) -> str:
+def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None, LOGGER=None) -> str:
     """
     Reconstructs a Kibana URL with Rison-encoded _g and _a fragments from a JSON file or dictionary.
 
@@ -88,6 +91,8 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
         data = json_dict
 
     if not data:
+        if LOGGER:
+            LOGGER.error("build_rison_url_from_json - Nor data nor path found")
         raise ValueError("Nor data nor path found")
 
     base_url = data.get("base_url")
