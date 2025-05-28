@@ -29,7 +29,8 @@ if __name__ == "__main__":
                               visible_fields,
                               filters,
                               data_view_id,
-                              search_query)
+                              search_query,
+                              LOGGER=BaseKibCatLogger)
 
     url = build_rison_url_from_json(json_dict=result_dict)
 

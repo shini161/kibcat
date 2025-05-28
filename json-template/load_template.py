@@ -9,7 +9,11 @@ def render_dict(base_url,
                 visible_fields,
                 filters,
                 data_view_id,
-                search_query):
+                search_query,
+                LOGGER=None):
+
+    if LOGGER:
+        LOGGER.message("Loading template for Kibana URL")
 
     current_path = os.path.dirname(os.path.realpath(__file__))
     template_path = os.path.join(current_path, "url-template.json.jinja2")
@@ -18,6 +22,9 @@ def render_dict(base_url,
         template_str = f.read()
 
     template = Template(template_str)
+
+    if LOGGER:
+        LOGGER.message("Template loaded")
 
     output_str = template.render(
         base_url=base_url,
@@ -28,5 +35,8 @@ def render_dict(base_url,
         data_view_id=data_view_id,
         search_query=search_query
     )
+
+    if LOGGER:
+        LOGGER.message("Kibana URL template rendered")
 
     return json.loads(output_str)
