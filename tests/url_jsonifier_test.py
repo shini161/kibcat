@@ -5,18 +5,42 @@ import json
 import pytest
 from url_jsonifier.utils import parse_rison_url_to_json, build_rison_url_from_json
 
-KIBANA_URL = (
-    "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?"
-    "_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a="
-    "(columns:!(agent.id,cometa.log.message,kubernetes.namespace,kubernetes.pod.name),"
-    "dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),"
-    "grid:(columns:('@timestamp':(width:127),agent.id:(width:159),cometa.log.message:(width:249),"
-    "kubernetes.namespace:(width:202))),interval:auto,"
-    "query:(language:kuery,query:'kubernetes.pod.name%20:%20%22backend%22'),"
-    "sort:!(!('@timestamp',desc)))"
-)
+KIBANA_URLS = [
+    (
+        # Original -> MEDIUM COMPLEXITY
+        "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?"
+        "_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a="
+        "(columns:!(agent.id,cometa.log.message,kubernetes.namespace,kubernetes.pod.name),"
+        "dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),"
+        "grid:(columns:('@timestamp':(width:127),agent.id:(width:159),cometa.log.message:(width:249),"
+        "kubernetes.namespace:(width:202))),interval:auto,"
+        "query:(language:kuery,query:'kubernetes.pod.name%20:%20%22backend%22'),"
+        "sort:!(!('@timestamp',desc)))"
 
-EXPECTED_OUTPUT = {
+    ),
+    (
+        # MINIMAL COMPLEXITY
+        "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?_g="
+        "(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2025-05-04T20:43:12.758Z',to:'2025-05-08T03:47:54.786Z'))&_a="
+        "(columns:!(agent.id),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(('$state':(store:appState),"
+        "meta:(alias:!n,disabled:!f,field:agent.id,index:'container-log*',key:agent.id,negate:!f,params:(query:'93dc8a23'),type:phrase),"
+        "query:(match_phrase:(agent.id:'93dc8a23')))),interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc)))"
+    ),
+    (
+        # EMPTY FILTERS AND NESTED ARRAY
+        "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?_g="
+        "(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:'2025-05-01T00:00:00.001Z',to:'2025-05-28T05:29:14.652Z'))&_a="
+        "(columns:!(host,message),dataSource:(dataViewId:'container-log*',type:dataView),filters:!(),interval:auto,query:(language:kuery,query:''),sort:!(!(host,asc)))"
+    ),
+    (
+        # UNUSUAL BUT VALID RISON SYNTAX
+        "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover#/?_g="
+        "(refreshInterval:(pause:!f,value:null),time:(from:'2025-05-01T00:00:00.001Z',to:'2025-05-28T05:29:14.652Z'))&_a="
+        "(query:(language:'lucene',query:''),filters:!(),columns:!())"
+    )
+]
+
+EXPECTED_OUTPUT_1 = {
   "base_url": "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover",
   "_g": {
     "filters": [],
@@ -71,26 +95,29 @@ EXPECTED_OUTPUT = {
   }
 }
 
-@pytest.fixture
-def temp_json_path(tmp_path):
-    # Create a temp data file inside pytest's temp folder
-    return tmp_path / "decode.json"
 
-def test_parse_and_rebuild_rison_url(temp_json_path):
-    parsed = parse_rison_url_to_json(KIBANA_URL, temp_json_path)
-    rebuilt = build_rison_url_from_json(temp_json_path)
+@pytest.mark.parametrize("url", KIBANA_URLS)
+def test_parse_and_rebuild_rison_url(url, tmp_path):
+    json_path = tmp_path / "parsed.json"
+    parsed = parse_rison_url_to_json(url, json_path)
+    assert "base_url" in parsed
+    assert parsed["base_url"].startswith("https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag")
 
-    assert parsed == EXPECTED_OUTPUT
+    if "_g" in parsed:
+        assert isinstance(parsed["_g"], dict)
+    if "_a" in parsed:
+        assert isinstance(parsed["_a"], dict)
 
-    # Make sure base URL is preserved
+    rebuilt = build_rison_url_from_json(json_path)
     assert parsed["base_url"] in rebuilt
 
-    # Optional: Check critical _g/_a keys exist in parsed result
-    assert parsed["_g"] is not None
-    assert parsed["_a"] is not None
+    reparsed = parse_rison_url_to_json(rebuilt, json_path)
 
-    # Optional: Re-parse rebuilt and check it's same as original
-    reparsed = parse_rison_url_to_json(rebuilt, temp_json_path)
-    assert reparsed["_g"] == parsed["_g"]
-    assert reparsed["_a"] == parsed["_a"]
+    if "_g" in parsed:
+        assert reparsed["_g"] == parsed["_g"]
+    if "_a" in parsed:
+        assert reparsed["_a"] == parsed["_a"]
 
+    # Extra check only for the first URL
+    if url == KIBANA_URLS[0]:
+        assert parsed == EXPECTED_OUTPUT_1
