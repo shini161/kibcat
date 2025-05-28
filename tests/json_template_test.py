@@ -10,7 +10,7 @@ def test_render_dict_basic():
     visible_fields = ["field1", "field2", "field3"]
     filters = [("field1", "value1"), ("field2", "value2")]
     data_view_id = "data-view-123"
-    search_query = "field3 : \\\"value3\\\""
+    search_query = 'field3 : "value3"'
 
     output = render_dict(
         base_url,
