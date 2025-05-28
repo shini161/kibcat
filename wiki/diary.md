@@ -2,6 +2,8 @@
 
 Inizio analisi dell'URL di Kibana, encoder e decoder.
 
+*Ora non esistente, in quanto non funzionante correttamente e sostituito da quello svolto nel [giorno 27/05/2025](#27052025).*
+
 [url encoder](/kibana-url-encode)
 ```python
 import os
@@ -96,3 +98,114 @@ Esempio _a:
   ]
 }
 ```
+
+# 27/05/2025
+
+Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](/json-template/url-template.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [utils.py](/url_jsonifier/utils.py) per generare il link a Kibana.
+
+Per renderizzare il template è stata creata la funzione `render_dict` in [load_template.py](/json-template/load_template.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
+
+I parametri possibili sono:
+
+| *Parametro* | *Descrizione* |
+|------------|--------|
+| `base_url` | url base di kibana |
+| `start_time` | Tempo di inizio, formattato come `2025-05-09T18:02:40.258Z` |
+| `end_time` | Tempo di fine, come prima |
+| `visible_fields` | Lista delle field da visualizzare nei dati |
+| `filters` | Dict contenente la field e il valore a cui deve corrispondere |
+| `data_view_id` | ID del data view da usare |
+| `search_query` | Query di ricerca in formato di Kibana |
+
+Per ora è stato implementato solamente l'operatore `is` durante il filtraggio, ma in futuro sarà possibile aggiungere tutti gli operatori.
+
+In questo esempio viene generato l'url di kibana che porta ad un filtraggio dei dati coi parametri specificati:
+
+```python
+    base_url = "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover"
+    start_time = "2025-05-09T18:02:40.258Z"
+    end_time = "2025-05-10T02:05:46.064Z"
+    visible_fields = ["agent.id", "cometa.log.message", "kubernetes.namespace",
+                      "kubernetes.pod.name", "container.image.name", "cometa.log.level"]
+    filters = [("kubernetes.namespace", "qa"),
+               ("cometa.log.level", "ERROR")]
+    data_view_id = "container-log*"
+    search_query = "kubernetes.pod.name : \\\"backend\\\""
+
+    result_dict = render_dict(base_url,
+                              start_time,
+                              end_time,
+                              visible_fields,
+                              filters,
+                              data_view_id,
+                              search_query)
+
+    url = build_rison_url_from_json(json_dict=result_dict)
+
+```
+
+Invece per quanto riguarda l'API di Kibana è stato risolto l'errore del certificato creando un wrapper per la classe dell'API di Kibana su Python
+
+[test.py](/kibana-api/test.py)
+```python
+class NotCertifiedKibana(Kibana):
+    """Kibana class wrapper to disable SSL certificate"""
+
+    def requester(self, **kwargs):
+        headers = {
+            "Content-Type": "application/json",
+            "kbn-xsrf": "True",
+        } if not "files" in kwargs else {
+            "kbn-xsrf": "True",
+        }
+        auth = (self.username, self.password) if (
+            self.username and self.password) else None
+        return requests.request(headers=headers, auth=auth, verify=False, **kwargs)
+
+    def get(self, path):
+        return self.requester(method="GET", url=f"{self.base_url}{path}")
+```
+
+Inoltre per poter ottenere la lista delle field per il filtraggio dei dati (quelle che sono circa 270 sull UI di Kibana) è stato trovato l'indirizzo dell'API: `"/s/{SPACE_ID}/internal/data_views/fields?pattern={DATA_VIEW_ID}"` dove `SPACE_ID` indica l'ID dello space, solitamente `default`, e `DATA_VIEW_ID` indica l'ID del data view da utilizzare, che al momento è `container-log*`
+
+---
+
+[URL JSONifier](/url_jsonifier/) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
+
+È stata utilizzata la libreria [`prison`](https://pypi.org/project/prison/) per parsare il rison, regex per identificare gli argomenti dell'URL (ovvero la parte `_g` e la parte `_a`)
+
+[url_jsonifier/utils.py](/url_jsonifier/utils.py)
+```py
+def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
+    """
+    Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
+    decodes them into Python dictionaries, and optionally saves the result to a JSON file.
+
+    Args:
+        url (str): The full Kibana URL to parse.
+        path (str, optional): If provided, the decoded data will be saved to this file path as JSON.
+
+    Returns:
+        dict: A dictionary with the following keys:
+            - base_url (str): The part of the URL before the fragment.
+            - _g (dict or None): Decoded `_g` parameter, or None if not present or failed to decode.
+            - _a (dict or None): Decoded `_a` parameter, or None if not present or failed to decode.
+    """
+
+def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None) -> str:
+    """
+    Reconstructs a Kibana URL with Rison-encoded _g and _a fragments from a JSON file or dictionary.
+
+    Args:
+        path (str, optional): Path to the JSON file containing base_url, _g, and _a. Defaults to None.
+        json_dict (Dict, optional): Dictionary with base_url, _g, and _a. Used if path is not provided.
+
+    Returns:
+        str: The reconstructed Kibana URL with Rison-encoded _g and _a in the fragment.
+
+    Raises:
+        ValueError: If neither path nor json_dict is provided or if they contain invalid data.
+    """
+```
+
+Sono stati aggiunti [test automatici](/tests/) di workflow su github sul modulo di `url_jsonifier`

@@ -1,8 +1,5 @@
 services:
-
   cheshire-cat-core:
-    depends_on:
-      - ollama
     image: ghcr.io/cheshire-cat-ai/core:latest
     container_name: cheshire_cat_core
     ports:
@@ -12,32 +9,8 @@ services:
       - ./cat/static:/app/cat/static
       - ./cat/plugins:/app/cat/plugins
       - ./cat/data:/app/cat/data
-
-  ollama:
-    container_name: ollama
-    image: ollama/ollama:latest
-    volumes:
-      - ollama:/root/.ollama
-    environment:
-      - gpus=all
-      - OLLAMA_KEEP_ALIVE=1h
-    pull_policy: always
-    tty: true
-    expose:
-      - 11434
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
-    healthcheck:
-      test: "ollama --version && ollama ps || exit 1"
-      interval: 5s
-      retries: 20
-      timeout: 10s
-
-volumes:
-  ollama:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
