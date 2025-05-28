@@ -8,7 +8,7 @@ from cat.plugins.kibcat.utils.kibcat_api import (
     get_field_properties,
     get_field_possible_values,
 )
-from cat.plugins.kibcat.utils.base_logger import BaseKibCatLogger
+from cat.plugins.kibcat.cat_logger import KibCatLogger
 
 import json
 
@@ -66,30 +66,30 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
     kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
 
-    spaces = get_spaces(kibana)
+    spaces = get_spaces(kibana, LOGGER=KibCatLogger)
 
     if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
-        print("Specified space ID not found")
+        KibCatLogger.error("Specified space ID not found")
         return "Error during response"
 
-    data_views = get_dataviews(kibana)
+    data_views = get_dataviews(kibana, LOGGER=KibCatLogger)
 
     if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
-        print("Specified data view not found")
+        KibCatLogger.error("Specified data view not found")
         return "Error during response"
 
     # Get all the fields
 
-    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID)
+    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)
 
     if not fields_list:
-        print("Not found fields_list")
+        KibCatLogger.error("Not found fields_list")
         return "Error during response"
 
     # Get cat input in json
 
     json_input = json.loads(input)
-    needed_fields = [element["key"] for element in json_input]
+    # needed_fields = [element["key"] for element in json_input]
 
     # Group them with keywords if there are
     grouped_list = group_fields(fields_list)
@@ -110,7 +110,9 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
         for field in key_fields:
             field_properties = get_field_properties(fields_list, field)
-            possible_values = get_field_possible_values(kibana, SPACE_ID, DATA_VIEW_ID, field_properties)
+            possible_values = get_field_possible_values(
+                kibana, SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger
+            )
 
             new_key[field] = possible_values
 
