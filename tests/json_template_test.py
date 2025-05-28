@@ -1,11 +1,7 @@
-import sys
-import os
 import pytest
 
-# Add parent folder to sys.path so we can import load_template
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from load_template import render_dict
+# Import from the package — no sys.path hacks needed
+from json_template.load_template import render_dict
 
 def test_render_dict_basic():
     base_url = "https://kibana.example.com/app/discover"
@@ -26,22 +22,15 @@ def test_render_dict_basic():
         search_query
     )
 
-    # Basic checks on keys
     assert "base_url" in output
     assert "_g" in output
     assert "_a" in output
 
-    # Check base_url matches input
     assert output["base_url"] == base_url
-
-    # Check _g time range matches inputs
     assert output["_g"]["time"]["from"] == start_time
     assert output["_g"]["time"]["to"] == end_time
-
-    # Check _a columns matches visible_fields
     assert output["_a"]["columns"] == visible_fields
 
-    # Check filters keys and values
     filters_meta = output["_a"]["filters"]
     assert isinstance(filters_meta, list)
     assert len(filters_meta) == len(filters)
@@ -50,6 +39,5 @@ def test_render_dict_basic():
         assert f_item["meta"]["params"]["query"] == val
         assert f_item["query"]["match_phrase"][field] == val
 
-    # Check search query
     assert output["_a"]["query"]["query"] == search_query
 
