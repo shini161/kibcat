@@ -10,7 +10,7 @@ def test_render_dict_basic():
     visible_fields = ["field1", "field2", "field3"]
     filters = [("field1", "value1"), ("field2", "value2")]
     data_view_id = "data-view-123"
-    search_query = 'field3 : "value3"'
+    search_query = "field3 : \\\"value3\\\""
 
     output = render_dict(
         base_url,
@@ -39,5 +39,5 @@ def test_render_dict_basic():
         assert f_item["meta"]["params"]["query"] == val
         assert f_item["query"]["match_phrase"][field] == val
 
-    assert output["_a"]["query"]["query"] == search_query
+    assert output["_a"]["query"]["query"] == search_query.replace("\\", "")
 
