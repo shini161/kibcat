@@ -10,4 +10,9 @@ Questo template è usato per generare l'url di kibana, a partire dai parametri:
 | `data_view_id` | ID del data view da usare |
 | `search_query` | Query di ricerca in formato di Kibana |
 
-Per ora è stato implementato solamente l'operatore `is`
+Per ora è stato implementato solamente l'operatore `is`.
+
+La funzione per renderizzare il json si trova in `load_template.py`. Tramite il file `example.py` è possibile testarne il funzionamento generando un link di kibana a partire dai parametri dati.
+
+### Importante:
+Per far funzionare correttamente l'import del template json è necessario che il file di template `url-template.json.jinja2` si trovi nello stesso path di `load_template.py`.

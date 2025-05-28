@@ -1,11 +1,7 @@
 from jinja2 import Template
 import os
-import sys
 import json
 
-# Do this to import from relative path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from url_jsonifier.utils import build_rison_url_from_json
 
 def render_dict(base_url,
                 start_time,
@@ -13,7 +9,11 @@ def render_dict(base_url,
                 visible_fields,
                 filters,
                 data_view_id,
-                search_query):
+                search_query,
+                LOGGER=None):
+
+    if LOGGER:
+        LOGGER.message("Loading template for Kibana URL")
 
     current_path = os.path.dirname(os.path.realpath(__file__))
     template_path = os.path.join(current_path, "url-template.json.jinja2")
@@ -22,6 +22,9 @@ def render_dict(base_url,
         template_str = f.read()
 
     template = Template(template_str)
+
+    if LOGGER:
+        LOGGER.message("Template loaded")
 
     output_str = template.render(
         base_url=base_url,
@@ -33,29 +36,7 @@ def render_dict(base_url,
         search_query=search_query
     )
 
+    if LOGGER:
+        LOGGER.message("Kibana URL template rendered")
+
     return json.loads(output_str)
-
-
-# For testing
-if __name__ == "__main__":
-    base_url = "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover"
-    start_time = "2025-05-09T18:02:40.258Z"
-    end_time = "2025-05-10T02:05:46.064Z"
-    visible_fields = ["agent.id", "cometa.log.message", "kubernetes.namespace",
-                      "kubernetes.pod.name", "container.image.name", "cometa.log.level"]
-    filters = [("kubernetes.namespace", "qa"),
-               ("cometa.log.level", "ERROR")]
-    data_view_id = "container-log*"
-    search_query = "kubernetes.pod.name : \\\"backend\\\""
-
-    result_dict = render_dict(base_url,
-                              start_time,
-                              end_time,
-                              visible_fields,
-                              filters,
-                              data_view_id,
-                              search_query)
-
-    url = build_rison_url_from_json(json_dict=result_dict)
-
-    print(url)

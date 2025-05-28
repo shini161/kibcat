@@ -71,28 +71,32 @@ def get_field_properties(fields: List, target_field: str) -> Dict:
     return next((d for d in fields if d["name"] == target_field), None)
 
 
-def get_spaces(kibana: Kibana) -> List | None:
+def get_spaces(kibana: Kibana, LOGGER=None) -> List | None:
     """Gets the spaces as a list of dicts"""
     response = kibana.space().all()
 
     if response.status_code == 200:
-        print("Connected to Kibana")
+        if LOGGER:
+            LOGGER.message("Connected to Kibana API")
 
         spaces = response.json()
 
-        print("Available spaces:")
+        if LOGGER:
+            LOGGER.message("Available spaces:")
         for space in spaces:
-            print(f"- ID: {space['id']}, Name: {space['name']}")
+            if LOGGER:
+                LOGGER.message(f"- ID: {space['id']}, Name: {space['name']}")
 
         return spaces
 
     else:
-        print(
-            f"Connected, but received unexpected status code: {response.status_code}")
+        if LOGGER:
+            LOGGER.error(
+                f"Connected, but received unexpected status code: {response.status_code}")
         return None
 
 
-def get_dataviews(kibana: NotCertifiedKibana) -> List | None:
+def get_dataviews(kibana: NotCertifiedKibana, LOGGER=None) -> List | None:
     """Gets all the available data views as a list of dicts"""
     dataviews_response = kibana.get("/api/data_views")
 
@@ -103,12 +107,13 @@ def get_dataviews(kibana: NotCertifiedKibana) -> List | None:
         return data_views
 
     else:
-        print(
-            f"Cant get data views: {dataviews_response.status_code}")
+        if LOGGER:
+            LOGGER.error(
+                f"Cant get data views: {dataviews_response.status_code}")
         return None
 
 
-def get_fields_list(kibana: NotCertifiedKibana, space_id: str, data_view_id: str) -> List | None:
+def get_fields_list(kibana: NotCertifiedKibana, space_id: str, data_view_id: str, LOGGER=None) -> List | None:
     """Gets the fields list as a list of dict"""
 
     fields_request_url = f"/s/{space_id}/internal/data_views/fields?pattern={data_view_id}"
@@ -123,11 +128,13 @@ def get_fields_list(kibana: NotCertifiedKibana, space_id: str, data_view_id: str
         return fields_list
 
     else:
-        print(f"Error getting fields list: {fields_request.status_code}")
+        if LOGGER:
+            LOGGER.error(
+                f"Error getting fields list: {fields_request.status_code}")
         return None
 
 
-def get_field_possible_values(kibana: NotCertifiedKibana, space_id: str, data_view_id: str, field_dict: Dict, start_date: str | None = None, end_date: str | None = None) -> List | None:
+def get_field_possible_values(kibana: NotCertifiedKibana, space_id: str, data_view_id: str, field_dict: Dict, start_date: str | None = None, end_date: str | None = None, LOGGER=None) -> List | None:
     request_body = {
         "query": "",
         "field": field_dict["name"],
@@ -161,6 +168,7 @@ def get_field_possible_values(kibana: NotCertifiedKibana, space_id: str, data_vi
     if response.status_code == 200:
         return response.json()
     else:
-        print(
-            f"Error getting the fields possible values: {response.status_code}")
+        if LOGGER:
+            LOGGER.error(
+                f"Error getting the fields possible values: {response.status_code}")
         return None
