@@ -2,5 +2,7 @@
 	"name": "KibCat",
 	"version": "0.0.1",
 	"description": "The best chocolate",
-	"thumb": "https://raw.githubusercontent.com/shini161/kib-cat/refs/heads/main/assets/kib-cat-logo.png?token=GHSAT0AAAAAADDPIVMP56ZEDQ2UJ2ZF7CTC2BWYA6A"
+	"author_name": "shini161 + luca2040",
+	"thumb": "https://raw.githubusercontent.com/shini161/kib-cat/refs/heads/main/assets/kib-cat-logo.png?token=GHSAT0AAAAAADDPIVMP56ZEDQ2UJ2ZF7CTC2BWYA6A",
+	"tags": "kibana, elastic, cat, cheshire"
 }
