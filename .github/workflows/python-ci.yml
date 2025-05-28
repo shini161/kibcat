@@ -35,7 +35,12 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: Run tests with pytest
+    - name: Run json-template tests
       run: |
-        echo "🧪 Running tests..."
-        pytest -v --tb=short --cov=url_jsonifier --cov-report=term-missing
+        echo "🧪 Running json-template tests..."
+        pytest json-template -v --tb=short --cov=json-template --cov-report=term-missing
+
+    - name: Run url_jsonifier tests
+      run: |
+        echo "🧪 Running url_jsonifier tests..."
+        pytest url_jsonifier -v --tb=short --cov=url_jsonifier --cov-report=term-missing
