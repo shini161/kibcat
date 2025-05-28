@@ -181,3 +181,7 @@ local_dataset/downloaded_dataset
 kibana/
 kibana-api/fields.json
 kibana-api/fields_listed.json
+
+data
+kibana-api/fields.json
+local_dataset/downloaded_dataset

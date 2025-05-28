@@ -1,0 +1,65 @@
+{
+    "base_url": "{{ base_url }}",
+    "_g": {
+        "filters": [],
+        "refreshInterval": {
+            "pause": true,
+            "value": 60000
+        },
+        "time": {
+            "from": "{{ start_time }}",
+            "to": "{{ end_time }}"
+        }
+    },
+    "_a": {
+        "columns": [
+            {% for viewable_field in visible_fields %}
+                "{{ viewable_field }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        "dataSource": {
+            "dataViewId": "{{ data_view_id }}",
+            "type": "dataView"
+        },
+        "filters": [
+            {% for field_name, expected_value in filters %}
+                {
+                    "$state": {
+                        "store": "appState"
+                    },
+                    "meta": {
+                        "alias": null,
+                        "disabled": false,
+                        "field": "{{ field_name }}",
+                        "index": "{{ data_view_id }}",
+                        "key": "{{ field_name }}",
+                        "negate": false,
+                        "params": {
+                            "query": "{{ expected_value }}"
+                        },
+                        "type": "phrase"
+                    },
+                    "query": {
+                        "match_phrase": {
+                            "{{ field_name }}" : "{{ expected_value }}"
+                        }
+                    }
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        "grid": {
+            "columns": {}
+        },
+        "interval": "auto",
+        "query": {
+            "language": "kuery",
+            "query": "{{ search_query }}"
+        },
+        "sort": [
+            [
+                "@timestamp",
+                "desc"
+            ]
+        ]
+    }
+}
