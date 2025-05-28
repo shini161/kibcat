@@ -183,3 +183,6 @@ kibana-api/fields_listed.json
 url_jsonifier/data
 kibana-api/fields.json
 local_dataset/downloaded_dataset
+
+container/cat/plugins/kibcat/utils/base_logger.py
+container/cat/plugins/kibcat/utils/kibcat_api.py

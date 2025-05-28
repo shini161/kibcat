@@ -8,6 +8,8 @@ services:
     volumes:
       - ./cat/static:/app/cat/static
       - ./cat/plugins:/app/cat/plugins
+      - ../kibana-api/kibcat_api.py:/app/cat/plugins/kibcat/utils/kibcat_api.py
+      - ../logger/base_logger.py:/app/cat/plugins/kibcat/utils/base_logger.py
       - ./cat/data:/app/cat/data
     logging:
       driver: json-file
