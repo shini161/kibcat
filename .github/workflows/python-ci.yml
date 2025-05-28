@@ -37,8 +37,8 @@ jobs:
 
     - name: Run json-template tests
       run: |
-        echo "🧪 Running json-template tests..."
-        pytest json-template -v --tb=short --cov=json-template --cov-report=term-missing
+        echo "🧪 Running json_template tests..."
+        pytest json_template -v --tb=short --cov=json_template --cov-report=term-missing
 
     - name: Run url_jsonifier tests
       run: |
