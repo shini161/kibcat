@@ -180,3 +180,5 @@ url_jsonifier/data
 
 cat/plugins/kibcat/imports
 cat/plugins/kibcat/requirements.txt
+**/tests/data
+**/examples/data

@@ -11,15 +11,15 @@ services:
       - ./cat/plugins:/app/cat/plugins
       - ./cat/data:/app/cat/data
       # JSON Template
-      - ./json_template/builders.py:/app/cat/plugins/kibcat/imports/json_template/builders.py
-      - ./json_template/templates/url.json.jinja2:/app/cat/plugins/kibcat/imports/json_template/templates/url.json.jinja2
+      - ./src/json_template/builders.py:/app/cat/plugins/kibcat/imports/json_template/builders.py
+      - ./src/json_template/templates/url.json.jinja2:/app/cat/plugins/kibcat/imports/json_template/templates/url.json.jinja2
       # Kibana API 
-      - ./kibana_api/kibcat_api.py:/app/cat/plugins/kibcat/imports/kibana_api/kibcat_api.py
+      - ./src/kibana_api/kibcat_api.py:/app/cat/plugins/kibcat/imports/kibana_api/kibcat_api.py
       # Logging 
-      - ./logging/base_logger.py:/app/cat/plugins/kibcat/imports/logging/base_logger.py
+      - ./src/ogging/base_logger.py:/app/cat/plugins/kibcat/imports/logging/base_logger.py
       # URL JSONifier
-      - ./url_jsonifier/builders.py:/app/cat/plugins/kibcat/imports/url_jsonifier/builders.py
-      - ./url_jsonifier/parsers.py:/app/cat/plugins/kibcat/imports/url_jsonifier/parsers.py
+      - ./src/url_jsonifier/builders.py:/app/cat/plugins/kibcat/imports/url_jsonifier/builders.py
+      - ./src/url_jsonifier/parsers.py:/app/cat/plugins/kibcat/imports/url_jsonifier/parsers.py
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
     logging:
