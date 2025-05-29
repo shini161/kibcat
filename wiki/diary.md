@@ -209,3 +209,95 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
 ```
 
 Sono stati aggiunti [test automatici](/tests/) di workflow su github sul modulo di `url_jsonifier`
+
+# 28/05/2025
+
+Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](/kibana_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
+
+La funzione `get_spaces` serve ad ottenere tutti gli `space` di Kibana e in questo caso per verificare se quello che si vuole usare esista.
+
+La funzione `get_dataviews` serve ad ottenere la lista dei `data view` su Kibana per verificare se quella necessaria esista.
+
+La funzione `get_fields_list` chiama l'API di Kibana per ottenere la lista delle field con anche la tipologia e altri dati riguardanti le field.
+In questo caso viene usata per ottenere la lista delle field e le keyword collegate a delle field specifiche.
+
+La funzione `group_fields` si occupa di associare ad ogni field una eventuale keyword che la riguarda, per facilitare successivamente il passaggio di informazioni al Cat.
+
+La funzione `get_field_properties` si occupa semplicemente di ricavare le proprietà di una specifica field, e serve per ricavare i possibili valori di quella field, tramite la funzione `get_field_possible_values` che fa una richiesta API a Kibana per ottenere dei possibili valori che una field specifica può assumere.
+
+[Esempio: /kibana_api/example.py](/kibana_api/example.py)
+
+```python
+
+if __name__ == "__main__":
+    kibana = NotCertifiedKibana(
+        base_url=URL, username=USERNAME, password=PASSWORD)
+
+    spaces = get_spaces(kibana)
+
+    if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
+        print("Specified space ID not found")
+        exit(1)
+
+    data_views = get_dataviews(kibana)
+
+    if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
+        print("Specified data view not found")
+        exit(1)
+
+    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID)
+    grouped_list = group_fields(fields_list)
+
+    field_name = "example.some.field"  # Random field just to test if everything works
+    field_properties = get_field_properties(fields_list, field_name)
+
+    values = get_field_possible_values(
+        kibana, SPACE_ID, DATA_VIEW_ID, field_properties)
+
+    print(values)
+
+```
+
+Inoltre è stata aggiunta una [classe base di logging](/logger/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
+
+[base_logger.py](/logger/base_logger.py)
+
+```python
+class BaseKibCatLogger:
+    """Base logger class for all functions in this repo.
+    Will be wrapped by another class to use the cat's logger once in the plugin"""
+
+    @staticmethod
+    def message(message: str):
+        print(message)
+
+    @staticmethod
+    def warning(message: str):
+        print(f"WARNING: {message}")
+
+    @staticmethod
+    def error(message: str):
+        print(f"ERROR: {message}")
+```
+
+Esempio di uso in [cat/plugins/kibcat/cat_logger.py](/container/cat/plugins/kibcat/cat_logger.py):
+
+```python
+from cat.log import log
+from cat.plugins.kibcat.utils.base_logger import BaseKibCatLogger
+
+
+class KibCatLogger(BaseKibCatLogger):
+
+    @staticmethod
+    def message(message: str):
+        log.info(message)
+
+    @staticmethod
+    def warning(message: str):
+        log.warning(message)
+
+    @staticmethod
+    def error(message: str):
+        log.error(message)
+```
