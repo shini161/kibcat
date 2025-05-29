@@ -1,42 +1,91 @@
 from jinja2 import Template
+from typing import Optional, Type
+from ..logging.base_logger import BaseKibCatLogger
+from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
 import os
 import json
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_FILE_PATH = os.path.join(BASE_DIR, "templates", "url.json.jinja2")
 
-def build_template(base_url,
-                start_time,
-                end_time,
-                visible_fields,
-                filters,
-                data_view_id,
-                search_query,
-                LOGGER=None):
+def build_template(
+    base_url: str,
+    start_time: str,
+    end_time: str,
+    visible_fields: list[str],
+    filters: list[tuple(str, str)],
+    data_view_id: str,
+    search_query: str,
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None
+) -> ParsedKibanaURL:
+    """
+    Renders a Kibana URL JSON structure using a Jinja2 template and provided parameters.
 
-    if LOGGER:
-        LOGGER.message("Loading template for Kibana URL")
+    Args:
+        base_url (str): The base URL for Kibana.
+        start_time (str): The start time for the time filter.
+        end_time (str): The end time for the time filter.
+        visible_fields (list[str]): List of fields to show in the view.
+        filters (list[tuple[str, str]]): List of key-value filter pairs.
+        data_view_id (str): The data view ID to be used.
+        search_query (str): The search query string.
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
 
-    current_path = os.path.dirname(os.path.realpath(__file__))
-    template_path = os.path.join(current_path, "url-template.json.jinja2")
-
-    with open(template_path) as f:
-        template_str = f.read()
-
-    template = Template(template_str)
-
-    if LOGGER:
-        LOGGER.message("Template loaded")
-
-    output_str = template.render(
-        base_url=base_url,
-        start_time=start_time,
-        end_time=end_time,
-        visible_fields=visible_fields,
-        filters=filters,
-        data_view_id=data_view_id,
-        search_query=search_query
-    )
+    Returns:
+        ParsedKibanaURL: Parsed Kibana URL data loaded from rendered JSON.
+    """
 
     if LOGGER:
-        LOGGER.message("Kibana URL template rendered")
+        LOGGER.message("build_template - Loading template for Kibana URL")
 
-    return json.loads(output_str)
+    template_str: Optional[str] = None
+
+    try:
+        with open(TEMPLATE_FILE_PATH) as file:
+            template_str = file.read()
+    except Exception as e:
+        msg = f"build_template - Failed to read template file.\n{e}"
+        if LOGGER:
+            LOGGER.error(msg)
+        raise IOError(msg)
+
+    try:
+        template = Template(template_str)
+    except Exception as e:
+        msg = f"build_template - Failed to compile Jinja2 template.\n{e}"
+        if LOGGER:
+            LOGGER.error(msg)
+        raise Exception(msg)
+
+    if LOGGER:
+        msg = "build_template - Template loaded and compiled successfully."
+        LOGGER.message(msg)
+
+    try:
+        output_str = template.render(
+            base_url=base_url,
+            start_time=start_time,
+            end_time=end_time,
+            visible_fields=visible_fields,
+            filters=filters,
+            data_view_id=data_view_id,
+            search_query=search_query
+        )
+    except Exception as e:
+        msg = f"build_template - Failed to render template.\n{e}"
+        if LOGGER:
+            LOGGER.error(msg)
+        raise Exception(msg)
+
+    if LOGGER:
+            LOGGER.message("build_template - Kibana URL template rendered successfully")
+
+    try:
+        result: ParsedKibanaURL = json.loads(output_str)
+    except json.JSONDecodeError as e:
+        msg = f"build_template - Rendered template is not valid JSON.\n{e}"
+        if LOGGER:
+            LOGGER.error(msg)
+        raise json.JSONDecodeError(msg)
+
+    return result

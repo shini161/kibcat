@@ -33,9 +33,10 @@ def build_rison_url_from_json(
             with open(path, "r") as file:
                 data = json.load(file)
         except Exception as e:
+            msg = f"build_rison_url_from_json - Failed to load JSON from path.\n{e}"
             if LOGGER:
-                LOGGER.error(f"build_rison_url_from_json - Failed to load JSON from path: {e}")
-            raise FileNotFoundError(f"Couldn't find or open the file {file}")
+                LOGGER.error(msg)
+            raise IOError(msg)
 
     # otherwise load from json_dict
     elif json_dict:
@@ -43,13 +44,15 @@ def build_rison_url_from_json(
 
     # if data is None
     if not data:
+        msg = f"build_rison_url_from_json - Neither data nor path provided."
         if LOGGER:
-            LOGGER.error("build_rison_url_from_json - Neither data nor path provided.")
-        raise ValueError("Either 'path' or 'json_dict' must be provided.")
+            LOGGER.error(msg)
+        raise ValueError(msg)
 
     base_url: str = data.get("base_url")
     if not base_url:
-        raise ValueError("'base_url' is missing in the provided data.")
+        msg = "build_rison_url_from_json - 'base_url' is missing in the provided data."
+        raise ValueError(msg)
 
     g_data: Optional[dict] = data.get("_g")
     a_data: Optional[dict] = data.get("_a")

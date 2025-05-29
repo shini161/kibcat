@@ -47,14 +47,16 @@ def parse_rison_url_to_json(
     try:
         g_parsed = prison.loads(g_raw) if g_raw else None
     except Exception as e:
+        msg = f"parse_rison_url_to_json - Failed to parse _g.\n{e}"
         if LOGGER:
-            LOGGER.warning(f"⚠️ Failed to parse _g: {e}")
+            LOGGER.warning(msg)
 
     try:
         a_parsed = prison.loads(a_raw) if a_raw else None
     except Exception as e:
+        msg = f"parse_rison_url_to_json - Failed to parse _a.\n{e}"
         if LOGGER:
-            LOGGER.warning(f"⚠️ Failed to parse _a: {e}")
+            LOGGER.warning(msg)
 
     result: ParsedKibanaURL = {
         "base_url": url.split("#")[0],  # URL before the fragment
@@ -68,11 +70,13 @@ def parse_rison_url_to_json(
             with open(path, "w") as file:
                 json.dump(result, file, indent=2)
 
+            msg = f"parse_rison_url_to_json - Saved decoded URL to {path}"
             if LOGGER:
-                LOGGER.message(f"✅ Saved decoded URL to {path}")
+                LOGGER.message(msg)
         except Exception as e:
+            msg = f"parse_rison_url_to_json - Failed to save JSON to {path}.\n{e}"
             if LOGGER:
-                LOGGER.error(f"❌ Failed to save JSON to {path}: {e}")
-            raise Exception(f"parse_rison_url_to_json - {e}")
+                LOGGER.error(msg)
+            raise Exception(msg)
 
     return result
