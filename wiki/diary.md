@@ -438,3 +438,4 @@ Infine tramite le varie funzioni di codifica e decodifica degli URL sviluppate p
 
 Per esempio la richiesta di esempio specificata precedentemente porterà alla pagina di Kibana:
 
+![Kibana](/assets/kibana_test_1.PNG)
