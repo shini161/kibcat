@@ -3,7 +3,7 @@ import os
 import json
 
 
-def render_dict(base_url,
+def build_template(base_url,
                 start_time,
                 end_time,
                 visible_fields,
