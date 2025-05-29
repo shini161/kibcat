@@ -1,37 +1,42 @@
 from load_template import render_dict
-import sys
-import os
+from ...logging.base_logger import BaseKibCatLogger
+from ...url_jsonifier.builders import build_rison_url_from_json
 
-# fmt:off
 
-# Need to add the path to import relative. Necessary only when testing here.
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from logger.base_logger import BaseKibCatLogger
-from url_jsonifier.utils import build_rison_url_from_json
+BASE_URL = "https://localhost:9200/discover"
+START_TIME = "2025-05-09T18:02:40.258Z"
+END_TIME = "2025-05-10T02:05:46.064Z"
+VISIBLE_FIELDS = ["choco.id", "log.message", "example.namespace",
+                    "example.name", "img.name", "log.level"]
+FILTERS = [("example.namespace", "qa"),
+            ("log.level", "ERROR")]
+DATA_VIEW_ID = "logs*"
+SEARCH_QUERY = "example.name : \\\"backend\\\""
 
-# fmt:on
+LOGGER = BaseKibCatLogger
 
-# For testing
-if __name__ == "__main__":
-    base_url = "https://kibana-logging-devops-pcto.stella.cloud.az.cgm.ag/app/discover"
-    start_time = "2025-05-09T18:02:40.258Z"
-    end_time = "2025-05-10T02:05:46.064Z"
-    visible_fields = ["agent.id", "cometa.log.message", "kubernetes.namespace",
-                      "kubernetes.pod.name", "container.image.name", "cometa.log.level"]
-    filters = [("kubernetes.namespace", "qa"),
-               ("cometa.log.level", "ERROR")]
-    data_view_id = "container-log*"
-    search_query = "kubernetes.pod.name : \\\"backend\\\""
+try:
+    result_dict = render_dict(BASE_URL,
+                            START_TIME,
+                            END_TIME,
+                            VISIBLE_FIELDS,
+                            FILTERS,
+                            DATA_VIEW_ID,
+                            SEARCH_QUERY,
+                            LOGGER=LOGGER)
+except Exception as e:
+    msg = f"generate_example.py - Failed to render dict.\n{e}"
+    if LOGGER:
+        LOGGER.error(msg)
+    raise Exception(msg)
 
-    result_dict = render_dict(base_url,
-                              start_time,
-                              end_time,
-                              visible_fields,
-                              filters,
-                              data_view_id,
-                              search_query,
-                              LOGGER=BaseKibCatLogger)
-
+try:
     url = build_rison_url_from_json(json_dict=result_dict)
+except Exception as e:
+    msg = f"generate_example.py - Failed to build Rison URL.\n{e}"
+    if LOGGER:
+        LOGGER.error(msg)
+    raise Exception(msg)
 
-    BaseKibCatLogger.message(f"Generated URL:\n{url}")
+msg = f"generate_example.py - Generated URL:\n{url}"
+LOGGER.message(msg)

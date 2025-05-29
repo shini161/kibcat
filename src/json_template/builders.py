@@ -78,7 +78,7 @@ def build_template(
         raise Exception(msg)
 
     if LOGGER:
-            LOGGER.message("build_template - Kibana URL template rendered successfully")
+        LOGGER.message("build_template - Kibana URL template rendered successfully")
 
     try:
         result: ParsedKibanaURL = json.loads(output_str)
