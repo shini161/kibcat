@@ -301,3 +301,141 @@ class KibCatLogger(BaseKibCatLogger):
     def error(message: str):
         log.error(message)
 ```
+
+# 29/05/2025
+
+La repo è stata sottoposta ad un refactoring completo in modo da migliorare la struttura di file e il naming dei file e delle cartelle.
+
+---
+
+È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](/container/cat/plugins/kibcat/plugin.py)
+
+```python
+@tool(return_direct=True)
+def add_filter(input, cat):  # [TODO]: add multiple filter options other than `is`
+    """Aggiungi uno o più filtri deterministici alla ricerca su Kibana.
+    ...
+    """
+```
+
+Questo tool, essendo la prima versione funzionante, non ha ancora le funzionalità complete necessarie, e quindi per il suo funzionamento è necessario che l'utente specifichi il valore esatto della field nella query, per esempio in questo modo:
+
+```text
+aggiungi un filtro per example.field.example1 di debug e filtra per tutti i example.field.example2 di backend. inoltre il example.field.example3 deve essere qa. estendi la ricerca negli ultimi 2 giorni
+```
+
+In questo caso il gatto estrae la richiesta dell'utente in formato JSON
+
+```json
+{
+    "action": "add_filter",
+    "action_input": {
+        "filters": [
+            {
+                "key": "example.field.example1",
+                "operator": "is",
+                "value": "debug"
+            },
+            {
+                "key": "example.field.example2",
+                "operator": "is",
+                "value": "backend"
+            },
+            {
+                "key": "example.field.example3",
+                "operator": "is",
+                "value": "qa"
+            }
+        ],
+        "time": 2880
+    }
+}
+```
+
+Successivamente si usa l'API di Kibana sviluppata nei giorni precedenti per poter ottenere le varie keyword e i possibili valori di ogni field richiesta dall'utente, scrivendo il risultato in una stringa JSON.
+
+```json
+[
+  {
+    "key": {
+      "example.field.example1": [
+        "CRITICAL",
+        "DEBUG",
+        "ERROR",
+        "INFO",
+        "TRACE",
+        "WARN",
+        "error",
+        "fatal",
+        "info",
+        "information"
+      ]
+    },
+    "operator": "is",
+    "value": "debug"
+  },
+  {
+    "key": {
+      "example.field.example2": [],
+      "example.field.example2.keyword": [
+        "example_0",
+        "example_1",
+        "example_2",
+        "example_3",
+        "example_4",
+        "example_5",
+        "example_6",
+        "example_7",
+        "example_8",
+        "example_9"
+      ]
+    },
+    "operator": "is",
+    "value": "backend"
+  },
+  {
+    "key": {
+      "example.field.example3": [],
+      "example.field.example3.keyword": [
+        "example_0",
+        "example_1",
+        "example_2",
+        "example_3",
+        "example_4",
+        "example_5",
+        "example_6",
+        "example_7",
+        "example_8",
+        "example_9"
+      ]
+    },
+    "operator": "is",
+    "value": "qa"
+  }
+]
+```
+
+Tutto questo JSON viene poi passato a una chiamata all'LLM con la richiesta di separarli in query di filtraggio e query di kibana. Il risultato di questa chiamata LLM sarà un ulteriore JSON.
+
+```json
+{
+  "filters": [
+    {
+      "key": "example.field.example1",
+      "operator": "is",
+      "value": "DEBUG"
+    }
+  ],
+  "query": "example.field.example2: \"backend\" AND example.field.example3: \"qa\""
+}
+```
+
+Infine tramite le varie funzioni di codifica e decodifica degli URL sviluppate precedentemente, combinate con la funzione che genera il JSON URL da template, è possibile generare un URL di Kibana che porta alla pagina coi filtraggi desiderati, che il Cat darà come risposta in markdown:
+
+```python
+    return f"Kibana [URL]({url})"
+```
+
+Per esempio la richiesta di esempio specificata precedentemente porterà alla pagina di Kibana:
+
+![Kibana](/assets/kibana_test_1.PNG)
