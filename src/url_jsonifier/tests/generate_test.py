@@ -11,7 +11,7 @@ OUTPUT_FILE_PATH = os.path.join(DATA_FOLDER, "parsed_rison.json")
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
 KIBANA_URL = (
-        "https://kibcat.com/app/discover#/?_g="
+        "https://localhost:9200/app/discover#/?_g="
         "(filters:!(),refreshInterval:(pause:!t,value:60000),"
         "time:(from:'2025-05-09T18:02:40.258Z',to:'2025-05-10T02:05:46.064Z'))&_a="
         "(columns:!(choco.id,log.message,example.namespace,example.name),"
