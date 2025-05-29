@@ -8,14 +8,21 @@ class NotCertifiedKibana(Kibana):
     """Kibana class wrapper to disable SSL certificate, and also add a get method for direct API calls"""
 
     def requester(self, **kwargs):
-        headers = {
-            "Content-Type": "application/json",
-            "kbn-xsrf": "True",
-        } if not "files" in kwargs else {
-            "kbn-xsrf": "True",
-        }
-        auth = (self.username, self.password) if (
-            self.username and self.password) else None
+        headers = (
+            {
+                "Content-Type": "application/json",
+                "kbn-xsrf": "True",
+            }
+            if not "files" in kwargs
+            else {
+                "kbn-xsrf": "True",
+            }
+        )
+        auth = (
+            (self.username, self.password)
+            if (self.username and self.password)
+            else None
+        )
         return requests.request(headers=headers, auth=auth, verify=False, **kwargs)
 
     def get(self, path):
@@ -68,7 +75,7 @@ def group_fields(fields: List) -> List:
 
 
 def get_field_properties(fields: List, target_field: str) -> Dict:
-    return next((d for d in fields if d["name"] == target_field), None)
+    return next((d for d in fields if d["name"] == target_field), {})
 
 
 def get_spaces(kibana: Kibana, LOGGER=None) -> List | None:
@@ -92,7 +99,8 @@ def get_spaces(kibana: Kibana, LOGGER=None) -> List | None:
     else:
         if LOGGER:
             LOGGER.error(
-                f"Connected, but received unexpected status code: {response.status_code}")
+                f"Connected, but received unexpected status code: {response.status_code}"
+            )
         return None
 
 
@@ -108,15 +116,18 @@ def get_dataviews(kibana: NotCertifiedKibana, LOGGER=None) -> List | None:
 
     else:
         if LOGGER:
-            LOGGER.error(
-                f"Cant get data views: {dataviews_response.status_code}")
+            LOGGER.error(f"Cant get data views: {dataviews_response.status_code}")
         return None
 
 
-def get_fields_list(kibana: NotCertifiedKibana, space_id: str, data_view_id: str, LOGGER=None) -> List | None:
+def get_fields_list(
+    kibana: NotCertifiedKibana, space_id: str, data_view_id: str, LOGGER=None
+) -> List | None:
     """Gets the fields list as a list of dict"""
 
-    fields_request_url = f"/s/{space_id}/internal/data_views/fields?pattern={data_view_id}"
+    fields_request_url = (
+        f"/s/{space_id}/internal/data_views/fields?pattern={data_view_id}"
+    )
     # &meta_fields=_source&meta_fields=_id&meta_fields=_index&meta_fields=_score&meta_fields=_ignored&allow_no_index=true&apiVersion=1
 
     fields_request = kibana.get(fields_request_url)
@@ -129,12 +140,22 @@ def get_fields_list(kibana: NotCertifiedKibana, space_id: str, data_view_id: str
 
     else:
         if LOGGER:
-            LOGGER.error(
-                f"Error getting fields list: {fields_request.status_code}")
+            LOGGER.error(f"Error getting fields list: {fields_request.status_code}")
         return None
 
 
-def get_field_possible_values(kibana: NotCertifiedKibana, space_id: str, data_view_id: str, field_dict: Dict, start_date: str | None = None, end_date: str | None = None, LOGGER=None) -> List | None:
+def get_field_possible_values(
+    kibana: NotCertifiedKibana,
+    space_id: str,
+    data_view_id: str,
+    field_dict: Dict,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    LOGGER=None,
+) -> List:
+    if not field_dict:
+        return []
+
     request_body = {
         "query": "",
         "field": field_dict["name"],
@@ -148,18 +169,24 @@ def get_field_possible_values(kibana: NotCertifiedKibana, space_id: str, data_vi
             "aggregatable": field_dict["aggregatable"],
             "readFromDocValues": field_dict["readFromDocValues"],
             "shortDotsEnable": False,
-            "isMapped": True
+            "isMapped": True,
         },
-        "filters": [{
-            "range": {
-                "@timestamp": {
-                    "format": "strict_date_optional_time",
-                    "gte": start_date,
-                    "lte": end_date
+        "filters": (
+            [
+                {
+                    "range": {
+                        "@timestamp": {
+                            "format": "strict_date_optional_time",
+                            "gte": start_date,
+                            "lte": end_date,
+                        }
+                    }
                 }
-            }
-        }] if start_date and end_date else [],
-        "method": "terms_enum"
+            ]
+            if start_date and end_date
+            else []
+        ),
+        "method": "terms_enum",
     }
 
     api_url = f"/s/{space_id}/internal/kibana/suggestions/values/{data_view_id}"
@@ -170,5 +197,6 @@ def get_field_possible_values(kibana: NotCertifiedKibana, space_id: str, data_vi
     else:
         if LOGGER:
             LOGGER.error(
-                f"Error getting the fields possible values: {response.status_code}")
-        return None
+                f"Error getting the fields possible values: {response.status_code}"
+            )
+        return []
