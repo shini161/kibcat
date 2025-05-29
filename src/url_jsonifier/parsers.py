@@ -1,10 +1,12 @@
-from urllib.parse import urlparse, unquote, quote
-from typing import Dict
+from urllib.parse import urlparse, unquote
+from typing import Dict, Optional
 import prison
 import json
 import re
+from ..logging.base_logger import BaseKibCatLogger
 
-def parse_rison_url_to_json(url: str, path: str | None = None, LOGGER=None) -> Dict:
+
+def parse_rison_url_to_json(url: str, path: Optional[str] = None, LOGGER: Optional[BaseKibCatLogger] = None) -> Dict:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
     decodes them into Python dictionaries, and optionally saves the result to a JSON file.

@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args: [--profile=black]
+  
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports]
+
+  - repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v3.3.7
+    hooks:
+      - id: pylint
+        args: []
+
+  - repo: https://github.com/pre-commit/mirrors-pytest
+    rev: v8.3.5
+    hooks:
+      - id: pytest
+        args: []

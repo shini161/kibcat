@@ -1,4 +1,4 @@
-from urllib.parse import quote 
+from urllib.parse import quote
 from typing import Dict
 import prison
 import json
@@ -13,13 +13,13 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
         json_dict (Dict, optional): Dictionary with base_url, _g, and _a. Used if path is not provided.
 
     Returns:
-        str: The reconstructed Kibana URL with Rison-encoded _g and _a in the fragment.
+        str: reconstructed Kibana URL with Rison-encoded _g and _a in the fragment.
 
     Raises:
-        ValueError: If neither path nor json_dict is provided or if they contain invalid data.
+        ValueError: If neither path nor json_dict is provided
     """
 
-    data = None
+    data: Dict | None = None
 
     # if path is passed read and load from file
     if path:
@@ -29,21 +29,22 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
     else:
         data = json_dict
 
+    # if data is None
     if not data:
         if LOGGER:
             LOGGER.error("build_rison_url_from_json - Nor data nor path found")
         raise ValueError("Nor data nor path found")
 
-    base_url = data.get("base_url")
-    g_data = data.get("_g")
-    a_data = data.get("_a")
+    base_url: str = data.get("base_url")
+    g_data: Dict | None = data.get("_g")
+    a_data: Dict | None = data.get("_a")
 
     # Convert Python objects back to Rison strings, then URL encode them
-    g_encoded = quote(prison.dumps(g_data)) if g_data else ""
-    a_encoded = quote(prison.dumps(a_data)) if a_data else ""
+    g_encoded: str = quote(prison.dumps(g_data)) if g_data else ""
+    a_encoded: str = quote(prison.dumps(a_data)) if a_data else ""
 
     # Build the fragment string with _g and _a
-    fragment_parts = []
+    fragment_parts: list[str] = []
     if g_encoded:
         fragment_parts.append(f"_g={g_encoded}")
     if a_encoded:
