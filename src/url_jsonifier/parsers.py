@@ -1,38 +1,47 @@
 from urllib.parse import urlparse, unquote
-from typing import Dict, Optional
+from typing import Optional, Type
 import prison
 import json
 import re
 from ..logging.base_logger import BaseKibCatLogger
+from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
 
 
-def parse_rison_url_to_json(url: str, path: Optional[str] = None, LOGGER: Optional[BaseKibCatLogger] = None) -> Dict:
+def parse_rison_url_to_json(
+        url: str,
+        path: Optional[str] = None,
+        LOGGER: Optional[Type[BaseKibCatLogger]] = None
+) -> ParsedKibanaURL:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
-    decodes them into Python dictionaries, and optionally saves the result to a JSON file.
+    decodes them into Python dictionaries, and optionally writes the output to a JSON file.
 
     Args:
         url (str): The full Kibana URL to parse.
-        path (str, optional): If provided, the decoded data will be saved to this file path as JSON.
+        path (Optional[str]): If provided, the decoded result will be saved to this file as JSON.
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Logger for warnings or messages.
 
     Returns:
-        dict: A dictionary with the following keys:
-            - base_url (str): The part of the URL before the fragment.
-            - _g (dict or None): Decoded `_g` parameter, or None if not present or failed to decode.
-            - _a (dict or None): Decoded `_a` parameter, or None if not present or failed to decode.
+        ParsedKibanaURL: Dictionary with keys:
+            - 'base_url': The portion of the URL before the fragment.
+            - '_g': Decoded `_g` object (or None if missing or invalid).
+            - '_a': Decoded `_a` object (or None if missing or invalid).
     """
 
     parsed_url = urlparse(url)
     # Extract the fragment part and strip leading '?' if present
-    fragment = parsed_url.fragment.lstrip("?")
+    fragment: str = parsed_url.fragment.lstrip("?")
 
     # Use regex to find the _g and _a Rison parts in the fragment
     match_g = re.search(r"_g=([^&]+)", fragment)
     match_a = re.search(r"_a=([^&]+)", fragment)
 
     # URL decode the matched Rison strings
-    g_raw = unquote(match_g.group(1)) if match_g else ""
-    a_raw = unquote(match_a.group(1)) if match_a else ""
+    g_raw: str = unquote(match_g.group(1)) if match_g else ""
+    a_raw: str = unquote(match_a.group(1)) if match_a else ""
+
+    g_parsed: Optional[dict] = None
+    a_parsed: Optional[dict] = None
 
     # Parse the Rison strings into Python objects
     try:
@@ -40,16 +49,14 @@ def parse_rison_url_to_json(url: str, path: Optional[str] = None, LOGGER: Option
     except Exception as e:
         if LOGGER:
             LOGGER.warning(f"⚠️ Failed to parse _g: {e}")
-        g_parsed = None
 
     try:
         a_parsed = prison.loads(a_raw) if a_raw else None
     except Exception as e:
         if LOGGER:
             LOGGER.warning(f"⚠️ Failed to parse _a: {e}")
-        a_parsed = None
 
-    output = {
+    result: ParsedKibanaURL = {
         "base_url": url.split("#")[0],  # URL before the fragment
         "_g": g_parsed,
         "_a": a_parsed
@@ -57,12 +64,15 @@ def parse_rison_url_to_json(url: str, path: Optional[str] = None, LOGGER: Option
 
     # if path is passed, save to path
     if path:
-        with open(path, "w") as file:
-            json.dump(output, file, indent=2)
+        try:
+            with open(path, "w") as file:
+                json.dump(result, file, indent=2)
 
-        if LOGGER:
-            LOGGER.message(f"✅ Saved decoded URL to {path}")
+            if LOGGER:
+                LOGGER.message(f"✅ Saved decoded URL to {path}")
+        except Exception as e:
+            if LOGGER:
+                LOGGER.error(f"❌ Failed to save JSON to {path}: {e}")
+            raise Exception(f"parse_rison_url_to_json - {e}")
 
-    return output
-
-
+    return result

@@ -1,43 +1,58 @@
 from urllib.parse import quote
-from typing import Dict
+from typing import Optional, Type
+from ..logging.base_logger import BaseKibCatLogger
+from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
 import prison
 import json
 
-
-def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = None, LOGGER=None) -> str:
+def build_rison_url_from_json(
+        path: Optional[str] = None,
+        json_dict: Optional[Type[ParsedKibanaURL]] = None,
+        LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
     """
-    Reconstructs a Kibana URL with Rison-encoded _g and _a fragments from a JSON file or dictionary.
+    Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them
+    to the base URL fragment. Input can be provided either via a JSON file or a dictionary.
 
     Args:
-        path (str, optional): Path to the JSON file containing base_url, _g, and _a. Defaults to None.
-        json_dict (Dict, optional): Dictionary with base_url, _g, and _a. Used if path is not provided.
+        path (Optional[str]): Path to a JSON file containing `base_url`, `_g`, and `_a`. Defaults to None.
+        json_dict (Optional[Type[ParsedKibanaURL]]): Dictionary containing `base_url`, `_g`, and `_a`. Used if `path` is not provided.
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Logger for warnings or status messages.
 
     Returns:
-        str: reconstructed Kibana URL with Rison-encoded _g and _a in the fragment.
+        str: The reconstructed Kibana URL with Rison-encoded `_g` and `_a` parameters in the fragment.
 
     Raises:
-        ValueError: If neither path nor json_dict is provided
+        ValueError: If neither `path` nor `json_dict` is provided.
     """
 
-    data: Dict | None = None
+    data: Optional[ParsedKibanaURL] = None
 
     # if path is passed read and load from file
     if path:
-        with open(path, "r") as file:
-            data = json.load(file)
+        try:
+            with open(path, "r") as file:
+                data = json.load(file)
+        except Exception as e:
+            if LOGGER:
+                LOGGER.error(f"build_rison_url_from_json - Failed to load JSON from path: {e}")
+            raise FileNotFoundError(f"Couldn't find or open the file {file}")
+
     # otherwise load from json_dict
-    else:
+    elif json_dict:
         data = json_dict
 
     # if data is None
     if not data:
         if LOGGER:
-            LOGGER.error("build_rison_url_from_json - Nor data nor path found")
-        raise ValueError("Nor data nor path found")
+            LOGGER.error("build_rison_url_from_json - Neither data nor path provided.")
+        raise ValueError("Either 'path' or 'json_dict' must be provided.")
 
     base_url: str = data.get("base_url")
-    g_data: Dict | None = data.get("_g")
-    a_data: Dict | None = data.get("_a")
+    if not base_url:
+        raise ValueError("'base_url' is missing in the provided data.")
+
+    g_data: Optional[dict] = data.get("_g")
+    a_data: Optional[dict] = data.get("_a")
 
     # Convert Python objects back to Rison strings, then URL encode them
     g_encoded: str = quote(prison.dumps(g_data)) if g_data else ""
@@ -49,7 +64,8 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
         fragment_parts.append(f"_g={g_encoded}")
     if a_encoded:
         fragment_parts.append(f"_a={a_encoded}")
-    fragment = "/?" + "&".join(fragment_parts)
+
+    fragment: str = "/?" + "&".join(fragment_parts) if fragment_parts else ""
 
     # Reconstruct the full URL with the fragment
     full_url = f"{base_url}#{fragment}"
