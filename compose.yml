@@ -6,11 +6,22 @@ services:
       - 1865:80
       - 5678:5678
     volumes:
+      # Cheshire Cat
       - ./cat/static:/app/cat/static
       - ./cat/plugins:/app/cat/plugins
-      - ../kibana-api/kibcat_api.py:/app/cat/plugins/kibcat/utils/kibcat_api.py
-      - ../logger/base_logger.py:/app/cat/plugins/kibcat/utils/base_logger.py
       - ./cat/data:/app/cat/data
+      # JSON Template
+      - ./json_template/builders.py:/app/cat/plugins/kibcat/imports/json_template/builders.py
+      - ./json_template/templates/url.json.jinja2:/app/cat/plugins/kibcat/imports/json_template/templates/url.json.jinja2
+      # Kibana API 
+      - ./kibana_api/kibcat_api.py:/app/cat/plugins/kibcat/imports/kibana_api/kibcat_api.py
+      # Logging 
+      - ./logging/base_logger.py:/app/cat/plugins/kibcat/imports/logging/base_logger.py
+      # URL JSONifier
+      - ./url_jsonifier/builders.py:/app/cat/plugins/kibcat/imports/url_jsonifier/builders.py
+      - ./url_jsonifier/parsers.py:/app/cat/plugins/kibcat/imports/url_jsonifier/parsers.py
+      # Requirements
+      - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
     logging:
       driver: json-file
       options:
