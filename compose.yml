@@ -5,6 +5,8 @@ services:
     ports:
       - 1865:80
       - 5678:5678
+    env_file:
+      - .env
     volumes:
       # Cheshire Cat
       - ./cat/static:/app/cat/static

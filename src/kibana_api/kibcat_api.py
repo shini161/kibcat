@@ -17,7 +17,11 @@ class NotCertifiedKibana(Kibana):
             if not "files" in kwargs
             else {"kbn-xsrf": "True"}
         )
-        auth = (self.username, self.password) if (self.username and self.password) else None
+        auth = (
+            (self.username, self.password)
+            if (self.username and self.password)
+            else None
+        )
         return requests.request(headers=headers, auth=auth, verify=False, **kwargs)
 
     def get(self, path: str) -> requests.Response:
@@ -68,11 +72,15 @@ def group_fields(fields: list[dict[str, Any]]) -> list[list[str]]:
     return result
 
 
-def get_field_properties(fields: list[dict[str, Any]], target_field: str) -> dict[str, Any]:
+def get_field_properties(
+    fields: list[dict[str, Any]], target_field: str
+) -> dict[str, Any]:
     return next((d for d in fields if d.get("name") == target_field), {})
 
 
-def get_spaces(kibana: Kibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> Optional[list[dict[str, any]]]:
+def get_spaces(
+    kibana: Kibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None
+) -> Optional[list[dict[str, Any]]]:
     """Gets the spaces as a list of dicts"""
 
     try:
@@ -97,12 +105,14 @@ def get_spaces(kibana: Kibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None) 
         return None
 
 
-def get_dataviews(kibana: NotCertifiedKibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> Optional[list[dict[str, any]]]:
+def get_dataviews(
+    kibana: NotCertifiedKibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None
+) -> Optional[list[dict[str, Any]]]:
     """Gets all the available data views as a list of dicts"""
     try:
         response = kibana.get("/api/data_views")
         if response.status_code == 200:
-            return response.json().get("data_views", [])
+            return response.json().get("data_view", [])
         else:
             msg = f"get_dataviews - Can't get data views - Code {response.status_code}"
             if LOGGER:
@@ -119,7 +129,7 @@ def get_fields_list(
     kibana: NotCertifiedKibana,
     space_id: str,
     data_view_id: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
 ) -> Optional[list[dict[str, Any]]]:
     """Gets the fields list as a list of dict"""
     try:
