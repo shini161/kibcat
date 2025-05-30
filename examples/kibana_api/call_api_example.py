@@ -1,0 +1,92 @@
+import os
+from typing import Optional, Any
+from src.kibana_api import (
+    NotCertifiedKibana,
+    get_spaces,
+    get_dataviews,
+    get_fields_list,
+    group_fields,
+    get_field_properties,
+    get_field_possible_values,
+)
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Connection Details
+BASE_URL = os.getenv("KIBANA_URL")
+USERNAME = os.getenv("KIBANA_USERNAME")
+PASS = os.getenv("KIBANA_PASS")
+
+SPACE_ID = os.getenv("KIBANA_SPACE_ID")
+DATA_VIEW_ID = os.getenv("DATA_VIEW_ID")
+EXAMPLE_FIELD_NAME = os.getenv("EXAMPLE_FIELD_NAME")
+
+
+def run_example() -> Optional[list[Any]]:
+    """
+    Connect to Kibana, validate space and data view, then fetch possible values for a given field.
+
+    Returns:
+        A list of possible values for the test field, or None on failure.
+    """
+
+    if not BASE_URL or not USERNAME or not PASS:
+        msg = f"call_api_example.py - Missing required environment variables: KIBANA_URL, KIBANA_USERNAME or KIBANA_PASS"
+        print(msg)
+        return None
+
+    # Initialize Kibana API
+    kibana = NotCertifiedKibana(base_url=BASE_URL, username=USERNAME, password=PASS)
+
+    # Validate space
+    spaces = get_spaces(kibana)
+    if not spaces or not any(space.get("id") == SPACE_ID for space in spaces):
+        msg = f"call_api_example.py - Specified Space ID '{SPACE_ID}' not found."
+        print(msg)
+        return None
+
+    # Validate date view
+    data_views = get_dataviews(kibana)
+    if not data_views or not any(view.get("id") == DATA_VIEW_ID for view in data_views):
+        msg = f"call_api_example.py - Specified data view ID '{DATA_VIEW_ID}' not found."
+        print(msg)
+        return None
+
+    # Fetch and group fields
+    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID)
+    if not fields_list:
+        msg = f"call_api_example.py - No fields found for the specified data view."
+        print(msg)
+        return None
+
+    grouped_list = group_fields(fields_list)
+
+    # Test: retrieve field properties and possible values
+    field_properties = get_field_properties(fields_list, EXAMPLE_FIELD_NAME)
+    if not field_properties:
+        msg = f"call_api_example.py - Field '{EXAMPLE_FIELD_NAME}' not found in fields list."
+        print(msg)
+        return None
+
+    try:
+        values = get_field_possible_values(kibana, SPACE_ID, DATA_VIEW_ID, field_properties)
+        return values
+    except Exception as e:
+        msg = f"call_api_example.py - Error fetching values for field '{EXAMPLE_FIELD_NAME}': {e}"
+        print(msg)
+        return None
+
+
+if __name__ == "__main__":
+    print("🔍 Running Kibana field value fetch example...")
+
+    values = run_example()
+
+    if values is not None:
+        print("✅ Possible values:")
+        for value in values:
+            print(f"• {value}")
+    else:
+        msg = "call_api_example - Example failed."
+        print(msg)
