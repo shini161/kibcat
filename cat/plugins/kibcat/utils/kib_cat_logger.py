@@ -3,6 +3,7 @@ from cat.plugins.kibcat.imports.logging.base_logger import BaseKibCatLogger
 
 
 class KibCatLogger(BaseKibCatLogger):
+    """Wrapper of the class BaseKibCatLogger to log using the cat's logger"""
 
     @staticmethod
     def message(message: str):

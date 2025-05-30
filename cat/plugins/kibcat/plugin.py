@@ -208,6 +208,10 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
         field["name"] for field in fields_list if field["name"] in requested_keys
     ]
 
+    for key, _ in MAIN_FIELDS_DICT.items():
+        if key not in existing_requested_fields:
+            existing_requested_fields.append(key)
+
     field_to_group = {field: group for group in grouped_list for field in group}
 
     # Replace the key names with the possible keys in the input
