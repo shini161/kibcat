@@ -1,14 +1,16 @@
 from urllib.parse import quote
-from typing import Optional, Type
+from typing import Optional, Type, Any
 from ..logging.base_logger import BaseKibCatLogger
 from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
 import prison
 import json
 
+
 def build_rison_url_from_json(
-        path: Optional[str] = None,
-        json_dict: Optional[ParsedKibanaURL] = None,
-        LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
+    path: Optional[str] = None,
+    json_dict: Optional[ParsedKibanaURL] = None,
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+) -> str:
     """
     Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them
     to the base URL fragment. Input can be provided either via a JSON file or a dictionary.
@@ -54,8 +56,8 @@ def build_rison_url_from_json(
         msg = "build_rison_url_from_json - 'base_url' is missing in the provided data."
         raise ValueError(msg)
 
-    g_data: Optional[dict] = data.get("_g")
-    a_data: Optional[dict] = data.get("_a")
+    g_data: Optional[dict[str, Any]] = data.get("_g")
+    a_data: Optional[dict[str, Any]] = data.get("_a")
 
     # Convert Python objects back to Rison strings, then URL encode them
     g_encoded: str = quote(prison.dumps(g_data)) if g_data else ""
