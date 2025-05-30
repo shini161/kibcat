@@ -12,6 +12,7 @@ from cat.plugins.kibcat.imports.json_template.builders import build_template
 from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
     build_agent_prefix,
+    build_add_filter_tool_prefix,
 )
 from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
@@ -19,16 +20,17 @@ from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 import json
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Callable
 
 ########## ENV variables ##########
 
-URL = os.getenv("URL")
-BASE_URL_PART = os.getenv("BASE_URL_PART")
-USERNAME = os.getenv("USERNAME")
-PASSWORD = os.getenv("PASSWORD")
+URL = os.getenv("KIBANA_URL")
+BASE_URL_PART = os.getenv("KIBANA_BASE_URL_PART")
+USERNAME = os.getenv("KIBANA_USERNAME")
+PASSWORD = os.getenv("KIBANA_PASS")
 
-SPACE_ID = os.getenv("SPACE_ID")
-DATA_VIEW_ID = os.getenv("DATA_VIEW_ID")
+SPACE_ID = os.getenv("KIBANA_SPACE_ID")
+DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
 
 ###################################
 
@@ -48,57 +50,7 @@ def format_time_kibana(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
-###################################
-
-
-@hook
-def agent_prompt_prefix(prefix, cat):
-    """Prompt prefix hook"""
-
-    prefix = build_agent_prefix(LOGGER=KibCatLogger)
-
-    return prefix
-
-
-@tool(return_direct=True)
-def add_filter(input, cat):  # [TODO]: add multiple filter options other than `is`
-    """Aggiungi uno o più filtri deterministici alla ricerca su Kibana.
-
-    I filtri sono strutturati in questo modo:
-    [key] [operator] [value]
-    dove [key] indica la chiave, ovvero il valore o variabile per cui filtrare
-    [operator] indica la relazione tra i valori, i quali possibili valori sono (in lista JSON): ["is"]
-    e infine [value] indica il valore a cui si sta comparando.
-
-    input è un dict JSON contenente due elementi, "filters" e "time":
-    # "filters"
-    "filters": una lista di dizionari che indicano il filtraggio.
-    Ogni dizionario ha varie proprietà:
-    "key": la [key] da comparare
-    "operator": l' [operator] da usare
-    "value": il [value] per l'operatore
-    # "time"
-    "time" indica fino a quanto tempo fa estendere la ricerca in *minuti* __se l'utente non specifica questo parametro, è 14400__.
-
-    ESEMPIO:
-    user query: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
-    input: "{
-    "filters": [{
-    "key":"example.test.kubernetes.num",
-    "operator":"is",
-    "value":8
-    },
-    {
-    "key":"log.level",
-    "operator":"is"
-    "value":"error"
-    }],
-    "time": 50
-    }"
-    """
-
-    # Check the variables
-
+def check_env_vars() -> str | None:
     if not URL:
         msg = "URL parameter null"
 
@@ -130,6 +82,51 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
         KibCatLogger.error(msg)
         return msg
 
+    return None
+
+
+def apply_add_filter_docstring() -> Callable:
+    """
+    A decorator to set dynamically the tool's docstring.
+    """
+
+    def decorator(func: Callable) -> Callable:
+        tool_prefix: str = build_add_filter_tool_prefix()
+
+        func.__doc__ = tool_prefix
+        return func
+
+    return decorator
+
+
+###################################
+
+
+@hook
+def agent_prompt_prefix(prefix, cat):
+    """Prompt prefix hook"""
+
+    prefix = build_agent_prefix(LOGGER=KibCatLogger)
+
+    return prefix
+
+
+@tool(return_direct=True)
+@apply_add_filter_docstring()
+def add_filter(input, cat):  # [TODO]: add multiple filter options other than `is`
+    """The main tool for the first demo.
+
+    This works with direct questions, like telling the cat the field and the value to filter it for.
+    Also for the most used fields, written in the main_fields.json files the cat will automatically try to understand the needed field.
+
+    The docstring the cat will use to register this tool is generated dynamically to include the main fields.
+    """
+
+    # Check the variables
+    env_check_result = check_env_vars()
+    if env_check_result:
+        return env_check_result
+
     kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
 
     spaces = get_spaces(kibana, LOGGER=KibCatLogger)
@@ -150,7 +147,8 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
     # Get all the fields
 
-    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)
+    # Type is ignored because env variables are already checked using the check_env_vars function
+    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
 
     if not fields_list:
         msg = "Not found fields_list"
@@ -190,8 +188,9 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
         for field in key_fields:
             field_properties = get_field_properties(fields_list, field)
+            # Type is ignored because env variables are already checked using the check_env_vars function
             possible_values = get_field_possible_values(
-                kibana, SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger
+                kibana, SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
             )
 
             new_key[field] = possible_values
@@ -220,13 +219,14 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
     # [TODO]: Here need to implement the possibility to set the operator, other than 'is'
     filters = [(element["key"], element["value"]) for element in filters_cat]
 
+    # Type is ignored because env variables are already checked using the check_env_vars function
     result_dict = build_template(
-        URL + BASE_URL_PART,
+        URL + BASE_URL_PART,  # type: ignore
         start_time_str,
         end_time_str,
         existing_requested_fields,
         filters,
-        DATA_VIEW_ID,
+        DATA_VIEW_ID,  # type: ignore
         kql_cat,
         LOGGER=KibCatLogger,
     )

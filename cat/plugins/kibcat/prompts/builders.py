@@ -50,3 +50,25 @@ def build_agent_prefix(LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
     )
 
     return result
+
+
+def build_add_filter_tool_prefix(
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+) -> str:
+    """
+    Returns the add_filter tool's from the template.
+
+    Args:
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+
+    Returns:
+        str: The add_filter tool's prefix.
+    """
+
+    result: str = generic_template_renderer(
+        templates_path=TEMPLATES_FILE_PATH,
+        template_name="add_filter_tool_prefix.jinja2",
+        LOGGER=LOGGER,
+    )
+
+    return result
