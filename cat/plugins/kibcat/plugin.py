@@ -9,7 +9,10 @@ from cat.plugins.kibcat.imports.kibana_api.kibcat_api import (
     get_field_possible_values,
 )
 from cat.plugins.kibcat.imports.json_template.builders import build_template
-from cat.plugins.kibcat.prompts.builders import build_refine_filter_json
+from cat.plugins.kibcat.prompts.builders import (
+    build_refine_filter_json,
+    build_agent_prefix,
+)
 from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
@@ -17,18 +20,7 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
-
-@hook
-def agent_prompt_prefix(prefix, cat):
-    """Prompt prefix hook"""
-
-    prefix = """Sei un aiutante per poter trovare dei log di un applicazione.
-    I log sono salvati su elasticsearch e tu devi aiutare a generare delle query e filtri necessari a trovarli.
-    Non rispondi a nulla che non c'entri con questo argomento.
-    Rispondi in modo professionale, preciso, e conciso. Nessun giro di parole o informazioni aggiuntive. Vai diretto al punto."""
-
-    return prefix
-
+########## ENV variables ##########
 
 URL = os.getenv("URL")
 BASE_URL_PART = os.getenv("BASE_URL_PART")
@@ -38,9 +30,34 @@ PASSWORD = os.getenv("PASSWORD")
 SPACE_ID = os.getenv("SPACE_ID")
 DATA_VIEW_ID = os.getenv("DATA_VIEW_ID")
 
+###################################
 
-def format_time_kibana(dt):
+############## Utils ##############
+
+
+def format_time_kibana(dt: datetime) -> str:
+    """
+    Format a datetime object to a Kibana-compatible ISO 8601 string with milliseconds.
+
+    Args:
+        dt: A datetime object.
+
+    Returns:
+        A string formatted as 'YYYY-MM-DDTHH:MM:SS.mmmZ'.
+    """
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
+###################################
+
+
+@hook
+def agent_prompt_prefix(prefix, cat):
+    """Prompt prefix hook"""
+
+    prefix = build_agent_prefix(LOGGER=KibCatLogger)
+
+    return prefix
 
 
 @tool(return_direct=True)
