@@ -1,5 +1,5 @@
-from ..builders import build_rison_url_from_json
-from ..parsers import parse_rison_url_to_json
+from src.url_jsonifier.builders import build_rison_url_from_json
+from src.url_jsonifier.parsers import parse_rison_url_to_json
 import json
 import os
 
