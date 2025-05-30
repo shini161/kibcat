@@ -1,39 +1,34 @@
-from typing import List, Dict
 import requests
+from typing import Optional, Any, Type
 from collections import defaultdict
 from kibana_api import Kibana
+from ..logging.base_logger import BaseKibCatLogger
 
 
 class NotCertifiedKibana(Kibana):
-    """Kibana class wrapper to disable SSL certificate, and also add a get method for direct API calls"""
+    """Kibana class wrapper to disable SSL certificate, and also add a 'get' method for direct API calls"""
 
-    def requester(self, **kwargs):
+    def requester(self, **kwargs) -> requests.Response:
         headers = (
             {
                 "Content-Type": "application/json",
                 "kbn-xsrf": "True",
             }
             if not "files" in kwargs
-            else {
-                "kbn-xsrf": "True",
-            }
+            else {"kbn-xsrf": "True",}
         )
-        auth = (
-            (self.username, self.password)
-            if (self.username and self.password)
-            else None
-        )
+        auth = (self.username, self.password) if (self.username and self.password) else None
         return requests.request(headers=headers, auth=auth, verify=False, **kwargs)
 
-    def get(self, path):
+    def get(self, path: str) -> requests.Response:
         return self.requester(method="GET", url=f"{self.base_url}{path}")
 
-    def post(self, path, body):
+    def post(self, path: str, body: dict[str, Any]) -> requests.Response:
         return self.requester(method="POST", url=f"{self.base_url}{path}", json=body)
 
 
-def group_fields(fields: List) -> List:
-    """Groups fields with their specific keyword, in a list, for example the output might be:
+def group_fields(fields: list[dict[str, Any]]) -> list[list[str]]:
+    """Groups fields with their keyword subfields
     [[
         "stream",
         "stream.keyword"
@@ -41,32 +36,31 @@ def group_fields(fields: List) -> List:
     [
         "tags",
         "tags.keyword"
-    ]]"""
-    groups_dict = defaultdict(list)
+    ]]
+    """
+    groups_dict: dict[str, list[str]] = defaultdict(list)
 
     for field in fields:
         # Get field name
-        name = field["name"]
+        name = field.get("name")
 
         # Get field parent if it exists
-        sub_type = field.get("subType", {})
-        multi = sub_type.get("multi", {})
-        parent = multi.get("parent")
-
-        if parent:
+        parent = field.get("subType", {}).get("multi", {}).get("parent")
+        if name and parent:
             groups_dict[parent].append(name)
 
     grouped = set()
-    result = []
+    result: list[list[str]] = []
 
     for field in fields:
-        name = field["name"]
+        name = field.get("name")
+        if not name:
+            continue
 
         if name in groups_dict:
             group = [name] + groups_dict[name]
             result.append(group)
             grouped.update(group)
-
         elif name not in grouped:
             result.append([name])
             grouped.add(name)
@@ -74,73 +68,74 @@ def group_fields(fields: List) -> List:
     return result
 
 
-def get_field_properties(fields: List, target_field: str) -> Dict:
-    return next((d for d in fields if d["name"] == target_field), {})
+def get_field_properties(fields: list[dict[str, Any]], target_field: str) -> dict[str, Any]:
+    return next((d for d in fields if d.get("name") == target_field), {})
 
 
-def get_spaces(kibana: Kibana, LOGGER=None) -> List | None:
+def get_spaces(kibana: Kibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> Optional[list[dict[str, any]]]:
     """Gets the spaces as a list of dicts"""
-    response = kibana.space().all()
 
-    if response.status_code == 200:
-        if LOGGER:
-            LOGGER.message("Connected to Kibana API")
-
-        spaces = response.json()
-
-        if LOGGER:
-            LOGGER.message("Available spaces:")
-        for space in spaces:
+    try:
+        response: requests.Response = kibana.space().all()
+        if response.status_code == 200:
+            spaces = response.json()
             if LOGGER:
-                LOGGER.message(f"- ID: {space['id']}, Name: {space['name']}")
-
-        return spaces
-
-    else:
+                LOGGER.message("Connected to Kibana API")
+                LOGGER.message("Available spaces:")
+                for space in spaces:
+                    LOGGER.message(f"- ID: {space['id']}, Name: {space['name']}")
+            return spaces
+        else:
+            msg = f"get_spaces - Unexpected status code: {response.status_code}"
+            if LOGGER:
+                LOGGER.error(msg)
+            return None
+    except Exception as e:
+        msg = f"get_spaces: Exception while getting spaces.\n{e}"
         if LOGGER:
-            LOGGER.error(
-                f"Connected, but received unexpected status code: {response.status_code}"
-            )
+            LOGGER.error(msg)
         return None
 
 
-def get_dataviews(kibana: NotCertifiedKibana, LOGGER=None) -> List | None:
+def get_dataviews(kibana: NotCertifiedKibana, LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> Optional[list[dict[str, any]]]:
     """Gets all the available data views as a list of dicts"""
-    dataviews_response = kibana.get("/api/data_views")
-
-    if dataviews_response.status_code == 200:
-        dataviews = dataviews_response.json()
-
-        data_views = dataviews["data_view"]
-        return data_views
-
-    else:
+    try:
+        response = kibana.get("/api/data_views")
+        if response.status_code == 200:
+            return response.json().get("data_views", [])
+        else:
+            msg = f"get_dataviews - Can't get data views - Code {response.status_code}"
+            if LOGGER:
+                LOGGER.error(msg)
+            return None
+    except Exception as e:
+        msg = f"get_dataviews - Exception while getting dataviews.\n{e}"
         if LOGGER:
-            LOGGER.error(f"Cant get data views: {dataviews_response.status_code}")
+            LOGGER.error(msg)
         return None
 
 
 def get_fields_list(
-    kibana: NotCertifiedKibana, space_id: str, data_view_id: str, LOGGER=None
-) -> List | None:
+    kibana: NotCertifiedKibana,
+    space_id: str,
+    data_view_id: str,
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None
+) -> Optional[list[dict[str, Any]]]:
     """Gets the fields list as a list of dict"""
-
-    fields_request_url = (
-        f"/s/{space_id}/internal/data_views/fields?pattern={data_view_id}"
-    )
-    # &meta_fields=_source&meta_fields=_id&meta_fields=_index&meta_fields=_score&meta_fields=_ignored&allow_no_index=true&apiVersion=1
-
-    fields_request = kibana.get(fields_request_url)
-
-    if fields_request.status_code == 200:
-        fields_json = fields_request.json()
-        fields_list = fields_json["fields"]
-
-        return fields_list
-
-    else:
+    try:
+        url = f"/s/{space_id}/internal/data_views/fields?pattern={data_view_id}"
+        response = kibana.get(url)
+        if response.status_code == 200:
+            return response.json().get("fields", [])
+        else:
+            msg = f"get_fields_list - Unexpected status code: {response.status_code}"
+            if LOGGER:
+                LOGGER.error(msg)
+            return None
+    except Exception as e:
+        msg = f"get_fields_list - Exception while getting fields list.\n{e}"
         if LOGGER:
-            LOGGER.error(f"Error getting fields list: {fields_request.status_code}")
+            LOGGER.error(msg)
         return None
 
 
@@ -148,11 +143,12 @@ def get_field_possible_values(
     kibana: NotCertifiedKibana,
     space_id: str,
     data_view_id: str,
-    field_dict: Dict,
-    start_date: str | None = None,
-    end_date: str | None = None,
-    LOGGER=None,
-) -> List:
+    field_dict: dict[str, Any],
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+) -> list[Any]:
+    """Returns a list of suggested values for a field"""
     if not field_dict:
         return []
 
@@ -189,14 +185,18 @@ def get_field_possible_values(
         "method": "terms_enum",
     }
 
-    api_url = f"/s/{space_id}/internal/kibana/suggestions/values/{data_view_id}"
-    response = kibana.post(api_url, request_body)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
+    try:
+        api_url = f"/s/{space_id}/internal/kibana/suggestions/values/{data_view_id}"
+        response = kibana.post(api_url, request_body)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            msg = f"get_field_possible_values - Unexpected status code: {response.status_code}"
+            if LOGGER:
+                LOGGER.error(msg)
+            return []
+    except Exception as e:
+        msg = f"get_field_possible_values - Exception while getting field possible values.\n{e}"
         if LOGGER:
-            LOGGER.error(
-                f"Error getting the fields possible values: {response.status_code}"
-            )
+            LOGGER.error(msg)
         return []
