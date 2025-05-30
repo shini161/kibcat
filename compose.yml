@@ -10,18 +10,8 @@ services:
       - ./cat/static:/app/cat/static
       - ./cat/plugins:/app/cat/plugins
       - ./cat/data:/app/cat/data
-      # JSON Template
-      - ./src/json_template/builders.py:/app/cat/plugins/kibcat/imports/json_template/builders.py
-      - ./src/json_template/templates/url.json.jinja2:/app/cat/plugins/kibcat/imports/json_template/templates/url.json.jinja2
-      # Kibana API 
-      - ./src/kibana_api/kibcat_api.py:/app/cat/plugins/kibcat/imports/kibana_api/kibcat_api.py
-      # Logging 
-      - ./src/logging/base_logger.py:/app/cat/plugins/kibcat/imports/logging/base_logger.py
-      # URL JSONifier
-      - ./src/url_jsonifier/builders.py:/app/cat/plugins/kibcat/imports/url_jsonifier/builders.py
-      - ./src/url_jsonifier/parsers.py:/app/cat/plugins/kibcat/imports/url_jsonifier/parsers.py
-      # Typings
-      - ./src/kibcat_types:/app/cat/plugins/kibcat/imports/kibcat_types
+      # SRC to imports
+      - ./src:/app/cat/plugins/kibcat/imports
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
     logging:
