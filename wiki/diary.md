@@ -209,3 +209,233 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
 ```
 
 Sono stati aggiunti [test automatici](/tests/) di workflow su github sul modulo di `url_jsonifier`
+
+# 28/05/2025
+
+Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](/kibana_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
+
+La funzione `get_spaces` serve ad ottenere tutti gli `space` di Kibana e in questo caso per verificare se quello che si vuole usare esista.
+
+La funzione `get_dataviews` serve ad ottenere la lista dei `data view` su Kibana per verificare se quella necessaria esista.
+
+La funzione `get_fields_list` chiama l'API di Kibana per ottenere la lista delle field con anche la tipologia e altri dati riguardanti le field.
+In questo caso viene usata per ottenere la lista delle field e le keyword collegate a delle field specifiche.
+
+La funzione `group_fields` si occupa di associare ad ogni field una eventuale keyword che la riguarda, per facilitare successivamente il passaggio di informazioni al Cat.
+
+La funzione `get_field_properties` si occupa semplicemente di ricavare le proprietà di una specifica field, e serve per ricavare i possibili valori di quella field, tramite la funzione `get_field_possible_values` che fa una richiesta API a Kibana per ottenere dei possibili valori che una field specifica può assumere.
+
+[Esempio: /kibana_api/example.py](/kibana_api/example.py)
+
+```python
+
+if __name__ == "__main__":
+    kibana = NotCertifiedKibana(
+        base_url=URL, username=USERNAME, password=PASSWORD)
+
+    spaces = get_spaces(kibana)
+
+    if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
+        print("Specified space ID not found")
+        exit(1)
+
+    data_views = get_dataviews(kibana)
+
+    if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
+        print("Specified data view not found")
+        exit(1)
+
+    fields_list = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID)
+    grouped_list = group_fields(fields_list)
+
+    field_name = "example.some.field"  # Random field just to test if everything works
+    field_properties = get_field_properties(fields_list, field_name)
+
+    values = get_field_possible_values(
+        kibana, SPACE_ID, DATA_VIEW_ID, field_properties)
+
+    print(values)
+
+```
+
+Inoltre è stata aggiunta una [classe base di logging](/logger/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
+
+[base_logger.py](/logger/base_logger.py)
+
+```python
+class BaseKibCatLogger:
+    """Base logger class for all functions in this repo.
+    Will be wrapped by another class to use the cat's logger once in the plugin"""
+
+    @staticmethod
+    def message(message: str):
+        print(message)
+
+    @staticmethod
+    def warning(message: str):
+        print(f"WARNING: {message}")
+
+    @staticmethod
+    def error(message: str):
+        print(f"ERROR: {message}")
+```
+
+Esempio di uso in [cat/plugins/kibcat/cat_logger.py](/container/cat/plugins/kibcat/cat_logger.py):
+
+```python
+from cat.log import log
+from cat.plugins.kibcat.utils.base_logger import BaseKibCatLogger
+
+
+class KibCatLogger(BaseKibCatLogger):
+
+    @staticmethod
+    def message(message: str):
+        log.info(message)
+
+    @staticmethod
+    def warning(message: str):
+        log.warning(message)
+
+    @staticmethod
+    def error(message: str):
+        log.error(message)
+```
+
+# 29/05/2025
+
+La repo è stata sottoposta ad un refactoring completo in modo da migliorare la struttura di file e il naming dei file e delle cartelle.
+
+---
+
+È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](/container/cat/plugins/kibcat/plugin.py)
+
+```python
+@tool(return_direct=True)
+def add_filter(input, cat):  # [TODO]: add multiple filter options other than `is`
+    """Aggiungi uno o più filtri deterministici alla ricerca su Kibana.
+    ...
+    """
+```
+
+Questo tool, essendo la prima versione funzionante, non ha ancora le funzionalità complete necessarie, e quindi per il suo funzionamento è necessario che l'utente specifichi il valore esatto della field nella query, per esempio in questo modo:
+
+```text
+aggiungi un filtro per example.field.example1 di debug e filtra per tutti i example.field.example2 di backend. inoltre il example.field.example3 deve essere qa. estendi la ricerca negli ultimi 2 giorni
+```
+
+In questo caso il gatto estrae la richiesta dell'utente in formato JSON
+
+```json
+{
+    "action": "add_filter",
+    "action_input": {
+        "filters": [
+            {
+                "key": "example.field.example1",
+                "operator": "is",
+                "value": "debug"
+            },
+            {
+                "key": "example.field.example2",
+                "operator": "is",
+                "value": "backend"
+            },
+            {
+                "key": "example.field.example3",
+                "operator": "is",
+                "value": "qa"
+            }
+        ],
+        "time": 2880
+    }
+}
+```
+
+Successivamente si usa l'API di Kibana sviluppata nei giorni precedenti per poter ottenere le varie keyword e i possibili valori di ogni field richiesta dall'utente, scrivendo il risultato in una stringa JSON.
+
+```json
+[
+  {
+    "key": {
+      "example.field.example1": [
+        "CRITICAL",
+        "DEBUG",
+        "ERROR",
+        "INFO",
+        "TRACE",
+        "WARN",
+        "error",
+        "fatal",
+        "info",
+        "information"
+      ]
+    },
+    "operator": "is",
+    "value": "debug"
+  },
+  {
+    "key": {
+      "example.field.example2": [],
+      "example.field.example2.keyword": [
+        "example_0",
+        "example_1",
+        "example_2",
+        "example_3",
+        "example_4",
+        "example_5",
+        "example_6",
+        "example_7",
+        "example_8",
+        "example_9"
+      ]
+    },
+    "operator": "is",
+    "value": "backend"
+  },
+  {
+    "key": {
+      "example.field.example3": [],
+      "example.field.example3.keyword": [
+        "example_0",
+        "example_1",
+        "example_2",
+        "example_3",
+        "example_4",
+        "example_5",
+        "example_6",
+        "example_7",
+        "example_8",
+        "example_9"
+      ]
+    },
+    "operator": "is",
+    "value": "qa"
+  }
+]
+```
+
+Tutto questo JSON viene poi passato a una chiamata all'LLM con la richiesta di separarli in query di filtraggio e query di kibana. Il risultato di questa chiamata LLM sarà un ulteriore JSON.
+
+```json
+{
+  "filters": [
+    {
+      "key": "example.field.example1",
+      "operator": "is",
+      "value": "DEBUG"
+    }
+  ],
+  "query": "example.field.example2: \"backend\" AND example.field.example3: \"qa\""
+}
+```
+
+Infine tramite le varie funzioni di codifica e decodifica degli URL sviluppate precedentemente, combinate con la funzione che genera il JSON URL da template, è possibile generare un URL di Kibana che porta alla pagina coi filtraggi desiderati, che il Cat darà come risposta in markdown:
+
+```python
+    return f"Kibana [URL]({url})"
+```
+
+Per esempio la richiesta di esempio specificata precedentemente porterà alla pagina di Kibana:
+
+![Kibana](/assets/kibana_test_1.PNG)
