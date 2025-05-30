@@ -15,7 +15,7 @@ class NotCertifiedKibana(Kibana):
                 "kbn-xsrf": "True",
             }
             if not "files" in kwargs
-            else {"kbn-xsrf": "True",}
+            else {"kbn-xsrf": "True"}
         )
         auth = (self.username, self.password) if (self.username and self.password) else None
         return requests.request(headers=headers, auth=auth, verify=False, **kwargs)
