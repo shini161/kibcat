@@ -1,5 +1,5 @@
 from urllib.parse import urlparse, unquote
-from typing import Optional, Type
+from typing import Optional, Type, Any
 import prison
 import json
 import re
@@ -40,8 +40,8 @@ def parse_rison_url_to_json(
     g_raw: str = unquote(match_g.group(1)) if match_g else ""
     a_raw: str = unquote(match_a.group(1)) if match_a else ""
 
-    g_parsed: Optional[dict] = None
-    a_parsed: Optional[dict] = None
+    g_parsed: Optional[dict[str, Any]] = None
+    a_parsed: Optional[dict[str, Any]] = None
 
     # Parse the Rison strings into Python objects
     try:

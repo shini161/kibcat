@@ -1,6 +1,7 @@
-from typing import TypedDict, Optional
+from typing import TypedDict, Optional, Any
+
 
 class ParsedKibanaURL(TypedDict):
     base_url: str
-    _g: Optional[dict]
-    _a: Optional[dict]
+    _g: Optional[dict[str, Any]]
+    _a: Optional[dict[str, Any]]
