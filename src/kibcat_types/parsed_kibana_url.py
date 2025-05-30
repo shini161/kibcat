@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional, Any
+from typing import Any, Optional, TypedDict
 
 
 class ParsedKibanaURL(TypedDict):

@@ -1,5 +1,5 @@
-from typing import Any
 from src.json_template.builders import build_template
+from src.kibcat_types.parsed_kibana_url import ParsedKibanaURL
 
 
 def test_build_template() -> None:
@@ -9,22 +9,18 @@ def test_build_template() -> None:
     visible_fields: list[str] = ["field1", "field2", "field3"]
     filters: list[tuple[str, str]] = [("field1", "value1"), ("field2", "value2")]
     data_view_id: str = "data-view-123"
-    search_query: str = "field3 : \\\"value3\\\""
+    search_query: str = 'field3 : \\"value3\\"'
 
-    output: dict[str, Any] = build_template(
-        base_url,
-        start_time,
-        end_time,
-        visible_fields,
-        filters,
-        data_view_id,
-        search_query
+    output: ParsedKibanaURL = build_template(
+        base_url, start_time, end_time, visible_fields, filters, data_view_id, search_query
     )
 
     # Top Level Keys
     assert "base_url" in output
     assert "_g" in output
     assert "_a" in output
+    assert output["_g"] is not None
+    assert output["_a"] is not None
 
     # URL base and time range
     assert output["base_url"] == base_url
@@ -46,4 +42,3 @@ def test_build_template() -> None:
 
     # Search query
     assert output["_a"]["query"]["query"] == search_query.replace("\\", "")
-

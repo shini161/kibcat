@@ -1,9 +1,10 @@
-import pytest
-from typing import Any
 from pathlib import Path
+
+import pytest
+
+from src.kibcat_types.parsed_kibana_url import ParsedKibanaURL
 from src.url_jsonifier.builders import build_rison_url_from_json
 from src.url_jsonifier.parsers import parse_rison_url_to_json
-from src.kibcat_types.parsed_kibana_url import ParsedKibanaURL
 
 KIBANA_URLS: list[str] = [
     (
@@ -16,7 +17,6 @@ KIBANA_URLS: list[str] = [
         "example.namespace:(width:202))),interval:auto,"
         "query:(language:kuery,query:'example.name%20:%20%22backend%22'),"
         "sort:!(!('@timestamp',desc)))"
-
     ),
     (
         # MINIMAL COMPLEXITY
@@ -37,72 +37,43 @@ KIBANA_URLS: list[str] = [
         "https://example.com/app/discover#/?_g="
         "(refreshInterval:(pause:!f,value:null),time:(from:'2025-05-01T00:00:00.001Z',to:'2025-05-28T05:29:14.652Z'))&_a="
         "(query:(language:'lucene',query:''),filters:!(),columns:!())"
-    )
+    ),
 ]
 
 EXPECTED_OUTPUT_1: ParsedKibanaURL = {
-  "base_url": "https://example.com/app/discover",
-  "_g": {
-    "filters": [],
-    "refreshInterval": {
-      "pause": True,
-      "value": 60000
+    "base_url": "https://example.com/app/discover",
+    "_g": {
+        "filters": [],
+        "refreshInterval": {"pause": True, "value": 60000},
+        "time": {"from": "2025-05-09T18:02:40.258Z", "to": "2025-05-10T02:05:46.064Z"},
     },
-    "time": {
-      "from": "2025-05-09T18:02:40.258Z",
-      "to": "2025-05-10T02:05:46.064Z"
-    }
-  },
-  "_a": {
-    "columns": [
-      "example.id",
-      "log.message",
-      "example.namespace",
-      "example.name"
-    ],
-    "dataSource": {
-      "dataViewId": "logs*",
-      "type": "dataView"
-    },
-    "filters": [],
-    "grid": {
-      "columns": {
-        "@timestamp": {
-          "width": 127
+    "_a": {
+        "columns": ["example.id", "log.message", "example.namespace", "example.name"],
+        "dataSource": {"dataViewId": "logs*", "type": "dataView"},
+        "filters": [],
+        "grid": {
+            "columns": {
+                "@timestamp": {"width": 127},
+                "example.id": {"width": 159},
+                "log.message": {"width": 249},
+                "example.namespace": {"width": 202},
+            }
         },
-        "example.id": {
-          "width": 159
-        },
-        "log.message": {
-          "width": 249
-        },
-        "example.namespace": {
-          "width": 202
-        }
-      }
+        "interval": "auto",
+        "query": {"language": "kuery", "query": 'example.name : "backend"'},
+        "sort": [["@timestamp", "desc"]],
     },
-    "interval": "auto",
-    "query": {
-      "language": "kuery",
-      "query": "example.name : \"backend\""
-    },
-    "sort": [
-      [
-        "@timestamp",
-        "desc"
-      ]
-    ]
-  }
 }
 
 
 @pytest.mark.parametrize("url", KIBANA_URLS)
-def test_parse_and_rebuild_rison_url(url, tmp_path) -> None:
+def test_parse_and_rebuild_rison_url(url: str, tmp_path: Path) -> None:
     json_path = tmp_path / "parsed.json"
-    parsed: ParsedKibanaURL = parse_rison_url_to_json(url, json_path)
+    json_path_str = str(json_path)
+
+    parsed: ParsedKibanaURL = parse_rison_url_to_json(url, json_path_str)
 
     assert "base_url" in parsed
-    # Using startswith because there's also the /discover/app# part ...
     assert parsed["base_url"].startswith("https://example.com")
 
     if "_g" in parsed:
@@ -110,16 +81,15 @@ def test_parse_and_rebuild_rison_url(url, tmp_path) -> None:
     if "_a" in parsed:
         assert isinstance(parsed["_a"], dict)
 
-    rebuilt: str = build_rison_url_from_json(json_path)
+    rebuilt: str = build_rison_url_from_json(json_path_str)
     assert parsed["base_url"] in rebuilt
 
-    reparsed: ParsedKibanaURL = parse_rison_url_to_json(rebuilt, json_path)
+    reparsed: ParsedKibanaURL = parse_rison_url_to_json(rebuilt, json_path_str)
 
     if "_g" in parsed:
         assert reparsed["_g"] == parsed["_g"]
     if "_a" in parsed:
         assert reparsed["_a"] == parsed["_a"]
 
-    # Extra check only for the first URL
     if url == KIBANA_URLS[0]:
         assert parsed == EXPECTED_OUTPUT_1

@@ -1,9 +1,11 @@
-from urllib.parse import quote
-from typing import Optional, Type, Any
-from ..logging.base_logger import BaseKibCatLogger
-from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
-import prison
 import json
+from typing import Any, Optional, Type
+from urllib.parse import quote
+
+import prison
+
+from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
+from ..logging.base_logger import BaseKibCatLogger
 
 
 def build_rison_url_from_json(
@@ -51,7 +53,7 @@ def build_rison_url_from_json(
             LOGGER.error(msg)
         raise ValueError(msg)
 
-    base_url: str = data.get("base_url")
+    base_url: str | None = data.get("base_url")
     if not base_url:
         msg = "build_rison_url_from_json - 'base_url' is missing in the provided data."
         raise ValueError(msg)
