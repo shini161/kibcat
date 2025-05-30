@@ -9,6 +9,7 @@ from cat.plugins.kibcat.imports.kibana_api.kibcat_api import (
     get_field_possible_values,
 )
 from cat.plugins.kibcat.imports.json_template.builders import build_template
+from cat.plugins.kibcat.prompts.builders import build_refine_filter_json
 from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
@@ -180,106 +181,9 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
         element["key"] = new_key
 
-    query_filter_data = f"""
-You are given a JSON input representing a list of filter candidates for a Kibana search. From this input, your goal is to generate two outputs:
-
-1. A list of **filters**, using key-value pairs where the value exactly (or closely) matches a known value.
-2. A **KQL query**, for approximate or unmatched values that should be used in free-text search.
-
----
-
-### INPUT STRUCTURE (per item in list):
-
-- `"key"`: a dictionary with one or more field names (some may have `.keyword` versions) as keys, and a list of known values for each.
-- `"operator"`: the logical operator (e.g., "is").
-- `"value"`: the value to match against known values.
-
----
-
-### INSTRUCTIONS:
-
-1. For each object in the input:
-   - Check all fields in the `"key"` dictionary.
-   - If the `"value"` (case-insensitive) **matches or is quite similar** to one of the listed possible values:
-     - **If the match occurs in a `.keyword` field, you must prefer using that `.keyword` key** in the filter.
-     - Otherwise, use the matching key as-is.
-     - Use the matched value with original casing.
-     - Add this to the `"filters"` list using the provided `"operator"`.
-
-2. If the `"value"` does **not match or resemble any listed value** in any of the `"key"` fields (including `.keyword` ones):
-   - Do **not** add a filter for this.
-   - Instead, include a **free-text search** for the closest-matching field (prefer the non-`.keyword` version if available).
-   - Add this in the `"query"` string in KQL format:
-     - Format: `"field.name": "value"`
-
-3. If multiple items require a query fallback, combine them using `AND`.
-
----
-
-### EXPECTED OUTPUT FORMAT:
-
-Return only a JSON object like this:
-
-{{
-  "filters": [
-    {{
-      "key": "field.name",
-      "operator": "is",
-      "value": "MatchedValue"
-    }},
-    ...
-  ],
-  "query": "field1.name: \"value1\" AND field2.name: \"value2\""
-}}
-
----
-
-### EXAMPLE INPUT:
-
-[
-  {{
-    "key": {{
-      "example.log.level": [
-        "CRITICAL", "DEBUG", "ERROR", "INFO", "TRACE", "WARN",
-        "error", "fatal", "info", "information"
-      ]
-    }},
-    "operator": "is",
-    "value": "warning"
-  }},
-  {{
-    "key": {{
-      "example.pod.name": [],
-      "example.pod.name.keyword": [
-        "container.level.testing.example2",
-        "api.pod.level.testing"
-      ]
-    }},
-    "operator": "is",
-    "value": "backend"
-  }}
-]
-
----
-
-### EXAMPLE OUTPUT:
-
-{{
-  "filters": [
-    {{
-      "key": "example.log.level",
-      "operator": "is",
-      "value": "WARN"
-    }}
-  ],
-  "query": "example.pod.name: \"backend\""
-}}
-
----
-
-### INPUT JSON:
-{str(json.dumps(json_input, indent=2))}
-"""
+    query_filter_data = build_refine_filter_json(
+        str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
+    )
 
     cat_response = cat.llm(query_filter_data).replace("```json", "").replace("`", "")
     json_response = json.loads(cat_response)
