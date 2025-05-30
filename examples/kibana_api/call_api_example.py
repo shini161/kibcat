@@ -19,7 +19,7 @@ USERNAME = os.getenv("KIBANA_USERNAME")
 PASS = os.getenv("KIBANA_PASS")
 
 SPACE_ID = os.getenv("KIBANA_SPACE_ID")
-DATA_VIEW_ID = os.getenv("DATA_VIEW_ID")
+DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
 EXAMPLE_FIELD_NAME = os.getenv("EXAMPLE_FIELD_NAME")
 
 
