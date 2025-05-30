@@ -1,16 +1,16 @@
-from urllib.parse import urlparse, unquote
-from typing import Optional, Type, Any
-import prison
 import json
 import re
-from ..logging.base_logger import BaseKibCatLogger
+from typing import Any, Optional, Type
+from urllib.parse import unquote, urlparse
+
+import prison
+
 from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
+from ..logging.base_logger import BaseKibCatLogger
 
 
 def parse_rison_url_to_json(
-        url: str,
-        path: Optional[str] = None,
-        LOGGER: Optional[Type[BaseKibCatLogger]] = None
+    url: str, path: Optional[str] = None, LOGGER: Optional[Type[BaseKibCatLogger]] = None
 ) -> ParsedKibanaURL:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
@@ -61,7 +61,7 @@ def parse_rison_url_to_json(
     result: ParsedKibanaURL = {
         "base_url": url.split("#")[0],  # URL before the fragment
         "_g": g_parsed,
-        "_a": a_parsed
+        "_a": a_parsed,
     }
 
     # if path is passed, save to path
