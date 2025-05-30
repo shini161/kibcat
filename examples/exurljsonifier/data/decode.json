@@ -1,0 +1,77 @@
+{
+  "base_url": "https://***REMOVED***/app/discover",
+  "_g": {
+    "filters": [],
+    "refreshInterval": {
+      "pause": true,
+      "value": 60000
+    },
+    "time": {
+      "from": "2025-05-09T18:02:40.258Z",
+      "to": "2025-05-10T02:05:46.064Z"
+    }
+  },
+  "_a": {
+    "columns": [
+      "agent.id",
+      "***REMOVED***",
+      "***REMOVED***",
+      "***REMOVED***"
+    ],
+    "dataSource": {
+      "dataViewId": "container-log*",
+      "type": "dataView"
+    },
+    "filters": [
+      {
+        "$state": {
+          "store": "appState"
+        },
+        "meta": {
+          "alias": null,
+          "disabled": false,
+          "field": "***REMOVED***",
+          "index": "container-log*",
+          "key": "***REMOVED***",
+          "negate": false,
+          "params": {
+            "query": "qa"
+          },
+          "type": "phrase"
+        },
+        "query": {
+          "match_phrase": {
+            "***REMOVED***": "qa"
+          }
+        }
+      }
+    ],
+    "grid": {
+      "columns": {
+        "@timestamp": {
+          "width": 127
+        },
+        "agent.id": {
+          "width": 159
+        },
+        "***REMOVED***": {
+          "width": 249
+        },
+        "***REMOVED***": {
+          "width": 202
+        }
+      }
+    },
+    "interval": "auto",
+    "query": {
+      "language": "kuery",
+      "query": "***REMOVED*** : \"backend\""
+    },
+    "sort": [
+      [
+        "@timestamp",
+        "desc"
+      ]
+    ]
+  }
+}
