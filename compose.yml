@@ -16,10 +16,12 @@ services:
       # Kibana API 
       - ./src/kibana_api/kibcat_api.py:/app/cat/plugins/kibcat/imports/kibana_api/kibcat_api.py
       # Logging 
-      - ./src/ogging/base_logger.py:/app/cat/plugins/kibcat/imports/logging/base_logger.py
+      - ./src/logging/base_logger.py:/app/cat/plugins/kibcat/imports/logging/base_logger.py
       # URL JSONifier
       - ./src/url_jsonifier/builders.py:/app/cat/plugins/kibcat/imports/url_jsonifier/builders.py
       - ./src/url_jsonifier/parsers.py:/app/cat/plugins/kibcat/imports/url_jsonifier/parsers.py
+      # Typings
+      - ./src/kibcat_types:/app/cat/plugins/kibcat/imports/kibcat_types
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
     logging:

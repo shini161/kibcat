@@ -13,7 +13,7 @@ def build_template(
     start_time: str,
     end_time: str,
     visible_fields: list[str],
-    filters: list[tuple(str, str)],
+    filters: list[tuple[str, str]],
     data_view_id: str,
     search_query: str,
     LOGGER: Optional[Type[BaseKibCatLogger]] = None
