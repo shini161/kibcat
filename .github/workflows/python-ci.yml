@@ -39,6 +39,5 @@ jobs:
       run: |
         echo "🧪 Running tests..."
         pytest -v --tb=short \
-          --cov=url_jsonifier \
-          --cov=json_template \
+          --cov=src \
           --cov-report=term-missing tests/
