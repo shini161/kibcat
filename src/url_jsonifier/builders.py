@@ -7,7 +7,7 @@ import json
 
 def build_rison_url_from_json(
         path: Optional[str] = None,
-        json_dict: Optional[Type[ParsedKibanaURL]] = None,
+        json_dict: Optional[ParsedKibanaURL] = None,
         LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
     """
     Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them

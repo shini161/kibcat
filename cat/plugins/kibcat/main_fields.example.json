@@ -1,0 +1,15 @@
+{
+    "field.example.1": "Questa field è il primo esempio",
+    "field.example.2": "Questa field è il secondo esempio",
+    "field.example.3": {
+        "description": "Questa field è il terzo esempio",
+        "possible_values": [
+            "esempio1",
+            "esempio2",
+            "esempio3",
+            "esempio4"
+        ]
+    },
+    "field.example.4": "Questa field è il quarto esempio",
+    "field.example.5": "Questa field è il quinto esempio"
+}

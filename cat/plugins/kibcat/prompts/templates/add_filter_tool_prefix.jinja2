@@ -1,0 +1,37 @@
+{% raw %}Aggiungi uno o più filtri deterministici alla ricerca su Kibana.
+
+I filtri sono strutturati in questo modo:
+[key] [operator] [value]
+dove [key] indica la chiave, ovvero il valore o variabile per cui filtrare
+[operator] indica la relazione tra i valori, i quali possibili valori sono (in lista JSON): ["is"]
+e infine [value] indica il valore a cui si sta comparando.
+
+IMPORTANTE:
+Alcune [key] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:
+{% endraw %}{{ main_fields_str }}{% raw %}
+
+input è un dict JSON contenente due elementi, "filters" e "time":
+# "filters"
+"filters": una lista di dizionari che indicano il filtraggio.
+Ogni dizionario ha varie proprietà:
+"key": la [key] da comparare
+"operator": l' [operator] da usare
+"value": il [value] per l'operatore
+# "time"
+"time" indica fino a quanto tempo fa estendere la ricerca in *minuti* __se l'utente non specifica questo parametro, è 14400__.
+
+ESEMPIO:
+user query: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
+input: "{
+"filters": [{
+"key":"example.test.kubernetes.num",
+"operator":"is",
+"value":8
+},
+{
+"key":"log.level",
+"operator":"is"
+"value":"error"
+}],
+"time": 50
+}"{% endraw %}
