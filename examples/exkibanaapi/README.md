@@ -1,1 +1,0 @@
-Il file `example.py` serve solamente a testare manualmente il funzionamento corretto dell'API di Kibana e per provare le varie funzioni del file `kibcat_api.py`, non per test automatici.
