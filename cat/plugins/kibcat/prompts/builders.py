@@ -1,0 +1,32 @@
+from typing import Optional, Type
+from cat.plugins.kibcat.imports.logging.base_logger import BaseKibCatLogger
+from cat.plugins.kibcat.imports.json_template.builders import generic_template_renderer
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
+
+
+def build_refine_filter_json(
+    json_input: str,
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+) -> str:
+    """
+    Renders a the refine_filter_json using the given parameter.
+
+    Args:
+        json_input (str): The JSON input for the prompt.
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+
+    Returns:
+        str: The rendered prompt with the given input JSON.
+    """
+
+    result: str = generic_template_renderer(
+        templates_path=TEMPLATES_FILE_PATH,
+        template_name="refine_filter_json_prompt.jinja2",
+        LOGGER=LOGGER,
+        json_input=json_input,
+    )
+
+    return result
