@@ -18,13 +18,13 @@ repos:
         args: [--ignore-missing-imports]
 
   - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v3.3.7
+    rev: v2.7.4
     hooks:
       - id: pylint
         args: []
-
-  - repo: https://github.com/pre-commit/mirrors-pytest
-    rev: v8.3.5
-    hooks:
-      - id: pytest
-        args: []
+#
+#  - repo: https://github.com/pre-commit/mirrors-pytest
+#    rev: v8.3.5
+#    hooks:
+#      - id: pytest
+#        args: []

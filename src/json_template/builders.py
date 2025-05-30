@@ -1,10 +1,12 @@
-from jinja2 import Template
-from typing import Any, Optional, Type
-from ..logging.base_logger import BaseKibCatLogger
-from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
-import os
-import json
 import inspect
+import json
+import os
+from typing import Any, Optional, Type
+
+from jinja2 import Template
+
+from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
+from ..logging.base_logger import BaseKibCatLogger
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")

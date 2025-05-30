@@ -5,13 +5,13 @@ class BaseKibCatLogger:
     """
 
     @staticmethod
-    def message(message: str):
+    def message(message: str) -> None:
         print(message)
 
     @staticmethod
-    def warning(message: str):
+    def warning(message: str) -> None:
         print(f"WARNING: {message}")
 
     @staticmethod
-    def error(message: str):
+    def error(message: str) -> None:
         print(f"ERROR: {message}")
