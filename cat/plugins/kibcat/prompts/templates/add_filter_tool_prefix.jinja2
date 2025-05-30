@@ -6,6 +6,10 @@ dove [key] indica la chiave, ovvero il valore o variabile per cui filtrare
 [operator] indica la relazione tra i valori, i quali possibili valori sono (in lista JSON): ["is"]
 e infine [value] indica il valore a cui si sta comparando.
 
+IMPORTANTE:
+Alcune [key] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:
+{% endraw %}{{ main_fields_str }}{% raw %}
+
 input è un dict JSON contenente due elementi, "filters" e "time":
 # "filters"
 "filters": una lista di dizionari che indicano il filtraggio.

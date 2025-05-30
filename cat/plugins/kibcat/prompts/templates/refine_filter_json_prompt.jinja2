@@ -17,7 +17,7 @@
 
 1. For each object in the input:
    - Check all fields in the `"key"` dictionary.
-   - If the `"value"` (case-insensitive) **matches or is quite similar** to one of the listed possible values:
+   - If the `"value"` (case-insensitive) **matches OR is quite similar OR means the same thing** to one of the listed possible values:
      - **If the match occurs in a `.keyword` field, you must prefer using that `.keyword` key** in the filter.
      - Otherwise, use the matching key as-is.
      - Use the matched value with original casing.
