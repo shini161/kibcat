@@ -8,5 +8,5 @@ line_length = 100
 
 [mypy]
 python_version = 3.10
-ignore_missing_imports = True
-strict = True
+ignore_missing_imports = true
+strict = true

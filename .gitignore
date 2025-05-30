@@ -184,3 +184,5 @@ cat/plugins/kibcat/requirements.txt
 **/examples/data
 
 .ruff.toml
+
+**/**/kibcat/main_fields.json
