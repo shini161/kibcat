@@ -30,3 +30,23 @@ def build_refine_filter_json(
     )
 
     return result
+
+
+def build_agent_prefix(LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
+    """
+    Returns the LLM prefix from the template.
+
+    Args:
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+
+    Returns:
+        str: The LLM prefix.
+    """
+
+    result: str = generic_template_renderer(
+        templates_path=TEMPLATES_FILE_PATH,
+        template_name="cat_prefix.jinja2",
+        LOGGER=LOGGER,
+    )
+
+    return result
