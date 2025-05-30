@@ -20,7 +20,7 @@ from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 import json
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Callable
+from typing import Callable, Any
 
 ########## ENV variables ##########
 
@@ -31,6 +31,33 @@ PASSWORD = os.getenv("KIBANA_PASS")
 
 SPACE_ID = os.getenv("KIBANA_SPACE_ID")
 DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
+
+
+def get_main_fields_dict() -> dict[str, Any]:
+    """
+    Load the main fields dictionary from the JSON file specified by the FIELDS_JSON_PATH environment variable.
+
+    Returns:
+        A dictionary parsed from the JSON file, or an empty dict if the path is not set or an error occurs.
+    """
+    fields_json_path: str | None = os.getenv("FIELDS_JSON_PATH")
+
+    if not fields_json_path:
+        KibCatLogger.error("FIELDS_JSON_PATH environment variable is not set.")
+        return {}
+
+    try:
+        with open(fields_json_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    except (OSError, json.JSONDecodeError) as e:
+        # OSError covers file not found, permission issues, etc.
+        # JSONDecodeError covers invalid JSON structure
+        KibCatLogger.error(f"Error reading or parsing main fields JSON file: {e}")
+        return {}
+
+
+MAIN_FIELDS_DICT = get_main_fields_dict()
 
 ###################################
 
@@ -51,6 +78,11 @@ def format_time_kibana(dt: datetime) -> str:
 
 
 def check_env_vars() -> str | None:
+    """Checks if the env variables loaded really exist.
+
+    Returns:
+        str | None: None if every variable has been loaded successfully, and str with the error message if a variable is missing
+    """
     if not URL:
         msg = "URL parameter null"
 
@@ -91,7 +123,11 @@ def apply_add_filter_docstring() -> Callable:
     """
 
     def decorator(func: Callable) -> Callable:
-        tool_prefix: str = build_add_filter_tool_prefix()
+        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
+
+        tool_prefix: str = build_add_filter_tool_prefix(
+            main_fields_str=main_fields_str, LOGGER=KibCatLogger
+        )
 
         func.__doc__ = tool_prefix
         return func
@@ -103,7 +139,7 @@ def apply_add_filter_docstring() -> Callable:
 
 
 @hook
-def agent_prompt_prefix(prefix, cat):
+def agent_prompt_prefix(prefix, cat) -> str:
     """Prompt prefix hook"""
 
     prefix = build_agent_prefix(LOGGER=KibCatLogger)
