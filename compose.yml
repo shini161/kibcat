@@ -1,0 +1,21 @@
+services:
+  cheshire-cat-core:
+    image: ghcr.io/cheshire-cat-ai/core:latest
+    container_name: cheshire_cat_core
+    ports:
+      - 1865:80
+      - 5678:5678
+    volumes:
+      # Cheshire Cat
+      - ./cat/static:/app/cat/static
+      - ./cat/plugins:/app/cat/plugins
+      - ./cat/data:/app/cat/data
+      # SRC to imports
+      - ./src:/app/cat/plugins/kibcat/imports
+      # Requirements
+      - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

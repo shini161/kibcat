@@ -161,8 +161,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-container/cat/data/
-container/cat/static/
+cat/data/
+cat/static/
 ollama/
 ollamaui/
 cc_vscode_debugpy/
@@ -171,18 +171,16 @@ cc_vscode_debugpy/
 elastic/
 kibana/data/
 test/
-ollama/
-
-!/local_dataset/container/.env
-local_dataset/downloaded_dataset
 
 kibana/
-kibana-api/fields.json
-kibana-api/fields_listed.json
+kibana_api/fields.json
+kibana_api/fields_listed.json
 
 url_jsonifier/data
-kibana-api/fields.json
-local_dataset/downloaded_dataset
 
-container/cat/plugins/kibcat/utils/base_logger.py
-container/cat/plugins/kibcat/utils/kibcat_api.py
+cat/plugins/kibcat/imports
+cat/plugins/kibcat/requirements.txt
+**/tests/data
+**/examples/data
+
+.ruff.toml
