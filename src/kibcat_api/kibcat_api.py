@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Any, Optional, Type, cast
 
 import requests
+import urllib3
 
 from kibana_api import Kibana
 
@@ -10,6 +11,16 @@ from ..logging.base_logger import BaseKibCatLogger
 
 class NotCertifiedKibana(Kibana):  # type: ignore[misc]
     """Kibana class wrapper to disable SSL certificate, and also add a 'get' method for direct API calls"""
+
+    # This class inherits from Kibana
+    def __init__(
+        self,
+        base_url: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None
+    ):
+        urllib3.disable_warnings()  # Disable SSL warnings
+        super().__init__(base_url, username, password)
 
     # Some types are ignored here, that's because the Kibana base class does not have Typings
     def requester(self, **kwargs: Any) -> requests.Response:
