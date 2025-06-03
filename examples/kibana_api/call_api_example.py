@@ -3,7 +3,7 @@ from typing import Any, Optional, cast
 
 from dotenv import load_dotenv
 
-from src.kibana_api.kibcat_api import NotCertifiedKibana, get_field_properties
+from src.kibcat_api.kibcat_api import NotCertifiedKibana, get_field_properties
 
 load_dotenv()
 
