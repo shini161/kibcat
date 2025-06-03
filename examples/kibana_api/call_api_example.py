@@ -3,7 +3,7 @@ from typing import Any, Optional, cast
 
 from dotenv import load_dotenv
 
-from src.kibana_api.kibcat_api import NotCertifiedKibana
+from src.kibana_api.kibcat_api import NotCertifiedKibana, get_field_properties
 
 load_dotenv()
 
@@ -34,14 +34,14 @@ def run_example() -> Optional[list[Any]]:
     kibana = NotCertifiedKibana(base_url=BASE_URL, username=USERNAME, password=PASS)
 
     # Validate space
-    spaces = kibana.get_spaces(kibana)
+    spaces = kibana.get_spaces()
     if not spaces or not any(space.get("id") == SPACE_ID for space in spaces):
         msg = f"call_api_example.py - Specified Space ID '{SPACE_ID}' not found."
         print(msg)
         return None
 
     # Validate date view
-    data_views = kibana.get_dataviews(kibana)
+    data_views = kibana.get_dataviews()
     if not data_views or not any(view.get("id") == DATA_VIEW_ID for view in data_views):
         msg = f"call_api_example.py - Specified data view ID '{DATA_VIEW_ID}' not found."
         print(msg)
@@ -57,7 +57,7 @@ def run_example() -> Optional[list[Any]]:
         return None
 
     # Test: retrieve field properties and possible values
-    field_properties = kibana.get_field_properties(fields_list, EXAMPLE_FIELD_NAME)
+    field_properties = get_field_properties(fields_list, EXAMPLE_FIELD_NAME) # type: ignore
     if not field_properties:
         msg = f"call_api_example.py - Field '{EXAMPLE_FIELD_NAME}' not found in fields list."
         print(msg)
