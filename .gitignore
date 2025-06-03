@@ -186,3 +186,5 @@ cat/plugins/kibcat/requirements.txt
 .ruff.toml
 
 **/**/kibcat/main_fields.json
+
+*.pyi
