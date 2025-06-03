@@ -3,7 +3,7 @@ from typing import Any, Optional, Type, cast
 
 import requests
 
-from kibana_api import Kibana
+from kibana_api import Kibana # type: ignore
 
 from ..logging.base_logger import BaseKibCatLogger
 
