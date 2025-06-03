@@ -55,7 +55,7 @@ if __name__ == "__main__":
     START_TIME = "2025-05-09T18:02:40.258Z"
     END_TIME = "2025-05-10T02:05:46.064Z"
     VISIBLE_FIELDS = [
-        "choco.id",
+        "example.id",
         "log.message",
         "example.namespace",
         "example.name",

@@ -188,3 +188,5 @@ cat/plugins/kibcat/requirements.txt
 **/**/kibcat/main_fields.json
 
 *.pyi
+
+**/url_jsonifier/data

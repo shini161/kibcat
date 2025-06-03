@@ -53,19 +53,19 @@ if __name__ == "__main__":
 
 ```
 
-L'URL di kibana è composto da un URL base, in questo caso: `https://***REMOVED***/app/discover`, e successivamente si hanno due parti codificate in `rison` indicate con `_g` e `_a`, che possono essere decodificate in un JSON:
+L'URL di kibana è composto da un URL base, in questo caso: `https://kibana_example/app/discover`, e successivamente si hanno due parti codificate in `rison` indicate con `_g` e `_a`, che possono essere decodificate in un JSON:
 
 Esempio _a:
 ```json
 {
   "columns": [
-    "agent.id",
-    "***REMOVED***",
-    "***REMOVED***",
-    "***REMOVED***"
+    "example.id",
+    "example.log.message",
+    "example.namespace",
+    "example.pod.name"
   ],
   "dataSource": {
-    "dataViewId": "container-log*",
+    "dataViewId": "log*",
     "type": "dataView"
   },
   "filters": [],
@@ -74,13 +74,13 @@ Esempio _a:
       "@timestamp": {
         "width": 127
       },
-      "agent.id": {
+      "example.id": {
         "width": 159
       },
-      "***REMOVED***": {
+      "example.log.message": {
         "width": 249
       },
-      "***REMOVED***": {
+      "example.namespace": {
         "width": 202
       }
     }
@@ -88,7 +88,7 @@ Esempio _a:
   "interval": "auto",
   "query": {
     "language": "kuery",
-    "query": "***REMOVED*** : \"backend\""
+    "query": "example.pod.name : \"backend\""
   },
   "sort": [
     [
@@ -122,15 +122,15 @@ Per ora è stato implementato solamente l'operatore `is` durante il filtraggio, 
 In questo esempio viene generato l'url di kibana che porta ad un filtraggio dei dati coi parametri specificati:
 
 ```python
-    base_url = "https://***REMOVED***/app/discover"
+    base_url = "https://kibana_example/app/discover"
     start_time = "2025-05-09T18:02:40.258Z"
     end_time = "2025-05-10T02:05:46.064Z"
-    visible_fields = ["agent.id", "***REMOVED***", "***REMOVED***",
-                      "***REMOVED***", "container.image.name", "***REMOVED***"]
-    filters = [("***REMOVED***", "qa"),
-               ("***REMOVED***", "ERROR")]
-    data_view_id = "container-log*"
-    search_query = "***REMOVED*** : \\\"backend\\\""
+    visible_fields = ["example.id", "example.log.message", "example.namespace",
+                      "example.pod.name", "example.image.name", "example.log.level"]
+    filters = [("example.namespace", "qa"),
+               ("example.log.level", "ERROR")]
+    data_view_id = "log*"
+    search_query = "example.pod.name : \\\"backend\\\""
 
     result_dict = render_dict(base_url,
                               start_time,
