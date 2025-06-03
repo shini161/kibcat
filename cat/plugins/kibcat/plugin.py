@@ -1,12 +1,8 @@
 from cat.mad_hatter.decorators import tool, hook
 from cat.plugins.kibcat.imports.kibana_api.kibcat_api import (
     NotCertifiedKibana,
-    get_spaces,
-    get_dataviews,
-    get_fields_list,
     group_fields,
     get_field_properties,
-    get_field_possible_values,
 )
 from cat.plugins.kibcat.imports.json_template.builders import build_template
 from cat.plugins.kibcat.prompts.builders import (
@@ -171,7 +167,7 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
     )
 
     # Get the list of spaces in Kibana
-    spaces: list[dict[str, Any]] | None = get_spaces(kibana, LOGGER=KibCatLogger)
+    spaces: list[dict[str, Any]] | None = kibana.get_spaces(LOGGER=KibCatLogger)
 
     # Check if the needed space exists, otherwise return the error
     if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -181,7 +177,7 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
         return msg
 
     # Get the dataviews from the Kibana API
-    data_views: list[dict[str, Any]] | None = get_dataviews(kibana, LOGGER=KibCatLogger)
+    data_views: list[dict[str, Any]] | None = kibana.get_dataviews(LOGGER=KibCatLogger)
 
     # Check if the dataview needed exists, otherwise return the error
     if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
@@ -192,7 +188,7 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
     # Get all the fields using the Kibana API
     # Type is ignored because env variables are already checked using the check_env_vars function
-    fields_list: list[dict[str, Any]] | None = get_fields_list(kibana, SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
+    fields_list: list[dict[str, Any]] | None = kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
 
     # if the field list cant be loaded, return the error
     if not fields_list:
@@ -249,8 +245,8 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
             # Get all the field's possible values
             # Type is ignored because env variables are already checked using the check_env_vars function
-            possible_values: list[Any] = get_field_possible_values(
-                kibana, SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
+            possible_values: list[Any] = kibana.get_field_possible_values(
+                SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
             )
 
             new_key[field] = possible_values
