@@ -1,3 +1,5 @@
+_Alcuni file potrebbero non corrispondere esattamente alle descrizioni a causa di cambiamenti eseguiti col tempo sulla repo._
+
 # 26/05/2025
 
 Inizio analisi dell'URL di Kibana, encoder e decoder.
@@ -101,9 +103,9 @@ Esempio _a:
 
 # 27/05/2025
 
-Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](/src/json-template/templates/url.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [utils.py](/src/url_jsonifier) per generare il link a Kibana.
+Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](/src/json-template/templates/url.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [url_jsonifier](/src/url_jsonifier) per generare il link a Kibana.
 
-Per renderizzare il template è stata creata la funzione `render_dict` in [load_template.py](/json-template/load_template.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
+Per renderizzare il template è stata creata la funzione `render_dict` in [json_template](/src/json_template/builders.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
 
 I parametri possibili sono:
 
@@ -146,7 +148,7 @@ In questo esempio viene generato l'url di kibana che porta ad un filtraggio dei 
 
 Invece per quanto riguarda l'API di Kibana è stato risolto l'errore del certificato creando un wrapper per la classe dell'API di Kibana su Python
 
-[test.py](/kibana-api/test.py)
+[kibcat_api.py](/src/kibcat_api/kibcat_api.py)
 ```python
 class NotCertifiedKibana(Kibana):
     """Kibana class wrapper to disable SSL certificate"""
@@ -170,11 +172,11 @@ Inoltre per poter ottenere la lista delle field per il filtraggio dei dati (quel
 
 ---
 
-[URL JSONifier](/url_jsonifier/) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
+[URL JSONifier](src/url_jsonifier/) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
 
 È stata utilizzata la libreria [`prison`](https://pypi.org/project/prison/) per parsare il rison, regex per identificare gli argomenti dell'URL (ovvero la parte `_g` e la parte `_a`)
 
-[url_jsonifier/utils.py](/url_jsonifier/utils.py)
+[url_jsonifier/utils.py](/src/url_jsonifier/utils.py)
 ```py
 def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
@@ -212,7 +214,7 @@ Sono stati aggiunti [test automatici](/tests/) di workflow su github sul modulo 
 
 # 28/05/2025
 
-Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](/kibana_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
+Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](/src/kibcat_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
 
 La funzione `get_spaces` serve ad ottenere tutti gli `space` di Kibana e in questo caso per verificare se quello che si vuole usare esista.
 
@@ -225,7 +227,7 @@ La funzione `group_fields` si occupa di associare ad ogni field una eventuale ke
 
 La funzione `get_field_properties` si occupa semplicemente di ricavare le proprietà di una specifica field, e serve per ricavare i possibili valori di quella field, tramite la funzione `get_field_possible_values` che fa una richiesta API a Kibana per ottenere dei possibili valori che una field specifica può assumere.
 
-[Esempio: /kibana_api/example.py](/kibana_api/example.py)
+[Esempio: call_api_example.py](/examples/kibana_api/call_api_example.py)
 
 ```python
 
@@ -258,9 +260,9 @@ if __name__ == "__main__":
 
 ```
 
-Inoltre è stata aggiunta una [classe base di logging](/logger/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
+Inoltre è stata aggiunta una [classe base di logging](/src/logging/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
 
-[base_logger.py](/logger/base_logger.py)
+[base_logger.py](/src/logging/base_logger.py)
 
 ```python
 class BaseKibCatLogger:
@@ -280,7 +282,7 @@ class BaseKibCatLogger:
         print(f"ERROR: {message}")
 ```
 
-Esempio di uso in [cat/plugins/kibcat/cat_logger.py](/container/cat/plugins/kibcat/cat_logger.py):
+Esempio di uso in [cat/plugins/kibcat/utils/kib_cat_logger.py](/cat/plugins/kibcat/utils/kib_cat_logger.py):
 
 ```python
 from cat.log import log
@@ -308,7 +310,7 @@ La repo è stata sottoposta ad un refactoring completo in modo da migliorare la 
 
 ---
 
-È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](/container/cat/plugins/kibcat/plugin.py)
+È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](/cat/plugins/kibcat/plugin.py)
 
 ```python
 @tool(return_direct=True)

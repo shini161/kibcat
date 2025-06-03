@@ -1,5 +1,5 @@
 from cat.mad_hatter.decorators import tool, hook
-from cat.plugins.kibcat.imports.kibana_api.kibcat_api import (
+from cat.plugins.kibcat.imports.kibcat_api.kibcat_api import (
     NotCertifiedKibana,
     group_fields,
     get_field_properties,
