@@ -306,6 +306,6 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
     KibCatLogger.message(f"Generated URL:\n{url}")
 
-    return f"Kibana [URL]({url})"
+    return f'Kibana <a href="{url}" target="_blank">URL</a>'
     # return f"```json\n{cat_response}\n```"
     # return f"```json\n{str(json.dumps(json_input,indent=2))}\n```"
