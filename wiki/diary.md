@@ -4,7 +4,7 @@ Inizio analisi dell'URL di Kibana, encoder e decoder.
 
 *Ora non esistente, in quanto non funzionante correttamente e sostituito da quello svolto nel [giorno 27/05/2025](#27052025).*
 
-[url encoder](/kibana-url-encode)
+[url encoder](/src/url_jsonifier)
 ```python
 import os
 import json
@@ -101,7 +101,7 @@ Esempio _a:
 
 # 27/05/2025
 
-Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](/json-template/url-template.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [utils.py](/url_jsonifier/utils.py) per generare il link a Kibana.
+Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](/src/json-template/templates/url.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [utils.py](/src/url_jsonifier) per generare il link a Kibana.
 
 Per renderizzare il template è stata creata la funzione `render_dict` in [load_template.py](/json-template/load_template.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
 
