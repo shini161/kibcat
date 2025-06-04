@@ -52,33 +52,6 @@ def build_agent_prefix(LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
     return result
 
 
-def build_add_filter_tool_prefix(
-    main_fields_str: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
-) -> str:
-    """
-    Returns the add_filter tool's from the template.
-
-    Args:
-        main_fields_str (str): The main fields JSON loaded as string
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
-
-    Returns:
-        str: The add_filter tool's prefix.
-    """
-
-    result: str = generic_template_renderer(
-        templates_path=TEMPLATES_FILE_PATH,
-        template_name="add_filter_tool_prefix.jinja2",
-        LOGGER=LOGGER,
-        main_fields_str=main_fields_str,
-    )
-
-    return result
-
-#TODO: remove build_agent_prefix
-
-
 def build_form_data_extractor(
     conversation_history: str,
     LOGGER: Optional[Type[BaseKibCatLogger]] = None,

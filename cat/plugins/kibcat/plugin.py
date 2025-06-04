@@ -6,7 +6,6 @@ from cat.plugins.kibcat.imports.kibcat_api.kibcat_api import (
 from cat.plugins.kibcat.imports.json_template.builders import build_template
 from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
-    build_add_filter_tool_prefix,
     build_form_data_extractor,
 )
 from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
@@ -19,7 +18,7 @@ from cat.experimental.form import CatForm, form
 import json
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Any
+from typing import Any
 
 ########## ENV variables ##########
 
@@ -114,24 +113,6 @@ def check_env_vars() -> str | None:
         return msg
 
     return None
-
-
-def apply_add_filter_docstring() -> Callable:
-    """
-    A decorator to set dynamically the tool's docstring.
-    """
-
-    def decorator(func: Callable) -> Callable:
-        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
-
-        tool_prefix: str = build_add_filter_tool_prefix(
-            main_fields_str=main_fields_str, LOGGER=KibCatLogger
-        )
-
-        func.__doc__ = tool_prefix
-        return func
-
-    return decorator
 
 
 ###################################
