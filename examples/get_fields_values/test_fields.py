@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from elastic_transport import NodeConfig
-from src.get_fields_values.fields import get_initial_part_of_fields
+from src.kibfieldvalues.fields import get_initial_part_of_fields
 import os
 import urllib3
 
