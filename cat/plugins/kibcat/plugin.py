@@ -13,7 +13,7 @@ from cat.plugins.kibcat.imports.kibcat_types.parsed_kibana_url import ParsedKiba
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 from pydantic import BaseModel
-from cat.experimental.form import CatForm, form
+from cat.experimental.form import CatForm, CatFormState, form
 
 import json
 import os
@@ -149,6 +149,66 @@ class FilterForm(CatForm):
         "not interested anymore",
     ]
     ask_confirm = False
+
+    def extract(self):
+        """Extracts the filter data from the form."""
+
+        history = self.cat.working_memory.stringify_chat_history()
+        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
+
+        json_str = self.cat.llm(
+            build_form_data_extractor(
+                conversation_history=history,
+                main_fields_str=main_fields_str,
+                LOGGER=KibCatLogger
+            )
+        ).replace("```json", "").replace("`", "")
+
+        response = json.loads(json_str)
+
+        return {
+            "start_time": response.get("start_time", 14400),
+            "end_time": response.get("end_time", 0),
+            "query": [], # TODO: extract query from conversation using extractor template
+            "filters": response.get("filters", [])
+        }
+    
+    def validate(self):
+        """Validate form data"""
+        self._missing_fields = []
+        self._errors = []
+        
+        # Validate start_time
+        if "start_time" in self._model:
+            start_time = self._model["start_time"]
+            if not isinstance(start_time, int) or start_time < 0:
+                self._errors.append("start_time: must be a positive integer")
+                del self._model["start_time"]
+        
+        # Validate end_time
+        if "end_time" in self._model:
+            end_time = self._model["end_time"]
+            if not isinstance(end_time, int) or end_time < 0:
+                self._errors.append("end_time: must be a positive integer")
+                del self._model["end_time"]
+            
+            # Check if end_time is less than start_time
+            if "start_time" in self._model and end_time > self._model["start_time"]:
+                self._errors.append("end_time: must be less than or equal to start_time")
+                del self._model["end_time"]
+        
+        # Validate filters
+        # TODO: validate ambiguous filters
+        # if "filters" in self._model:
+        #     self._errors.append("filters: must be a list of FilterItem objects")
+        #     del self._model["filters"]
+        # else:
+        #     self._missing_fields.append("filters")
+        
+        if not self._errors and not self._missing_fields:
+            self._state = CatFormState.COMPLETE
+        else:
+            self._state = CatFormState.INCOMPLETE
 
     def submit(self, form_data: FilterData) -> dict[str, str]:
         """Handles the form submission."""
@@ -293,27 +353,4 @@ class FilterForm(CatForm):
 
         return {
             "output": f'Kibana <a href="{url}" target="_blank">URL</a>'
-        }
-    
-    def extract(self):
-        """Extracts the filter data from the form."""
-
-        history = self.cat.working_memory.stringify_chat_history()
-        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
-
-        json_str = self.cat.llm(
-            build_form_data_extractor(
-                conversation_history=history,
-                main_fields_str=main_fields_str,
-                LOGGER=KibCatLogger
-            )
-        ).replace("```json", "").replace("`", "")
-
-        response = json.loads(json_str)
-
-        return {
-            "start_time": response.get("start_time", 14400),
-            "end_time": response.get("end_time", 0),
-            "query": [], # TODO: extract query from conversation using extractor template
-            "filters": response.get("filters", [])
         }
