@@ -309,3 +309,9 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
     return f'Kibana <a href="{url}" target="_blank">URL</a>'
     # return f"```json\n{cat_response}\n```"
     # return f"```json\n{str(json.dumps(json_input,indent=2))}\n```"
+
+@tool
+def get_token_usage(input, cat):
+    """Get the token usage for the current session."""
+    input_tokens = cat.working_memory.model_interactions[1].input_tokens
+    return f"Input tokens: {input_tokens}"
