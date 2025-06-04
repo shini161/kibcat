@@ -1,30 +1,29 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  - repo: local
     hooks:
       - id: black
-        args: [--line-length=100]
+        name: black
+        entry: black
+        language: system
+        types: [python]
+        args: ["--line-length=120"]
 
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
-    hooks:
       - id: isort
-        args: [--profile=black]
-  
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
-    hooks:
-      - id: mypy
-        args: [--ignore-missing-imports]
+        name: isort
+        entry: isort
+        language: system
+        types: [python]
+        args: ["--profile=black"]
 
-  - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.7.4
-    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [python]
+        args: ["--config-file=mypy.ini", "--explicit-package-bases", "--namespace-packages"]
+
       - id: pylint
-        args: []
-#
-#  - repo: https://github.com/pre-commit/mirrors-pytest
-#    rev: v8.3.5
-#    hooks:
-#      - id: pytest
-#        args: []
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]

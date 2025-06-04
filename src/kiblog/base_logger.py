@@ -1,4 +1,4 @@
-class BaseKibCatLogger:
+class BaseLogger:
     """
     Base logger class for all functions in this repo.
     Will be wrapped by another class to use the cat's logger once in the plugin

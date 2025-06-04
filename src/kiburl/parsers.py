@@ -5,12 +5,12 @@ from urllib.parse import unquote, urlparse
 
 import prison
 
-from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
-from ..logging.base_logger import BaseKibCatLogger
+from kiblog import BaseLogger
+from kibtypes import ParsedKibanaURL
 
 
 def parse_rison_url_to_json(
-    url: str, path: Optional[str] = None, LOGGER: Optional[Type[BaseKibCatLogger]] = None
+    url: str, path: Optional[str] = None, LOGGER: Optional[Type[BaseLogger]] = None
 ) -> ParsedKibanaURL:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
