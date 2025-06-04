@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from elastic_transport import NodeConfig
-from src.kibfieldvalues.fields import get_initial_part_of_fields
+from kibfieldvalues import get_initial_part_of_fields
 import os
 import urllib3
 
@@ -34,4 +34,7 @@ es: Elasticsearch = Elasticsearch([node_config], basic_auth=(USERNAME, PASS))
 
 print(es.info())
 print("\n" * 4)
-print(get_initial_part_of_fields(es, "kubernetes.pod.name.keyword"))
+
+EXAMPLE_FIELD = "kubernetes.pod.name.keyword"
+
+print(get_initial_part_of_fields(es, EXAMPLE_FIELD))
