@@ -293,11 +293,15 @@ class FilterForm(CatForm):
         """Extracts the filter data from the form."""
 
         history = self.cat.working_memory.stringify_chat_history()
+        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
 
-        json_str = self.cat.llm(build_form_data_extractor(
-            conversation_history=history,
-            LOGGER=KibCatLogger
-        )).replace("```json", "").replace("`", "")
+        json_str = self.cat.llm(
+            build_form_data_extractor(
+                conversation_history=history,
+                main_fields_str=main_fields_str,
+                LOGGER=KibCatLogger
+            )
+        ).replace("```json", "").replace("`", "")
 
         response = json.loads(json_str)
 

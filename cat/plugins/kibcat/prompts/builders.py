@@ -54,6 +54,7 @@ def build_agent_prefix(LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
 
 def build_form_data_extractor(
     conversation_history: str,
+    main_fields_str: str,
     LOGGER: Optional[Type[BaseKibCatLogger]] = None,
 ) -> str:
     """
@@ -61,7 +62,8 @@ def build_form_data_extractor(
 
     Args:
         conversation_history (str): The conversation history loaded as string
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+        main_fields_str (str): The main fields JSON loaded as string
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging
 
     Returns:
         str: The form data extractor.
@@ -72,6 +74,7 @@ def build_form_data_extractor(
         template_name="form_data_extractor.jinja2",
         LOGGER=LOGGER,
         conversation_history=conversation_history,
+        main_fields_str=main_fields_str,
     )
 
     return result
