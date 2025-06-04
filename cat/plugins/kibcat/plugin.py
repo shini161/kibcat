@@ -57,6 +57,10 @@ def get_main_fields_dict() -> dict[str, Any]:
 
 MAIN_FIELDS_DICT = get_main_fields_dict()
 
+# TODO: move costants like start_time when we decide where to put them
+DEFAULT_START_TIME: int = 14400  # Default to 4 hours
+DEFAULT_END_TIME: int = 0  # Default to now
+
 ###################################
 
 ############## Utils ##############
@@ -129,8 +133,8 @@ class QueryItem(BaseModel):
     value: str
 
 class FilterData(BaseModel):
-    start_time: int = 14400  # Default to 4 hours
-    end_time: int = 0
+    start_time: int = DEFAULT_START_TIME
+    end_time: int = DEFAULT_END_TIME
     filters: list[FilterItem] = []
     query: list[QueryItem] = []
 
@@ -167,8 +171,8 @@ class FilterForm(CatForm):
         response = json.loads(json_str)
 
         return {
-            "start_time": response.get("start_time", 14400),
-            "end_time": response.get("end_time", 0),
+            "start_time": response.get("start_time", DEFAULT_START_TIME),
+            "end_time": response.get("end_time", DEFAULT_END_TIME),
             "query": [], # TODO: extract query from conversation using extractor template
             "filters": response.get("filters", [])
         }
@@ -326,8 +330,8 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Kibana query: {kql_cat}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('end_time', 0))
-        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('start_time', 14400))
+        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('end_time'))
+        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('start_time'))
 
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
