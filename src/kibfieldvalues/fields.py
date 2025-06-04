@@ -10,7 +10,8 @@ def extract_base_name(value: str) -> str:
 
 
 def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list[str]:
-    """Get all the possible different initial values for the given field"""
+    """Get all the possible different initial values for the given field.
+    It is different from the suggested values since this one gets the values the field actually has."""
 
     all_base_names: set = set()
     after_key: Any = None
