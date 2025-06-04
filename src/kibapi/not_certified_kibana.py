@@ -8,7 +8,7 @@ with Kibana spaces, data views, fields, and fetch possible field values.
 The class logs messages optionally via a passed logger.
 """
 
-from typing import Any, Optional, Type, cast
+from typing import Any, Type, cast
 
 import requests  # type: ignore
 from kibana_api import Kibana
@@ -47,7 +47,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             if "files" not in kwargs
             else {"kbn-xsrf": "True"}
         )
-        auth: Optional[tuple[str, str]] = (self.username, self.password) if (self.username and self.password) else None
+        auth: tuple[str, str] | None = (self.username, self.password) if (self.username and self.password) else None
         return requests.request(headers=headers, auth=auth, verify=False, timeout=10, **kwargs)
 
     def get(self, path: str) -> requests.Response:
@@ -75,15 +75,15 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         """
         return self.requester(method="POST", url=f"{self.base_url}{path}", json=body)
 
-    def get_spaces(self, logger: Optional[Type[BaseLogger]] = None) -> Optional[list[dict[str, Any]]]:
+    def get_spaces(self, logger: Type[BaseLogger] | None = None) -> list[dict[str, Any]] | None:
         """
         Retrieve the list of Kibana spaces.
 
         Args:
-            logger (Optional[Type[BaseLogger]]): Optional logger for info and error messages.
+            logger (Type[BaseLogger] | None): Optional logger for info and error messages.
 
         Returns:
-            Optional[list[dict[str, Any]]]: List of spaces as dictionaries if successful, else None.
+            list[dict[str, Any]] | None: List of spaces as dictionaries if successful, else None.
         """
 
         try:
@@ -95,7 +95,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
                     logger.message("[kibapi.NotCertifiedKibana.get_spaces] - Available spaces:")
                     for space in spaces:
                         logger.message(f"- ID: {space['id']}, Name: {space['name']}")
-                return cast(Optional[list[dict[str, Any]]], spaces)
+                return cast(list[dict[str, Any]] | None, spaces)
             msg = f"[kibapi.NotCertifiedKibana.get_spaces] - Unexpected status code: {response.status_code}"
             if logger:
                 logger.error(msg)
@@ -106,21 +106,21 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
                 logger.error(msg)
             return None
 
-    def get_dataviews(self, logger: Optional[Type[BaseLogger]] = None) -> Optional[list[dict[str, Any]]]:
+    def get_dataviews(self, logger: Type[BaseLogger] | None = None) -> list[dict[str, Any]] | None:
         """
         Retrieve all available data views.
 
         Args:
-            logger (Optional[Type[BaseLogger]]): Optional logger for info and error messages.
+            logger (Type[BaseLogger] | None): Optional logger for info and error messages.
 
         Returns:
-            Optional[list[dict[str, Any]]]: List of data views as dictionaries if successful, else None.
+            list[dict[str, Any]] | None: List of data views as dictionaries if successful, else None.
         """
 
         try:
             response = self.get("/api/data_views")
             if response.status_code == 200:
-                return cast(Optional[list[dict[str, Any]]], response.json().get("data_view", []))
+                return cast(list[dict[str, Any]] | None, response.json().get("data_view", []))
             msg = f"[kibapi.NotCertifiedKibana.get_dataviews] - Can't get data views - Code {response.status_code}"
             if logger:
                 logger.error(msg)
@@ -135,25 +135,25 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         self,
         space_id: str,
         data_view_id: str,
-        logger: Optional[Type[BaseLogger]] = None,
-    ) -> Optional[list[dict[str, Any]]]:
+        logger: Type[BaseLogger] | None = None,
+    ) -> list[dict[str, Any]] | None:
         """
         Retrieve the list of fields for a specified space and data view.
 
         Args:
             space_id (str): The ID of the Kibana space.
             data_view_id (str): The ID or pattern of the data view.
-            logger (Optional[Type[BaseLogger]]): Optional logger for info and error messages.
+            logger (Type[BaseLogger] | None): Optional logger for info and error messages.
 
         Returns:
-            Optional[list[dict[str, Any]]]: List of fields as dictionaries if successful, else None.
+            list[dict[str, Any]] | None: List of fields as dictionaries if successful, else None.
         """
 
         try:
             url = f"/s/{space_id}/internal/data_views/fields?pattern={data_view_id}"
             response = self.get(url)
             if response.status_code == 200:
-                return cast(Optional[list[dict[str, Any]]], response.json().get("fields", []))
+                return cast(list[dict[str, Any]] | None, response.json().get("fields", []))
             msg = f"[kibapi.NotCertifiedKibana.get_fields_list] - Unexpected status code: {response.status_code}"
             if logger:
                 logger.error(msg)
@@ -170,9 +170,9 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         space_id: str,
         data_view_id: str,
         field_dict: dict[str, Any],
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        logger: Optional[Type[BaseLogger]] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        logger: Type[BaseLogger] | None = None,
     ) -> list[Any]:
         """
         Retrieve suggested possible values for a given field within a space and data view,
@@ -182,9 +182,9 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             space_id (str): The ID of the Kibana space.
             data_view_id (str): The ID of the data view.
             field_dict (dict[str, Any]): Dictionary describing the field (name, type, etc.).
-            start_date (Optional[str]): ISO 8601 formatted start date for filtering (inclusive).
-            end_date (Optional[str]): ISO 8601 formatted end date for filtering (inclusive).
-            logger (Optional[Type[BaseLogger]]): Optional logger for info and error messages.
+            start_date (str | None): ISO 8601 formatted start date for filtering (inclusive).
+            end_date (str | None): ISO 8601 formatted end date for filtering (inclusive).
+            logger (Type[BaseLogger] | None): Optional logger for info and error messages.
 
         Returns:
             list[Any]: List of suggested field values, empty if none or on error.
