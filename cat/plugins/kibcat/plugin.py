@@ -120,13 +120,19 @@ def check_env_vars() -> str | None:
 
 class FilterItem(BaseModel):
     key: str
-    operator: str = "is"
+    operator: str = "is" # TODO: support other operators
+    value: str
+
+class QueryItem(BaseModel):
+    key: str
+    operator: str = "is" # TODO: support other query operators
     value: str
 
 class FilterData(BaseModel):
     start_time: int = 14400  # Default to 4 hours
     end_time: int = 0
     filters: list[FilterItem] = []
+    query: list[QueryItem] = []
 
 @form
 class FilterForm(CatForm):
@@ -232,14 +238,13 @@ class FilterForm(CatForm):
 
             element["key"] = new_key
 
-        # Build the LLM query to filter the JSON to get the exact parameters to search on Kibana
-        query_filter_data: str = build_refine_filter_json(
+        filter_data: str = build_refine_filter_json(
             str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
         )
 
         # Call the cat using the query
         cat_response: str = (
-            self.cat.llm(query_filter_data).replace("```json", "").replace("`", "")
+            self.cat.llm(filter_data).replace("```json", "").replace("`", "")
         )
 
         try:
@@ -254,7 +259,8 @@ class FilterForm(CatForm):
 
         # Separate kibana query and filters
         filters_cat = json_response.get("filters", [])
-        kql_cat = json_response.get("query", []).replace('"', '\\"') #TODO: remove queries if not specified
+        #kql_cat = json_response.get("query", []).replace('"', '\\"')
+        kql_cat = "" # TODO: implement support for queries from scratch, from the form data for queries
 
         KibCatLogger.message(f"Filters: {filters_cat}")
         KibCatLogger.message(f"Kibana query: {kql_cat}")
@@ -308,5 +314,6 @@ class FilterForm(CatForm):
         return {
             "start_time": response.get("start_time", 14400),
             "end_time": response.get("end_time", 0),
+            "query": [], # TODO: extract query from conversation using extractor template
             "filters": response.get("filters", [])
         }
