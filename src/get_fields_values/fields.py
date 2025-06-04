@@ -1,76 +1,44 @@
-# Currently, while testing, the example part of this module will be there. Once done it will be moved to the examples folder.
-
 from elasticsearch import Elasticsearch
-from dotenv import load_dotenv
+from typing import Any
 import re
-import os
-from elastic_transport import NodeConfig
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-load_dotenv()
-
-BASE_URL = os.getenv("ELASTIC_URL")
-USERNAME = os.getenv("KIBANA_USERNAME")
-PASS = os.getenv("KIBANA_PASS")
-DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
 
 
-if not BASE_URL or not USERNAME or not PASS:
-    msg = "One of the fields is missing."
-
-    print(msg)
-    exit(1)
-
-
-print(f"Connecting to elastic at: {BASE_URL}")
+def extract_base_name(value: str) -> str:
+    """Extracts the base value (The one that is always the same) given a field's value"""
+    match = re.match(r"^([a-zA-Z0-9\-]+?)(?:-[a-z0-9]+.*)?$", value)
+    return match.group(1) if match else value
 
 
-node_config = NodeConfig(
-    scheme="https",
-    host=BASE_URL.split("://")[-1].split(":")[0],
-    port=443,
-    verify_certs=False,
-)
+def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list[str]:
+    """Get all the possible different initial values for the given field"""
 
-es = Elasticsearch([node_config], basic_auth=(USERNAME, PASS))
+    all_base_names: set = set()
+    after_key: Any = None
 
-print(es.info())
-
-
-def extract_base_name(pod_name):
-    match = re.match(r"^([a-zA-Z0-9\-]+?)(?:-[a-z0-9]+.*)?$", pod_name)
-    return match.group(1) if match else pod_name
-
-
-all_base_names = set()
-after_key = None
-
-while True:
-    body = {
-        "size": 0,
-        "aggs": {
-            "pod_names": {
-                "composite": {
-                    "size": 1000,
-                    "sources": [{"pod_name": {"terms": {"field": "kubernetes.pod.name.keyword"}}}],
-                    **({"after": after_key} if after_key else {}),
+    while True:
+        request_body: dict = {
+            "size": 0,
+            "aggs": {
+                "result_values": {
+                    "composite": {
+                        "size": 10000,
+                        "sources": [{"single_result": {"terms": {"field": keyword_name}}}],
+                        **({"after": after_key} if after_key else {}),
+                    }
                 }
-            }
-        },
-    }
+            },
+        }
 
-    response = es.search(index=".ds-container-log-monthly-*", body=body)
-    buckets = response["aggregations"]["pod_names"]["buckets"]
+        response: Any = client.search(index=".ds-container-log-monthly-*", body=request_body)
+        buckets: Any = response["aggregations"]["result_values"]["buckets"]
 
-    for bucket in buckets:
-        pod_name = bucket["key"]["pod_name"]
-        base_name = extract_base_name(pod_name)
-        all_base_names.add(base_name)
+        for bucket in buckets:
+            single_result: str = bucket["key"]["single_result"]
+            base_name: str = extract_base_name(single_result)
+            all_base_names.add(base_name)
 
-    after_key = response["aggregations"]["pod_names"].get("after_key")
-    if not after_key:
-        break
+        after_key: Any = response["aggregations"]["result_values"].get("after_key")
+        if not after_key:
+            break
 
-print(sorted(all_base_names))
+    return sorted(all_base_names)
