@@ -1,4 +1,3 @@
-from cat.mad_hatter.decorators import tool, hook
 from cat.plugins.kibcat.imports.kibcat_api.kibcat_api import (
     NotCertifiedKibana,
     group_fields,
@@ -7,12 +6,15 @@ from cat.plugins.kibcat.imports.kibcat_api.kibcat_api import (
 from cat.plugins.kibcat.imports.json_template.builders import build_template
 from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
-    build_agent_prefix,
     build_add_filter_tool_prefix,
+    build_form_data_extractor,
 )
 from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
 from cat.plugins.kibcat.imports.kibcat_types.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
+
+from pydantic import BaseModel
+from cat.experimental.form import CatForm, form
 
 import json
 import os
@@ -135,177 +137,191 @@ def apply_add_filter_docstring() -> Callable:
 ###################################
 
 
-@hook
-def agent_prompt_prefix(prefix, cat) -> str:
-    """Prompt prefix hook"""
+class FilterItem(BaseModel):
+    key: str
+    operator: str = "is"
+    value: str
 
-    prefix = build_agent_prefix(LOGGER=KibCatLogger)
+class FilterData(BaseModel):
+    start_time: int = 14400  # Default to 4 hours
+    end_time: int = 0
+    filters: list[FilterItem] = []
 
-    return prefix
-
-
-@tool(return_direct=True)
-@apply_add_filter_docstring()
-def add_filter(input, cat):  # [TODO]: add multiple filter options other than `is`
-    """The main tool for the first demo.
-
-    This works with direct questions, like telling the cat the field and the value to filter it for.
-    Also for the most used fields, written in the main_fields.json files the cat will automatically try to understand the needed field.
-
-    The docstring the cat will use to register this tool is generated dynamically to include the main fields.
-    """
-
-    # Check the variables
-    env_check_result: str | None = check_env_vars()
-    if env_check_result:
-        KibCatLogger.error(env_check_result)
-        return env_check_result
-
-    # Initialize the Kibana API class
-    kibana: NotCertifiedKibana = NotCertifiedKibana(
-        base_url=URL, username=USERNAME, password=PASSWORD
-    )
-
-    # Get the list of spaces in Kibana
-    spaces: list[dict[str, Any]] | None = kibana.get_spaces(LOGGER=KibCatLogger)
-
-    # Check if the needed space exists, otherwise return the error
-    if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
-        msg: str = "Specified space ID not found"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    # Get the dataviews from the Kibana API
-    data_views: list[dict[str, Any]] | None = kibana.get_dataviews(LOGGER=KibCatLogger)
-
-    # Check if the dataview needed exists, otherwise return the error
-    if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
-        msg: str = "Specified data view not found"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    # Get all the fields using the Kibana API
-    # Type is ignored because env variables are already checked using the check_env_vars function
-    fields_list: list[dict[str, Any]] | None = kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
-
-    # if the field list cant be loaded, return the error
-    if not fields_list:
-        msg: str = "Not found fields_list"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    # Get cat input in json
-    try:
-        json_input_total: dict = json.loads(input)
-        KibCatLogger.message("Cat JSON parsed correctly")
-
-    except json.JSONDecodeError as e:
-        msg: str = f"Cannot decode cat's JSON input - {e}"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    json_input: dict = json_input_total.get("filters", {})
-    time_ago: int = json_input_total.get("time", 14400)
-    # needed_fields = [element["key"] for element in json_input]
-
-    # Group them with keywords if there are
-    grouped_list: list[list[str]] = group_fields(fields_list)
-
-    # Extract the requested fields that actually exist, to be showed
-    requested_keys: set = {element["key"] for element in json_input}
-    fields_to_visualize: list = [
-        field["name"] for field in fields_list if field["name"] in requested_keys
+@form
+class FilterForm(CatForm):
+    description = "filter logs"
+    model_class = FilterData
+    start_examples = [
+        "filter logs",
+        "obtain logs",
+        "show logs",
+        "search logs"
     ]
+    stop_examples = [
+        "stop filtering logs",
+        "not interested anymore",
+    ]
+    ask_confirm = False
 
-    # Add to the visualize
-    for key, _ in MAIN_FIELDS_DICT.items():
-        if key not in fields_to_visualize:
-            fields_to_visualize.append(key)
+    def submit(self, form_data: FilterData) -> dict[str, str]:
+        """Handles the form submission."""
+        
+        # Check the variables
+        env_check_result: str | None = check_env_vars()
+        if env_check_result:
+            KibCatLogger.error(env_check_result)
+            return env_check_result
 
-    # Associate a group to every field in this dict
-    field_to_group: dict = {field: group for group in grouped_list for field in group}
+        # Initialize the Kibana API class
+        kibana: NotCertifiedKibana = NotCertifiedKibana(
+            base_url=URL, username=USERNAME, password=PASSWORD
+        )
 
-    # Replace the key names with the possible keys in the input
-    for element in json_input:
-        key: str = element.get("key", "")
-        element["key"] = field_to_group.get(key, [key])
+        # Get the list of spaces in Kibana
+        spaces: list[dict[str, Any]] | None = kibana.get_spaces(LOGGER=KibCatLogger)
 
-    # Now add the list of possible values per each one of the keys using the Kibana API
-    for element in json_input:
-        key_fields: list = element.get("key", [])
-        new_key: dict = {}
+        # Check if the needed space exists, otherwise return the error
+        if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
+            msg: str = "Specified space ID not found"
 
-        for field in key_fields:
-            # Get the field's properties
-            field_properties: dict[str, Any] = get_field_properties(fields_list, field)
+            KibCatLogger.error(msg)
+            return msg
 
-            # Get all the field's possible values
-            # Type is ignored because env variables are already checked using the check_env_vars function
-            possible_values: list[Any] = kibana.get_field_possible_values(
-                SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
-            )
+        # Get the dataviews from the Kibana API
+        data_views: list[dict[str, Any]] | None = kibana.get_dataviews(LOGGER=KibCatLogger)
 
-            new_key[field] = possible_values
+        # Check if the dataview needed exists, otherwise return the error
+        if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
+            msg: str = "Specified data view not found"
 
-        element["key"] = new_key
+            KibCatLogger.error(msg)
+            return msg
 
-    # Build the LLM query to filter the JSON to get the exact parameters to search on Kibana
-    query_filter_data: str = build_refine_filter_json(
-        str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
-    )
+        # Get all the fields using the Kibana API
+        # Type is ignored because env variables are already checked using the check_env_vars function
+        fields_list: list[dict[str, Any]] | None = kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
 
-    # Call the cat using the query
-    cat_response: str = (
-        cat.llm(query_filter_data).replace("```json", "").replace("`", "")
-    )
+        # if the field list cant be loaded, return the error
+        if not fields_list:
+            msg: str = "Not found fields_list"
 
-    try:
-        json_response: dict = json.loads(cat_response)
-        KibCatLogger.message("Cat JSON parsed correctly")
+            KibCatLogger.error(msg)
+            return msg
 
-    except json.JSONDecodeError as e:
-        msg: str = f"Cannot decode cat's JSON filtered - {e}"
+        json_input: dict = form_data.get("filters", {})
 
-        KibCatLogger.error(msg)
-        return msg
+        # Group them with keywords if there are
+        grouped_list: list[list[str]] = group_fields(fields_list)
 
-    # Separate kibana query and filters
-    filters_cat = json_response.get("filters", [])
-    kql_cat = json_response.get("query", []).replace('"', '\\"')
+        # Extract the requested fields that actually exist, to be showed
+        requested_keys: set = {element["key"] for element in json_input}
+        fields_to_visualize: list = [
+            field["name"] for field in fields_list if field["name"] in requested_keys
+        ]
 
-    KibCatLogger.message(f"Filters: {filters_cat}")
-    KibCatLogger.message(f"Kibana query: {kql_cat}")
+        # Add to the visualize
+        for key, _ in MAIN_FIELDS_DICT.items():
+            if key not in fields_to_visualize:
+                fields_to_visualize.append(key)
 
-    # Calculate time start and end
-    end_time: datetime = datetime.now(timezone.utc)
-    start_time: datetime = end_time - timedelta(minutes=time_ago)
+        # Associate a group to every field in this dict
+        field_to_group: dict = {field: group for group in grouped_list for field in group}
 
-    start_time_str: str = format_time_kibana(start_time)
-    end_time_str: str = format_time_kibana(end_time)
+        # Replace the key names with the possible keys in the input
+        for element in json_input:
+            key: str = element.get("key", "")
+            element["key"] = field_to_group.get(key, [key])
 
-    # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
-    filters: list = [(element["key"], element["value"]) for element in filters_cat]
+        # Now add the list of possible values per each one of the keys using the Kibana API
+        for element in json_input:
+            key_fields: list = element.get("key", [])
+            new_key: dict = {}
 
-    # Type is ignored because env variables are already checked using the check_env_vars function
-    result_dict: ParsedKibanaURL = build_template(
-        URL + BASE_URL_PART,  # type: ignore
-        start_time_str,
-        end_time_str,
-        fields_to_visualize,
-        filters,
-        DATA_VIEW_ID,  # type: ignore
-        kql_cat,
-        LOGGER=KibCatLogger,
-    )
+            for field in key_fields:
+                # Get the field's properties
+                field_properties: dict[str, Any] = get_field_properties(fields_list, field)
 
-    url: str = build_rison_url_from_json(json_dict=result_dict, LOGGER=KibCatLogger)
+                # Get all the field's possible values
+                # Type is ignored because env variables are already checked using the check_env_vars function
+                possible_values: list[Any] = kibana.get_field_possible_values(
+                    SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
+                )
 
-    KibCatLogger.message(f"Generated URL:\n{url}")
+                new_key[field] = possible_values
 
-    return f'Kibana <a href="{url}" target="_blank">URL</a>'
-    # return f"```json\n{cat_response}\n```"
-    # return f"```json\n{str(json.dumps(json_input,indent=2))}\n```"
+            element["key"] = new_key
+
+        # Build the LLM query to filter the JSON to get the exact parameters to search on Kibana
+        query_filter_data: str = build_refine_filter_json(
+            str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
+        )
+
+        # Call the cat using the query
+        cat_response: str = (
+            self.cat.llm(query_filter_data).replace("```json", "").replace("`", "")
+        )
+
+        try:
+            json_response: dict = json.loads(cat_response)
+            KibCatLogger.message("Cat JSON parsed correctly")
+
+        except json.JSONDecodeError as e:
+            msg: str = f"Cannot decode cat's JSON filtered - {e}"
+
+            KibCatLogger.error(msg)
+            return msg
+
+        # Separate kibana query and filters
+        filters_cat = json_response.get("filters", [])
+        kql_cat = json_response.get("query", []).replace('"', '\\"') #TODO: remove queries if not specified
+
+        KibCatLogger.message(f"Filters: {filters_cat}")
+        KibCatLogger.message(f"Kibana query: {kql_cat}")
+
+        # Calculate time start and end
+        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('end_time', 0))
+        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('start_time', 14400))
+
+        start_time_str: str = format_time_kibana(start_time)
+        end_time_str: str = format_time_kibana(end_time)
+
+        # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
+        filters: list = [(element["key"], element["value"]) for element in filters_cat]
+
+        # Type is ignored because env variables are already checked using the check_env_vars function
+        result_dict: ParsedKibanaURL = build_template(
+            URL + BASE_URL_PART,  # type: ignore
+            start_time_str,
+            end_time_str,
+            fields_to_visualize,
+            filters,
+            DATA_VIEW_ID,  # type: ignore
+            kql_cat,
+            LOGGER=KibCatLogger,
+        )
+
+        url: str = build_rison_url_from_json(json_dict=result_dict, LOGGER=KibCatLogger)
+
+        KibCatLogger.message(f"Generated URL:\n{url}")
+
+        return {
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>'
+        }
+    
+    def extract(self):
+        """Extracts the filter data from the form."""
+
+        history = self.cat.working_memory.stringify_chat_history()
+
+        json_str = self.cat.llm(build_form_data_extractor(
+            conversation_history=history,
+            LOGGER=KibCatLogger
+        )).replace("```json", "").replace("`", "")
+
+        response = json.loads(json_str)
+
+        return {
+            "start_time": response.get("start_time", 14400),
+            "end_time": response.get("end_time", 0),
+            "filters": response.get("filters", [])
+        }

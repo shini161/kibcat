@@ -1,0 +1,40 @@
+{% raw %}Estrai dalla conversazione dei filtri deterministici da applicare alla ricerca su Kibana, e restituisci un JSON strutturato.
+
+I filtri sono strutturati in questo modo:
+[key] [operator] [value]
+dove [key] indica la chiave, ovvero il valore o variabile per cui filtrare
+[operator] indica la relazione tra i valori, i quali possibili valori sono (in lista JSON): ["is"]
+e infine [value] indica il valore a cui si sta comparando.
+
+FORMATO:
+L'output che devi ritornare è un dict JSON contenente tre elementi, "filters", "start_time" e "end_time":
+# "filters"
+"filters": una lista di dizionari che indicano il filtraggio.
+Ogni dizionario ha varie proprietà:
+"key": la [key] da comparare
+"operator": l' [operator] da usare
+"value": il [value] per l'operatore
+# "start_time" 
+"start_time": indica fino a quanto tempo fa estendere la ricerca in *minuti* __se l'utente non specifica questo parametro, è 14400__.
+# "end_time"
+"end_time": indica fino a quanto tempo estendere la ricerca in *minuti* __se l'utente non specifica questo parametro, è 0__.
+
+CONVERSAZIONE:
+{% endraw %}{{ conversation_history }}{% raw %}
+
+ESEMPIO:
+conversazione: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
+output: "{
+"filters": [{
+"key":"example.test.kubernetes.num",
+"operator":"is",
+"value":8
+},
+{
+"key":"log.level",
+"operator":"is",
+"value":"error"
+}],
+"start_time": 50,
+"end_time": 0
+}"{% endraw %}

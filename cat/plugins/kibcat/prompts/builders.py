@@ -75,3 +75,30 @@ def build_add_filter_tool_prefix(
     )
 
     return result
+
+#TODO: remove build_agent_prefix
+
+
+def build_form_data_extractor(
+    conversation_history: str,
+    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+) -> str:
+    """
+    Returns the form data extractor from the template.
+
+    Args:
+        conversation_history (str): The conversation history loaded as string
+        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+
+    Returns:
+        str: The form data extractor.
+    """
+
+    result: str = generic_template_renderer(
+        templates_path=TEMPLATES_FILE_PATH,
+        template_name="form_data_extractor.jinja2",
+        LOGGER=LOGGER,
+        conversation_history=conversation_history,
+    )
+
+    return result
