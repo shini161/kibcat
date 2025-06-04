@@ -1,8 +1,8 @@
 from typing import Optional, Type
 
-from src.json_template.builders import build_template
-from src.logging.base_logger import BaseKibCatLogger
-from src.url_jsonifier.builders import build_rison_url_from_json
+from kiblog import BaseLogger
+from kibtemplate import build_template
+from kiburl import build_rison_url_from_json
 
 
 def generate_kibana_url(
@@ -13,7 +13,7 @@ def generate_kibana_url(
     filters: list[tuple[str, str]],
     data_view_id: str,
     search_query: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+    LOGGER: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
     Generates a Kibana Discover URL based on provided parameters.
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     DATA_VIEW_ID = "logs*"
     SEARCH_QUERY = 'example.name : \\"backend\\"'
 
-    LOGGER = BaseKibCatLogger
+    LOGGER = BaseLogger
 
     try:
         url = generate_kibana_url(

@@ -12,7 +12,7 @@ Questo template è usato per generare l'url di kibana, a partire dai parametri:
 
 Per ora è stato implementato solamente l'operatore `is`.
 
-La funzione per renderizzare il json si trova in `src/json_template/builders.py`. Tramite il file `generate_url_example.py` è possibile testarne il funzionamento generando un link di kibana a partire dai parametri dati.
+La funzione per renderizzare il json si trova in `src/kibtemplate/builders.py`. Tramite il file `example_generate_url.py` è possibile testarne il funzionamento generando un link di kibana a partire dai parametri dati.
 
 ### Importante:
-Per far funzionare correttamente l'import del template json è necessario che il file di template `url.json.jinja2` si trovi nello stesso path di `src/json_template/builders.py`.
+Per far funzionare correttamente l'import del template json è necessario che il file di template `url.json.jinja2` si trovi nello stesso path di `src/kibtemplate/builders.py`.
