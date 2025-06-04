@@ -23,9 +23,6 @@ IMPORTANTE:
 Alcune [key] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:
 {% endraw %}{{ main_fields_str }}{% raw %}
 
-CONVERSAZIONE:
-{% endraw %}{{ conversation_history }}{% raw %}
-
 ESEMPIO:
 conversazione: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
 output: "{
@@ -41,4 +38,7 @@ output: "{
 }],
 "start_time": 50,
 "end_time": 0
-}"{% endraw %}
+}"
+
+CONVERSAZIONE:
+{% endraw %}{{ conversation_history }}

@@ -201,14 +201,7 @@ class FilterForm(CatForm):
                 self._errors.append("end_time: must be less than or equal to start_time")
                 del self._model["end_time"]
         
-        # Validate filters
         # TODO: validate ambiguous filters
-        # if "filters" in self._model:
-        #     self._errors.append("filters: must be a list of FilterItem objects")
-        #     del self._model["filters"]
-        # else:
-        #     self._missing_fields.append("filters")
-        
         if not self._errors and not self._missing_fields:
             self._state = CatFormState.COMPLETE
         else:
@@ -288,7 +281,13 @@ class FilterForm(CatForm):
             key_fields: list = element.get("key", [])
             new_key: dict = {}
 
-            for field in key_fields:
+            # If there are two keys and last one ends with .keyword, add the .keyword field as well
+            if len(key_fields) == 2 and key_fields[-1].endswith(".keyword"):
+                # TODO: implement support for .keyword fields
+                new_key[key_fields[0]] = []
+            else:
+                # If there are no two keys or the last one doesn't end with .keyword, just keep the original key
+                field = key_fields[-1]
                 # Get the field's properties
                 field_properties: dict[str, Any] = get_field_properties(fields_list, field)
 
@@ -299,6 +298,9 @@ class FilterForm(CatForm):
                 )
 
                 new_key[field] = possible_values
+
+                # Remove original key
+                del key_fields[0]
 
             element["key"] = new_key
 
@@ -323,8 +325,7 @@ class FilterForm(CatForm):
 
         # Separate kibana query and filters
         filters_cat = json_response.get("filters", [])
-        #kql_cat = json_response.get("query", []).replace('"', '\\"')
-        kql_cat = "" # TODO: implement support for queries from scratch, from the form data for queries
+        kql_cat = json_response.get("query", "").replace('"', '\\"') # TODO: implement support for queries from scratch, from the form data for queries
 
         KibCatLogger.message(f"Filters: {filters_cat}")
         KibCatLogger.message(f"Kibana query: {kql_cat}")
