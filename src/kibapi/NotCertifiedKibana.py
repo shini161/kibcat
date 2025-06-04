@@ -1,11 +1,9 @@
-from collections import defaultdict
 from typing import Any, Optional, Type, cast
 
-import requests
+import requests  # type: ignore[import-untyped]
+from kibana_api import Kibana
 
-from kibana_api import Kibana # type: ignore
-
-from ..logging.base_logger import BaseKibCatLogger
+from kiblog import BaseLogger
 
 
 class NotCertifiedKibana(Kibana):  # type: ignore[misc]
@@ -21,9 +19,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             if not "files" in kwargs
             else {"kbn-xsrf": "True"}
         )
-        auth: tuple[str, str] | None = (
-            (self.username, self.password) if (self.username and self.password) else None
-        )
+        auth: tuple[str, str] | None = (self.username, self.password) if (self.username and self.password) else None
         return requests.request(headers=headers, auth=auth, verify=False, **kwargs)
 
     def get(self, path: str) -> requests.Response:
@@ -32,9 +28,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
     def post(self, path: str, body: dict[str, Any]) -> requests.Response:
         return self.requester(method="POST", url=f"{self.base_url}{path}", json=body)
 
-    def get_spaces(
-        self, LOGGER: Optional[Type[BaseKibCatLogger]] = None
-    ) -> Optional[list[dict[str, Any]]]:
+    def get_spaces(self, LOGGER: Optional[Type[BaseLogger]] = None) -> Optional[list[dict[str, Any]]]:
         """Gets the spaces as a list of dicts"""
 
         try:
@@ -58,9 +52,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
                 LOGGER.error(msg)
             return None
 
-    def get_dataviews(
-        self, LOGGER: Optional[Type[BaseKibCatLogger]] = None
-    ) -> Optional[list[dict[str, Any]]]:
+    def get_dataviews(self, LOGGER: Optional[Type[BaseLogger]] = None) -> Optional[list[dict[str, Any]]]:
         """Gets all the available data views as a list of dicts"""
         try:
             response = self.get("/api/data_views")
@@ -81,7 +73,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         self,
         space_id: str,
         data_view_id: str,
-        LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+        LOGGER: Optional[Type[BaseLogger]] = None,
     ) -> Optional[list[dict[str, Any]]]:
         """Gets the fields list as a list of dict"""
         try:
@@ -107,7 +99,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         field_dict: dict[str, Any],
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+        LOGGER: Optional[Type[BaseLogger]] = None,
     ) -> list[Any]:
         """Returns a list of suggested values for a field"""
         if not field_dict:
@@ -161,51 +153,3 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             if LOGGER:
                 LOGGER.error(msg)
             return []
-
-
-def group_fields(fields: list[dict[str, Any]]) -> list[list[str]]:
-    """Groups fields with their keyword subfields
-    [[
-        "stream",
-        "stream.keyword"
-    ],
-    [
-        "tags",
-        "tags.keyword"
-    ]]
-    """
-    groups_dict: dict[str, list[str]] = defaultdict(list)
-
-    for field in fields:
-        # Get field name
-        name = field.get("name")
-
-        # Get field parent if it exists
-        parent = field.get("subType", {}).get("multi", {}).get("parent")
-        if name and parent:
-            groups_dict[parent].append(name)
-
-    grouped: set[str] = set()
-    result: list[list[str]] = []
-
-    for field in fields:
-        name = field.get("name")
-        if not name:
-            continue
-
-        if name in groups_dict:
-            group = [name] + groups_dict[name]
-            result.append(group)
-            grouped.update(group)
-        elif name not in grouped:
-            result.append([name])
-            grouped.add(name)
-
-    return result
-
-
-def get_field_properties(fields: list[dict[str, Any]], target_field: str) -> dict[str, Any]:
-    try:
-        return next((d for d in fields if d.get("name") == target_field))
-    except StopIteration as _:
-        return {}
