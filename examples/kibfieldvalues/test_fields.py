@@ -33,7 +33,7 @@ node_config: NodeConfig = NodeConfig(
 es: Elasticsearch = Elasticsearch([node_config], basic_auth=(USERNAME, PASS))
 
 print(es.info())
-print("\n" * 4)
+print()
 
 EXAMPLE_FIELD = "kubernetes.pod.name.keyword"
 

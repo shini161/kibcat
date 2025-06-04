@@ -1,9 +1,9 @@
 from cat.log import log
-from cat.plugins.kibcat.imports.logging.base_logger import BaseKibCatLogger
+from cat.plugins.kibcat.imports.kiblog import BaseLogger
 
 
-class KibCatLogger(BaseKibCatLogger):
-    """Wrapper of the class BaseKibCatLogger to log using the cat's logger"""
+class KibCatLogger(BaseLogger):
+    """Wrapper of the class BaseLogger to log using the cat's logger"""
 
     @staticmethod
     def message(message: str):

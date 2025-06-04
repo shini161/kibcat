@@ -1,17 +1,17 @@
 from cat.mad_hatter.decorators import tool, hook
-from cat.plugins.kibcat.imports.kibcat_api.kibcat_api import (
+from cat.plugins.kibcat.imports.kibapi import (
     NotCertifiedKibana,
     group_fields,
     get_field_properties,
 )
-from cat.plugins.kibcat.imports.json_template.builders import build_template
+from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
 from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
     build_agent_prefix,
     build_add_filter_tool_prefix,
 )
-from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
-from cat.plugins.kibcat.imports.kibcat_types.parsed_kibana_url import ParsedKibanaURL
+from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
+from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 import json
@@ -309,3 +309,9 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
     return f'Kibana <a href="{url}" target="_blank">URL</a>'
     # return f"```json\n{cat_response}\n```"
     # return f"```json\n{str(json.dumps(json_input,indent=2))}\n```"
+
+@tool
+def get_token_usage(input, cat):
+    """Get the token usage for the current session."""
+    input_tokens = cat.working_memory.model_interactions[1].input_tokens
+    return f"Input tokens: {input_tokens}"
