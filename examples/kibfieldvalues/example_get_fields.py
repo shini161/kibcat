@@ -38,4 +38,4 @@ print()
 # This is just an example, it can be changed when using this file
 EXAMPLE_FIELD = "kubernetes.pod.name.keyword"
 
-print(get_initial_part_of_fields(es, EXAMPLE_FIELD))
+print(get_initial_part_of_fields(es, EXAMPLE_FIELD, DATA_VIEW_ID))

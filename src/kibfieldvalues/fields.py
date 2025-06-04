@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum, auto
-from typing import Any, TypeAlias
+from typing import Any, Optional, TypeAlias
 
 from elasticsearch import Elasticsearch
 
@@ -125,7 +125,13 @@ def flatten_dict(keys_dict: dict[str, Any], prefix: str = "") -> list[str]:
     return return_list
 
 
-def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list[str]:
+def get_initial_part_of_fields(
+    client: Elasticsearch,
+    keyword_name: str,
+    index_name: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> list[str]:
     """
     Retrieves all unique initial values present in the specified keyword field across
     the target Elasticsearch indices.
@@ -144,6 +150,29 @@ def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list
     while True:
         request_body: dict[str, Any] = {
             "size": 0,
+            "query": (
+                {
+                    "bool": {
+                        "filter": (
+                            [
+                                {
+                                    "range": {
+                                        "@timestamp": {
+                                            "format": "strict_date_optional_time",
+                                            "gte": start_date,
+                                            "lte": end_date,
+                                        }
+                                    }
+                                }
+                            ]
+                            if start_date and end_date
+                            else []
+                        )
+                    }
+                }
+                if start_date and end_date
+                else {"match_all": {}}
+            ),
             "aggs": {
                 "result_values": {
                     "composite": {
@@ -157,7 +186,7 @@ def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list
             },
         }
 
-        response: Any = client.search(index=".ds-container-log-monthly-*", body=request_body)
+        response: Any = client.search(index=index_name, body=request_body)
         buckets: Any = response["aggregations"]["result_values"]["buckets"]
 
         for bucket in buckets:
