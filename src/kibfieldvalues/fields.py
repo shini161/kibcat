@@ -1,6 +1,7 @@
-from elasticsearch import Elasticsearch
-from typing import Any
 import re
+from typing import Any
+
+from elasticsearch import Elasticsearch
 
 
 def extract_base_name(value: str) -> str:
@@ -12,11 +13,11 @@ def extract_base_name(value: str) -> str:
 def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list[str]:
     """Get all the possible different initial values for the given field"""
 
-    all_base_names: set = set()
+    all_base_names: set[str] = set()
     after_key: Any = None
 
     while True:
-        request_body: dict = {
+        request_body: dict[str, Any] = {
             "size": 0,
             "aggs": {
                 "result_values": {
@@ -37,7 +38,7 @@ def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list
             base_name: str = extract_base_name(single_result)
             all_base_names.add(base_name)
 
-        after_key: Any = response["aggregations"]["result_values"].get("after_key")
+        after_key = response["aggregations"]["result_values"].get("after_key")
         if not after_key:
             break
 
