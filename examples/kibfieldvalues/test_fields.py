@@ -1,9 +1,11 @@
-from elasticsearch import Elasticsearch
+import os
+
+import urllib3
 from dotenv import load_dotenv
 from elastic_transport import NodeConfig
+from elasticsearch import Elasticsearch
+
 from kibfieldvalues import get_initial_part_of_fields
-import os
-import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

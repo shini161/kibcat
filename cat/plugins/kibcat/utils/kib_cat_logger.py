@@ -1,4 +1,5 @@
 from cat.log import log
+
 from cat.plugins.kibcat.imports.kiblog import BaseLogger
 
 

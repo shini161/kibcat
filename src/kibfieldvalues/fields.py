@@ -1,6 +1,5 @@
-from elasticsearch import Elasticsearch
-from typing import Any
 import re
+from typing import Any
 
 from elasticsearch import Elasticsearch
 
@@ -12,7 +11,7 @@ def extract_base_name(value: str) -> str:
 
 
 from collections import defaultdict
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
 
 def recursive_group(
@@ -31,7 +30,7 @@ def recursive_group(
         else:
             # Reached the end of this element — put under a special key
             grouped["_end"].append(element)
-            
+
     if all(len(v) == 1 for v in grouped.values()):
         return elements
 
@@ -39,9 +38,7 @@ def recursive_group(
     for key, group_elements in grouped.items():
         # Check if all items are the same or cannot be split further
         unique_remainders = set(e for e in group_elements)
-        if len(unique_remainders) == 1 or all(
-            len(e.split("-")) <= level + 1 for e in group_elements
-        ):
+        if len(unique_remainders) == 1 or all(len(e.split("-")) <= level + 1 for e in group_elements):
             result[key] = group_elements
         else:
             result[key] = recursive_group(group_elements, level + 1)
@@ -53,7 +50,6 @@ def get_initial_part_of_fields(client: Elasticsearch, keyword_name: str) -> list
     """Get all the possible different initial values for the given field.
     It is different from the suggested values since this one gets the values the field actually has.
     """
-
 
     all_base_names: set[str] = set()
     after_key: Any = None

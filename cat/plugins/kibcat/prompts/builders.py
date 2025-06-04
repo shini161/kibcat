@@ -1,7 +1,8 @@
+import os
 from typing import Optional, Type
+
 from cat.plugins.kibcat.imports.kiblog import BaseLogger
 from cat.plugins.kibcat.imports.kibtemplate.builders import generic_template_renderer
-import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
