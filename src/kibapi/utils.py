@@ -1,3 +1,7 @@
+"""
+Utility functions for the kibapi package.
+"""
+
 from collections import defaultdict
 from typing import Any
 
@@ -44,7 +48,8 @@ def group_fields(fields: list[dict[str, Any]]) -> list[list[str]]:
 
 
 def get_field_properties(fields: list[dict[str, Any]], target_field: str) -> dict[str, Any]:
+    """Returns the properties of a field given its name from a list of field definitions."""
     try:
         return next((d for d in fields if d.get("name") == target_field))
-    except StopIteration as _:
+    except StopIteration:
         return {}

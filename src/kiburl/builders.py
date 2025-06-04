@@ -1,5 +1,7 @@
+"""Functions for rebuilding Kibana URLs from JSON or dict input."""
+
 import json
-from typing import Any, Optional, Type
+from typing import Any, Type
 from urllib.parse import quote
 
 import prison
@@ -9,18 +11,19 @@ from kibtypes import ParsedKibanaURL
 
 
 def build_rison_url_from_json(
-    path: Optional[str] = None,
-    json_dict: Optional[ParsedKibanaURL] = None,
-    LOGGER: Optional[Type[BaseLogger]] = None,
+    path: str | None = None,
+    json_dict: ParsedKibanaURL | None = None,
+    logger: Type[BaseLogger] | None = None,
 ) -> str:
     """
     Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them
     to the base URL fragment. Input can be provided either via a JSON file or a dictionary.
 
     Args:
-        path (Optional[str]): Path to a JSON file containing `base_url`, `_g`, and `_a`. Defaults to None.
-        json_dict (Optional[Type[ParsedKibanaURL]]): Dictionary containing `base_url`, `_g`, and `_a`. Used if `path` is not provided.
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Logger for warnings or status messages.
+        path (str | None): Path to a JSON file containing `base_url`, `_g`, and `_a`. Defaults to None.
+        json_dict (Type[ParsedKibanaURL] | None): Dictionary containing `base_url`, `_g`, and `_a`.
+        Used if `path` is not provided.
+        logger (Type[BaseKibCatLogger] | None): Logger for warnings or status messages.
 
     Returns:
         str: The reconstructed Kibana URL with Rison-encoded `_g` and `_a` parameters in the fragment.
@@ -29,18 +32,18 @@ def build_rison_url_from_json(
         ValueError: If neither `path` nor `json_dict` is provided.
     """
 
-    data: Optional[ParsedKibanaURL] = None
+    data: ParsedKibanaURL | None = None
 
     # if path is passed read and load from file
     if path:
         try:
-            with open(path, "r") as file:
+            with open(path, "r", encoding="utf-8") as file:
                 data = json.load(file)
         except Exception as e:
-            msg = f"build_rison_url_from_json - Failed to load JSON from path.\n{e}"
-            if LOGGER:
-                LOGGER.error(msg)
-            raise IOError(msg)
+            msg = f"[kiburl.build_rison_url_from_json] - Failed to load JSON from path.\n{e}"
+            if logger:
+                logger.error(msg)
+            raise IOError(msg) from e
 
     # otherwise load from json_dict
     elif json_dict:
@@ -48,18 +51,18 @@ def build_rison_url_from_json(
 
     # if data is None
     if not data:
-        msg = f"build_rison_url_from_json - Neither data nor path provided."
-        if LOGGER:
-            LOGGER.error(msg)
+        msg = "[kiburl.build_rison_url_from_json] - Neither data nor path provided."
+        if logger:
+            logger.error(msg)
         raise ValueError(msg)
 
     base_url: str | None = data.get("base_url")
     if not base_url:
-        msg = "build_rison_url_from_json - 'base_url' is missing in the provided data."
+        msg = "[kiburl.build_rison_url_from_json] - 'base_url' is missing in the provided data."
         raise ValueError(msg)
 
-    g_data: Optional[dict[str, Any]] = data.get("_g")
-    a_data: Optional[dict[str, Any]] = data.get("_a")
+    g_data: dict[str, Any] | None = data.get("_g")
+    a_data: dict[str, Any] | None = data.get("_a")
 
     # Convert Python objects back to Rison strings, then URL encode them
     g_encoded: str = quote(prison.dumps(g_data)) if g_data else ""
