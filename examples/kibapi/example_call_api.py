@@ -3,12 +3,8 @@ from typing import Any, Optional, cast
 
 from dotenv import load_dotenv
 
-<<<<<<< HEAD:examples/kibapi/example_call_api.py
 from kibapi import NotCertifiedKibana
 from kiblog import BaseLogger
-=======
-from src.kibcat_api.kibcat_api import NotCertifiedKibana, get_field_properties
->>>>>>> main:examples/kibana_api/call_api_example.py
 
 load_dotenv()
 
