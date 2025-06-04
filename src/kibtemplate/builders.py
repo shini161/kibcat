@@ -1,12 +1,12 @@
 import inspect
 import json
 import os
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, cast
 
 from jinja2 import Template
 
-from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
-from ..logging.base_logger import BaseKibCatLogger
+from kiblog import BaseLogger
+from kibtypes import ParsedKibanaURL
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
@@ -15,7 +15,7 @@ TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
 def generic_template_renderer(
     templates_path: str,
     template_name: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+    LOGGER: Optional[Type[BaseLogger]] = None,
     **kwargs: Any,
 ) -> str:
 
@@ -55,11 +55,9 @@ def generic_template_renderer(
         raise Exception(msg)
 
     if LOGGER:
-        LOGGER.message(
-            f"generic_template_renderer - Rendering {template_name} - Template rendered successfully"
-        )
+        LOGGER.message(f"generic_template_renderer - Rendering {template_name} - Template rendered successfully")
 
-    return output_str
+    return cast(str, output_str)
 
 
 def build_template(
@@ -70,7 +68,7 @@ def build_template(
     filters: list[tuple[str, str]],
     data_view_id: str,
     search_query: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+    LOGGER: Optional[Type[BaseLogger]] = None,
 ) -> ParsedKibanaURL:
     """
     Renders a Kibana URL JSON structure using a Jinja2 template and provided parameters.
@@ -116,8 +114,6 @@ def build_template(
             LOGGER.error(msg)
 
         current_frame = inspect.currentframe()
-        raise json.JSONDecodeError(
-            msg, "builders.py", current_frame.f_lineno if current_frame else 0
-        )
+        raise json.JSONDecodeError(msg, "builders.py", current_frame.f_lineno if current_frame else 0)
 
     return result

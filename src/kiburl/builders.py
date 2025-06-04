@@ -4,14 +4,14 @@ from urllib.parse import quote
 
 import prison
 
-from ..kibcat_types.parsed_kibana_url import ParsedKibanaURL
-from ..logging.base_logger import BaseKibCatLogger
+from kiblog import BaseLogger
+from kibtypes import ParsedKibanaURL
 
 
 def build_rison_url_from_json(
     path: Optional[str] = None,
     json_dict: Optional[ParsedKibanaURL] = None,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+    LOGGER: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
     Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them
