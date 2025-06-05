@@ -8,16 +8,18 @@ from pydantic import BaseModel
 
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import tool
-from cat.plugins.kibcat.imports.kibapi import (NotCertifiedKibana,
-                                               get_field_properties,
-                                               group_fields)
+from cat.plugins.kibcat.imports.kibapi import (
+    NotCertifiedKibana,
+    get_field_properties,
+    group_fields,
+)
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
-from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import \
-    ParsedKibanaURL
-from cat.plugins.kibcat.imports.kiburl.builders import \
-    build_rison_url_from_json
-from cat.plugins.kibcat.prompts.builders import (build_form_data_extractor,
-                                                 build_refine_filter_json)
+from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
+from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
+from cat.plugins.kibcat.prompts.builders import (
+    build_form_data_extractor,
+    build_refine_filter_json,
+)
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 ########## ENV variables ##########
@@ -58,8 +60,8 @@ def get_main_fields_dict() -> dict[str, Any]:
 MAIN_FIELDS_DICT = get_main_fields_dict()
 
 # TODO: move costants like start_time when we decide where to put them
-DEFAULT_START_TIME: int = 14400  # Default to 4 hours
-DEFAULT_END_TIME: int = 0  # Default to now
+DEFAULT_START_TIME: str = "PT4H"  # Default to 4 hours
+DEFAULT_END_TIME: str = "PT0S"  # Default to now
 
 ###################################
 
@@ -135,8 +137,8 @@ class QueryItem(BaseModel):
 
 
 class FilterData(BaseModel):
-    start_time: int = DEFAULT_START_TIME
-    end_time: int = DEFAULT_END_TIME
+    start_time: str = DEFAULT_START_TIME
+    end_time: str = DEFAULT_END_TIME
     filters: list[FilterItem] = []
     query: list[QueryItem] = []
 
