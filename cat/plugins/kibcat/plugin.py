@@ -152,7 +152,14 @@ class FilterForm(CatForm):
         "stop filtering logs",
         "not interested anymore",
     ]
-    ask_confirm = False
+    ask_confirm = True
+
+    _kibana: NotCertifiedKibana = None
+    def __init__(self, cat):
+        self._kibana = NotCertifiedKibana(
+            base_url=URL, username=USERNAME, password=PASSWORD
+        )
+        super().__init__(cat)
 
     def extract(self):
         """Extracts the filter data from the form."""
@@ -177,6 +184,23 @@ class FilterForm(CatForm):
             "filters": response.get("filters", [])
         }
     
+    def _clean_model_data(self, filters):
+        # Write updated values to the form model, in the format expected by the FilterData model
+        self._model = FilterData(
+            start_time=self._model.get("start_time", DEFAULT_START_TIME),
+            end_time=self._model.get("end_time", DEFAULT_END_TIME),
+            filters=[
+                FilterItem(key=list(filter_item["key"].keys())[0] if isinstance(filter_item["key"], dict) else filter_item["key"], 
+                          operator=filter_item.get("operator", "is"), 
+                          value=filter_item["value"])
+                for filter_item in filters
+            ],
+            query=[
+                QueryItem(key=query_item["key"], operator=query_item.get("operator", "is"), value=query_item["value"])
+                for query_item in self._model.get("query", [])
+            ]
+        ).model_dump()
+    
     def validate(self):
         """Validate form data"""
         self._missing_fields = []
@@ -200,29 +224,15 @@ class FilterForm(CatForm):
             if "start_time" in self._model and end_time > self._model["start_time"]:
                 self._errors.append("end_time: must be less than or equal to start_time")
                 del self._model["end_time"]
-        
-        # TODO: validate ambiguous filters
-        if not self._errors and not self._missing_fields:
-            self._state = CatFormState.COMPLETE
-        else:
-            self._state = CatFormState.INCOMPLETE
 
-    def submit(self, form_data: FilterData) -> dict[str, str]:
-        """Handles the form submission."""
-        
         # Check the variables
         env_check_result: str | None = check_env_vars()
         if env_check_result:
             KibCatLogger.error(env_check_result)
             return env_check_result
 
-        # Initialize the Kibana API class
-        kibana: NotCertifiedKibana = NotCertifiedKibana(
-            base_url=URL, username=USERNAME, password=PASSWORD
-        )
-
         # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = kibana.get_spaces(LOGGER=KibCatLogger)
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(LOGGER=KibCatLogger)
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -232,7 +242,7 @@ class FilterForm(CatForm):
             return msg
 
         # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = kibana.get_dataviews(LOGGER=KibCatLogger)
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(LOGGER=KibCatLogger)
 
         # Check if the dataview needed exists, otherwise return the error
         if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
@@ -243,7 +253,7 @@ class FilterForm(CatForm):
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        fields_list: list[dict[str, Any]] | None = kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
+        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
 
         # if the field list cant be loaded, return the error
         if not fields_list:
@@ -252,21 +262,10 @@ class FilterForm(CatForm):
             KibCatLogger.error(msg)
             return msg
 
-        json_input: dict = form_data.get("filters", {})
+        json_input: dict = self._model.get("filters", {})
 
         # Group them with keywords if there are
         grouped_list: list[list[str]] = group_fields(fields_list)
-
-        # Extract the requested fields that actually exist, to be showed
-        requested_keys: set = {element["key"] for element in json_input}
-        fields_to_visualize: list = [
-            field["name"] for field in fields_list if field["name"] in requested_keys
-        ]
-
-        # Add to the visualize
-        for key, _ in MAIN_FIELDS_DICT.items():
-            if key not in fields_to_visualize:
-                fields_to_visualize.append(key)
 
         # Associate a group to every field in this dict
         field_to_group: dict = {field: group for group in grouped_list for field in group}
@@ -293,7 +292,7 @@ class FilterForm(CatForm):
 
                 # Get all the field's possible values
                 # Type is ignored because env variables are already checked using the check_env_vars function
-                possible_values: list[Any] = kibana.get_field_possible_values(
+                possible_values: list[Any] = self._kibana.get_field_possible_values(
                     SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
                 )
 
@@ -304,6 +303,8 @@ class FilterForm(CatForm):
 
             element["key"] = new_key
 
+        # TODO: validate ambiguous filters
+        # TODO: move deterministic validation of accepted values out of the cat
         filter_data: str = build_refine_filter_json(
             str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
         )
@@ -314,31 +315,75 @@ class FilterForm(CatForm):
         )
 
         try:
-            json_response: dict = json.loads(cat_response)
+            json_cat_response: dict = json.loads(cat_response)
             KibCatLogger.message("Cat JSON parsed correctly")
 
+            # TODO: uncomment this when we implement .keyword fields support
+            """
+            if "errors" in json_cat_response:
+                for error in json_cat_response["errors"]:
+                    self._errors.append(error)
+                self._state = CatFormState.INCOMPLETE
+                self._clean_model_data(json_input)
+                return
+            else:
+                json_input = json_cat_response
+            """
         except json.JSONDecodeError as e:
             msg: str = f"Cannot decode cat's JSON filtered - {e}"
 
             KibCatLogger.error(msg)
-            return msg
+            self._errors.append(msg)
+            self._state = CatFormState.INCOMPLETE
+            self._clean_model_data(json_input)
+            return
+        
+        self._clean_model_data(json_input)
+        
+        if not self._errors and not self._missing_fields:
+            self._state = CatFormState.COMPLETE
+        else:
+            self._state = CatFormState.INCOMPLETE
 
-        # Separate kibana query and filters
-        filters_cat = json_response.get("filters", [])
-        kql_cat = json_response.get("query", "").replace('"', '\\"') # TODO: implement support for queries from scratch, from the form data for queries
+    def submit(self, form_data: FilterData) -> dict[str, str]:
+        """
+        Handles the form submission.
+        This function will be called when user wants to exit the form, since the URL generation
+        logic is already implemented in the confirm method.
+        """
 
-        KibCatLogger.message(f"Filters: {filters_cat}")
-        KibCatLogger.message(f"Kibana query: {kql_cat}")
+        # URL GENERATION
+        # Extract the requested fields that actually exist, to be showed
+        form_data_filters: dict = self._model.get("filters", [])
+        form_data_kql = "" # TODO: implement support for queries from scratch, from the form data for queries
+
+        # Get all the fields using the Kibana API
+        # Type is ignored because env variables are already checked using the check_env_vars function
+        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
+        # TODO: remove code duplication with the validate method
+
+        requested_keys: set = {element["key"] for element in form_data_filters}
+        fields_to_visualize: list = [
+            field["name"] for field in fields_list if field["name"] in requested_keys
+        ]
+
+        # Add to the visualize
+        for key, _ in MAIN_FIELDS_DICT.items():
+            if key not in fields_to_visualize:
+                fields_to_visualize.append(key)
+
+        KibCatLogger.message(f"Filters: {form_data_filters}")
+        KibCatLogger.message(f"Kibana query: {form_data_kql}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('end_time'))
-        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=form_data.get('start_time'))
+        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get('end_time'))
+        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get('start_time'))
 
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
 
         # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
-        filters: list = [(element["key"], element["value"]) for element in filters_cat]
+        filters: list = [(element["key"], element["value"]) for element in form_data_filters]
 
         # Type is ignored because env variables are already checked using the check_env_vars function
         result_dict: ParsedKibanaURL = build_template(
@@ -348,7 +393,7 @@ class FilterForm(CatForm):
             fields_to_visualize,
             filters,
             DATA_VIEW_ID,  # type: ignore
-            kql_cat,
+            form_data_kql,
             LOGGER=KibCatLogger,
         )
 
