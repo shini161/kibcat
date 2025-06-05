@@ -441,3 +441,102 @@ Infine tramite le varie funzioni di codifica e decodifica degli URL sviluppate p
 Per esempio la richiesta di esempio specificata precedentemente porterà alla pagina di Kibana:
 
 ![Kibana](/assets/kibana_test_1.PNG)
+
+# 04/06/2025 - 05/06/2025
+
+Field come `kubernetes.pod.name` in cui i valori sono formattati secondo: `nome-**`, per esempio:
+
+```txt
+example-test-7784c589c5-x8xx6
+example-test-7784c389c8-x8646
+example-test-ab35c389c8-x8646
+ex-2353-5353-3423
+ex-2353-5353-8764
+```
+
+necessitano di un metodo differente per poter ottenere tutti i valori possibili, in quanto Kibana non può fornire la lista di tutti i valori essendo che molti `pod.name` con lo stesso nome possono avere il codice della seconda parte diverso.
+
+Nell'esempio riportato sopra sarebbe quindi necessario estrarre i nomi in questo modo, per poterli usare a filtrare effettivamente solo i pod specifici:
+
+```json
+[
+  "example-test",
+  "ex"
+]
+```
+
+Per risolvere questo problema è stato creato un nuovo modulo, [`kibfieldvalues`](https://github.com/shini161/kib-cat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibfieldvalues).
+
+[fields.py](https://github.com/shini161/kib-cat/blob/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibfieldvalues/fields.py)
+```py
+def get_initial_part_of_fields(
+    client: Elasticsearch,
+    keyword_name: str,
+    index_name: str,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> list[str]:
+    """
+    Retrieves all unique initial values present in the specified keyword field across
+    the target Elasticsearch indices.
+    For example it can get the possible values of kubernetes.pod.name
+    Args:
+        client (Elasticsearch): An instance of the Elasticsearch client.
+        keyword_name (str): The name of the keyword field to aggregate values from.
+    Returns:
+        list[str]: A list of unique initial values found for the specified field,
+            processed and grouped.
+    """
+```
+
+La logica utilizzata per poter separare il nome del pod dalla parte identificativa, ovvero il "codice", inizia utilizzando l'API di Elastic per richiedere tutti i valori unici che quella field assume, che essendo relativamente pochi, è possibile elaborare in locale efficientemente.
+
+Successivamente si cerca di trovare le field che iniziano con una stessa stringa, ma differiscono solamente per la parte finale di "codice".
+
+Queste field vengono raggruppate e successivamente la parte di "codice" che differisce per ogni field viene rimossa, effettivamente ricavando la parte univoca che identifica il nome che si sta cercando.
+
+Infine la funzione ritorna una lista di stringhe composta dai nomi univoci utilizzabili per eseguire il filtraggio.
+
+---
+
+Successivamente si è deciso di ampliare la possibilità dei filtri, aggiungendo tutti gli operatori di Kibana, ovvero: `IS`, `IS_NOT`, `IS_ONE_OF`, `IS_NOT_ONE_OF`, `EXISTS`, `NOT_EXISTS`.
+
+Per fare questo è stato aggiornato il modulo [kibtemplate](https://github.com/shini161/kib-cat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate), aggiungendo [altri template](https://github.com/shini161/kib-cat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/templates) `jinja2` per poter implementare tutti gli operatori.
+
+Inoltre per rappresentare un filtro di Kibana è stata creata la classe `KibCatFilter`, che si trova all'interno di [kibcat_filter.py](https://github.com/shini161/kib-cat/blob/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/kibcat_filter.py):
+
+```python
+from enum import Enum, auto
+
+
+class FilterOperators(Enum):
+    """Enumeration of filter operators used in KibCat filtering."""
+
+    IS = auto()
+    IS_NOT = auto()
+    IS_ONE_OF = auto()
+    IS_NOT_ONE_OF = auto()
+    EXISTS = auto()
+    NOT_EXISTS = auto()
+
+
+class KibCatFilter:
+    """
+    Represents a filter condition for querying data.
+
+    Attributes:
+        field (str): The name of the field to filter on.
+        operator (FilterOperators): The filter operation to apply.
+        value (str | list[str]): The value(s) used for filtering.
+    """
+
+    field: str
+    operator: FilterOperators
+    value: str | list[str]
+
+    def __init__(self, field: str, operator: FilterOperators, value: str | list[str]):
+        self.field = field
+        self.operator = operator
+        self.value = value
+
+```
