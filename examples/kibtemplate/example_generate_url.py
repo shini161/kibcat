@@ -1,10 +1,13 @@
-from typing import Optional, Type
+"""Example script for generating a Kibana Discover URL."""
+
+from typing import Type
 
 from kiblog import BaseLogger
 from kibtemplate import build_template
 from kiburl import build_rison_url_from_json
 
 
+# pylint: disable=too-many-positional-arguments
 def generate_kibana_url(
     base_url: str,
     start_time: str,
@@ -13,7 +16,7 @@ def generate_kibana_url(
     filters: list[tuple[str, str]],
     data_view_id: str,
     search_query: str,
-    LOGGER: Optional[Type[BaseLogger]] = None,
+    logger: Type[BaseLogger] | None = None,
 ) -> str:
     """
     Generates a Kibana Discover URL based on provided parameters.
@@ -31,23 +34,23 @@ def generate_kibana_url(
             filters,
             data_view_id,
             search_query,
-            LOGGER=LOGGER,
+            logger=logger,
         )
     except Exception as e:
-        msg = f"generate_example.py - Failed to render template\n{e}"
-        if LOGGER:
-            LOGGER.error(msg)
-        raise RuntimeError(msg)
+        msg = f"[example.kibtemplate] - Failed to render template\n{e}"
+        if logger:
+            logger.error(msg)
+        raise RuntimeError(msg) from e
 
     try:
-        url = build_rison_url_from_json(json_dict=result_json_template)
+        result = build_rison_url_from_json(json_dict=result_json_template)
     except Exception as e:
-        msg = f"generate_example.py - Failed to build Rison URL\n{e}"
-        if LOGGER:
-            LOGGER.error(msg)
-        raise RuntimeError(msg)
+        msg = f"[example.kibtemplate] - Failed to build Rison URL\n{e}"
+        if logger:
+            logger.error(msg)
+        raise RuntimeError(msg) from e
 
-    return url
+    return result
 
 
 if __name__ == "__main__":
@@ -69,7 +72,7 @@ if __name__ == "__main__":
     LOGGER = BaseLogger
 
     try:
-        url = generate_kibana_url(
+        URL = generate_kibana_url(
             base_url=BASE_URL,
             start_time=START_TIME,
             end_time=END_TIME,
@@ -77,16 +80,11 @@ if __name__ == "__main__":
             filters=FILTERS,
             data_view_id=DATA_VIEW_ID,
             search_query=SEARCH_QUERY,
-            LOGGER=LOGGER,
+            logger=LOGGER,
         )
 
         if LOGGER is not None:
-            LOGGER.message(url)
-        else:
-            print(url)
+            LOGGER.message(URL)
     except RuntimeError as e:
-        msg = f"generate_example.py - Error while executing example\n{e}"
         if LOGGER is not None:
-            LOGGER.error(msg)
-        else:
-            print(msg)
+            LOGGER.error(f"[example.kibtemplate] - Error while executing example\n{e}")

@@ -1,0 +1,9 @@
+[MASTER]
+ignore=cat,venv,.venv
+init-hook='import sys; sys.path.append("src")'
+
+[FORMAT]
+max-line-length=120
+
+[MESSAGES CONTROL]
+disable=too-many-arguments,too-many-return-statements

@@ -1,6 +1,9 @@
+"""Script to parse and rebuild a Kibana Rison URL for testing and debugging purposes."""
+
 import json
 import os
 
+from kiblog import BaseLogger as logger
 from kiburl import build_rison_url_from_json, parse_rison_url_to_json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,21 +29,18 @@ KIBANA_URL = (
     "sort:!(!('@timestamp',desc)))"
 )
 
-COLOR_RED = "\033[91m"
-COLOR_RESET = "\033[0m"
-
 # Parse Kibana URL to JSON
-print(f"{COLOR_RED}---- PARSE URL ----{COLOR_RESET}")
-json_url = parse_rison_url_to_json(KIBANA_URL, OUTPUT_FILE_PATH)
-print(json.dumps(json_url, indent=2))
+logger.message("[example.kiburl] - PARSE URL")
+JSON_URL = parse_rison_url_to_json(url=KIBANA_URL, path=OUTPUT_FILE_PATH, logger=logger)
+logger.message(json.dumps(JSON_URL, indent=2))
 
 
 # Rebuild Kibana URL from JSON from file
-print(f"{COLOR_RED}---- BUILD URL FROM FILE ----{COLOR_RESET}")
-rison_url_from_file = build_rison_url_from_json(OUTPUT_FILE_PATH)
-print(f"{rison_url_from_file}")
+logger.message("[example.kiburl] - BUILD URL FROM FILE")
+RISON_URL_FROM_FILE = build_rison_url_from_json(path=OUTPUT_FILE_PATH, logger=logger)
+logger.message(f"{RISON_URL_FROM_FILE}")
 
 # Rebuild Kibana URL from JSON from json
-print(f"{COLOR_RED}---- BUILD URL FROM JSON ----{COLOR_RESET}")
-rison_url_from_json = build_rison_url_from_json(None, json_url)
-print("f{rison_url_from_json}")
+logger.message("[example.kiburl] - BUILD URL FROM JSON")
+RISON_URL_FROM_JSON = build_rison_url_from_json(json_dict=JSON_URL, logger=logger)
+logger.message("f{RISON_URL_FROM_JSON}")

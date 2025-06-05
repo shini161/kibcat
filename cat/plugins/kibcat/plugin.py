@@ -1,23 +1,24 @@
-from cat.mad_hatter.decorators import tool, hook
-from cat.plugins.kibcat.imports.kibapi import (
-    NotCertifiedKibana,
-    group_fields,
-    get_field_properties,
-)
-from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
-from cat.plugins.kibcat.prompts.builders import (
-    build_refine_filter_json,
-    build_agent_prefix,
-    build_add_filter_tool_prefix,
-)
-from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
-from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
-from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-
 import json
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Any
+from typing import Any, Callable
+
+from cat.mad_hatter.decorators import hook, tool
+
+from cat.plugins.kibcat.imports.kibapi import (
+    NotCertifiedKibana,
+    get_field_properties,
+    group_fields,
+)
+from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
+from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
+from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
+from cat.plugins.kibcat.prompts.builders import (
+    build_add_filter_tool_prefix,
+    build_agent_prefix,
+    build_refine_filter_json,
+)
+from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 ########## ENV variables ##########
 
@@ -122,9 +123,7 @@ def apply_add_filter_docstring() -> Callable:
     def decorator(func: Callable) -> Callable:
         main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
 
-        tool_prefix: str = build_add_filter_tool_prefix(
-            main_fields_str=main_fields_str, LOGGER=KibCatLogger
-        )
+        tool_prefix: str = build_add_filter_tool_prefix(main_fields_str=main_fields_str, LOGGER=KibCatLogger)
 
         func.__doc__ = tool_prefix
         return func
@@ -162,9 +161,7 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
         return env_check_result
 
     # Initialize the Kibana API class
-    kibana: NotCertifiedKibana = NotCertifiedKibana(
-        base_url=URL, username=USERNAME, password=PASSWORD
-    )
+    kibana: NotCertifiedKibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
 
     # Get the list of spaces in Kibana
     spaces: list[dict[str, Any]] | None = kibana.get_spaces(LOGGER=KibCatLogger)
@@ -217,9 +214,7 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
 
     # Extract the requested fields that actually exist, to be showed
     requested_keys: set = {element["key"] for element in json_input}
-    fields_to_visualize: list = [
-        field["name"] for field in fields_list if field["name"] in requested_keys
-    ]
+    fields_to_visualize: list = [field["name"] for field in fields_list if field["name"] in requested_keys]
 
     # Add to the visualize
     for key, _ in MAIN_FIELDS_DICT.items():
@@ -254,14 +249,10 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
         element["key"] = new_key
 
     # Build the LLM query to filter the JSON to get the exact parameters to search on Kibana
-    query_filter_data: str = build_refine_filter_json(
-        str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
-    )
+    query_filter_data: str = build_refine_filter_json(str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger)
 
     # Call the cat using the query
-    cat_response: str = (
-        cat.llm(query_filter_data).replace("```json", "").replace("`", "")
-    )
+    cat_response: str = cat.llm(query_filter_data).replace("```json", "").replace("`", "")
 
     try:
         json_response: dict = json.loads(cat_response)
@@ -309,3 +300,10 @@ def add_filter(input, cat):  # [TODO]: add multiple filter options other than `i
     return f'Kibana <a href="{url}" target="_blank">URL</a>'
     # return f"```json\n{cat_response}\n```"
     # return f"```json\n{str(json.dumps(json_input,indent=2))}\n```"
+
+
+@tool
+def get_token_usage(input, cat):
+    """Get the token usage for the current session."""
+    input_tokens = cat.working_memory.model_interactions[1].input_tokens
+    return f"Input tokens: {input_tokens}"

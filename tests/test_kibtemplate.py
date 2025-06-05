@@ -3,18 +3,18 @@
 from kibtemplate import build_template
 from kibtypes import ParsedKibanaURL
 
+# Params for building template
+BASE_URL = "https://kibana.example.com/app/discover"
+START_TIME = "2025-05-09T18:02:40.258Z"
+END_TIME = "2025-05-10T02:05:46.064Z"
+VISIBLE_FIELDS: list[str] = ["field1", "field2", "field3"]
+FILTERS: list[tuple[str, str]] = [("field1", "value1"), ("field2", "value2")]
+DATA_VIEW_ID = "data-view-123"
+SEARCH_QUERY = 'field3 : \\"value3\\"'
+
 
 def test_build_template() -> None:
     """Verify that build_template correctly constructs the Kibana URL JSON structure."""
-
-    # Params for building template
-    BASE_URL = "https://kibana.example.com/app/discover"
-    START_TIME = "2025-05-09T18:02:40.258Z"
-    END_TIME = "2025-05-10T02:05:46.064Z"
-    VISIBLE_FIELDS: list[str] = ["field1", "field2", "field3"]
-    FILTERS: list[tuple[str, str]] = [("field1", "value1"), ("field2", "value2")]
-    DATA_VIEW_ID = "data-view-123"
-    SEARCH_QUERY = 'field3 : \\"value3\\"'
 
     output: ParsedKibanaURL = build_template(
         base_url=BASE_URL,

@@ -1,6 +1,8 @@
+"""Functions for parsing Kibana URLs containing Rison-encoded data."""
+
 import json
 import re
-from typing import Any, Optional, Type
+from typing import Any, Type
 from urllib.parse import unquote, urlparse
 
 import prison
@@ -10,7 +12,7 @@ from kibtypes import ParsedKibanaURL
 
 
 def parse_rison_url_to_json(
-    url: str, path: Optional[str] = None, LOGGER: Optional[Type[BaseLogger]] = None
+    url: str, path: str | None = None, logger: Type[BaseLogger] | None = None
 ) -> ParsedKibanaURL:
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
@@ -18,8 +20,8 @@ def parse_rison_url_to_json(
 
     Args:
         url (str): The full Kibana URL to parse.
-        path (Optional[str]): If provided, the decoded result will be saved to this file as JSON.
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Logger for warnings or messages.
+        path (str | None): If provided, the decoded result will be saved to this file as JSON.
+        logger (Type[BaseKibCatLogger] | None): Logger for warnings or messages.
 
     Returns:
         ParsedKibanaURL: Dictionary with keys:
@@ -40,23 +42,23 @@ def parse_rison_url_to_json(
     g_raw: str = unquote(match_g.group(1)) if match_g else ""
     a_raw: str = unquote(match_a.group(1)) if match_a else ""
 
-    g_parsed: Optional[dict[str, Any]] = None
-    a_parsed: Optional[dict[str, Any]] = None
+    g_parsed: dict[str, Any] | None = None
+    a_parsed: dict[str, Any] | None = None
 
     # Parse the Rison strings into Python objects
     try:
         g_parsed = prison.loads(g_raw) if g_raw else None
-    except Exception as e:
-        msg = f"parse_rison_url_to_json - Failed to parse _g.\n{e}"
-        if LOGGER:
-            LOGGER.warning(msg)
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        msg = f"[kiburl.parse_rison_url_to_json] - Failed to parse _g.\n{e}"
+        if logger:
+            logger.warning(msg)
 
     try:
         a_parsed = prison.loads(a_raw) if a_raw else None
-    except Exception as e:
-        msg = f"parse_rison_url_to_json - Failed to parse _a.\n{e}"
-        if LOGGER:
-            LOGGER.warning(msg)
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        msg = f"[kiburl.parse_rison_url_to_json] - Failed to parse _a.\n{e}"
+        if logger:
+            logger.warning(msg)
 
     result: ParsedKibanaURL = {
         "base_url": url.split("#")[0],  # URL before the fragment
@@ -67,16 +69,16 @@ def parse_rison_url_to_json(
     # if path is passed, save to path
     if path:
         try:
-            with open(path, "w") as file:
+            with open(path, "w", encoding="utf-8") as file:
                 json.dump(result, file, indent=2)
 
-            msg = f"parse_rison_url_to_json - Saved decoded URL to {path}"
-            if LOGGER:
-                LOGGER.message(msg)
+            msg = f"[kiburl.parse_rison_url_to_json] - Saved decoded URL to {path}"
+            if logger:
+                logger.message(msg)
         except Exception as e:
-            msg = f"parse_rison_url_to_json - Failed to save JSON to {path}.\n{e}"
-            if LOGGER:
-                LOGGER.error(msg)
-            raise Exception(msg)
+            msg = f"[kiburl.parse_rison_url_to_json] - Failed to save JSON to {path}.\n{e}"
+            if logger:
+                logger.error(msg)
+            raise RuntimeError(msg) from e
 
     return result
