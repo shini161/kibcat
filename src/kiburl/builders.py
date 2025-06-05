@@ -33,7 +33,7 @@ def build_rison_url_from_json(
         ValueError: If neither `path` nor `json_dict` is provided.
     """
 
-    data: "ParsedKibanaURL" | None = None
+    data: "ParsedKibanaURL | None" = None
 
     # if path is passed read and load from file
     if path:
