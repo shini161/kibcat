@@ -16,10 +16,7 @@ from cat.plugins.kibcat.imports.kibapi import (
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
 from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
-from cat.plugins.kibcat.prompts.builders import (
-    build_refine_filter_json,
-    build_form_data_extractor
-)
+from cat.plugins.kibcat.prompts.builders import build_refine_filter_json, build_form_data_extractor
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 
@@ -127,13 +124,15 @@ def check_env_vars() -> str | None:
 
 class FilterItem(BaseModel):
     key: str
-    operator: str = "is" # TODO: support other operators
+    operator: str = "is"  # TODO: support other operators
     value: str
+
 
 class QueryItem(BaseModel):
     key: str
-    operator: str = "is" # TODO: support other query operators
+    operator: str = "is"  # TODO: support other query operators
     value: str
+
 
 class FilterData(BaseModel):
     start_time: int = DEFAULT_START_TIME
@@ -141,16 +140,12 @@ class FilterData(BaseModel):
     filters: list[FilterItem] = []
     query: list[QueryItem] = []
 
+
 @form
 class FilterForm(CatForm):
     description = "filter logs"
     model_class = FilterData
-    start_examples = [
-        "filter logs",
-        "obtain logs",
-        "show logs",
-        "search logs"
-    ]
+    start_examples = ["filter logs", "obtain logs", "show logs", "search logs"]
     stop_examples = [
         "stop filtering logs",
         "not interested anymore",
@@ -158,11 +153,10 @@ class FilterForm(CatForm):
     ask_confirm = True
 
     _kibana: NotCertifiedKibana = None
+
     def __init__(self, cat):
         # Initialize the NotCertifiedKibana instance with the provided credentials
-        self._kibana = NotCertifiedKibana(
-            base_url=URL, username=USERNAME, password=PASSWORD
-        )
+        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
@@ -175,59 +169,67 @@ class FilterForm(CatForm):
         history = self.cat.working_memory.stringify_chat_history()
         main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
 
-        json_str = self.cat.llm(
-            build_form_data_extractor(
-                conversation_history=history,
-                main_fields_str=main_fields_str,
-                logger=KibCatLogger
+        json_str = (
+            self.cat.llm(
+                build_form_data_extractor(
+                    conversation_history=history, main_fields_str=main_fields_str, logger=KibCatLogger
+                )
             )
-        ).replace("```json", "").replace("`", "")
+            .replace("```json", "")
+            .replace("`", "")
+        )
 
         response = json.loads(json_str)
 
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
             "end_time": response.get("end_time", DEFAULT_END_TIME),
-            "query": [], # TODO: extract query from conversation using extractor template
-            "filters": response.get("filters", [])
+            "query": [],  # TODO: extract query from conversation using extractor template
+            "filters": response.get("filters", []),
         }
-    
+
     def _clean_model_data(self, filters):
         # Write updated values to the form model, in the format expected by the FilterData model
         self._model = FilterData(
             start_time=self._model.get("start_time", DEFAULT_START_TIME),
             end_time=self._model.get("end_time", DEFAULT_END_TIME),
             filters=[
-                FilterItem(key=list(filter_item["key"].keys())[0] if isinstance(filter_item["key"], dict) else filter_item["key"], 
-                          operator=filter_item.get("operator", "is"), 
-                          value=filter_item["value"])
+                FilterItem(
+                    key=(
+                        list(filter_item["key"].keys())[0]
+                        if isinstance(filter_item["key"], dict)
+                        else filter_item["key"]
+                    ),
+                    operator=filter_item.get("operator", "is"),
+                    value=filter_item["value"],
+                )
                 for filter_item in filters
             ],
             query=[
                 QueryItem(key=query_item["key"], operator=query_item.get("operator", "is"), value=query_item["value"])
                 for query_item in self._model.get("query", [])
-            ]
+            ],
         ).model_dump()
-    
+
     def validate(self):
         """Validate form data"""
         self._missing_fields = []
         self._errors = []
-        
+
         # Validate start_time
         if "start_time" in self._model:
             start_time = self._model["start_time"]
             if not isinstance(start_time, int) or start_time < 0:
                 self._errors.append("start_time: must be a positive integer")
                 del self._model["start_time"]
-        
+
         # Validate end_time
         if "end_time" in self._model:
             end_time = self._model["end_time"]
             if not isinstance(end_time, int) or end_time < 0:
                 self._errors.append("end_time: must be a positive integer")
                 del self._model["end_time"]
-            
+
             # Check if end_time is less than start_time
             if "start_time" in self._model and end_time > self._model["start_time"]:
                 self._errors.append("end_time: must be less than or equal to start_time")
@@ -309,14 +311,10 @@ class FilterForm(CatForm):
 
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
-        filter_data: str = build_refine_filter_json(
-            str(json.dumps(json_input, indent=2)), logger=KibCatLogger
-        )
+        filter_data: str = build_refine_filter_json(str(json.dumps(json_input, indent=2)), logger=KibCatLogger)
 
         # Call the cat using the query
-        cat_response: str = (
-            self.cat.llm(filter_data).replace("```json", "").replace("`", "")
-        )
+        cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
 
         try:
             json_cat_response: dict = json.loads(cat_response)
@@ -341,9 +339,9 @@ class FilterForm(CatForm):
             self._state = CatFormState.INCOMPLETE
             self._clean_model_data(json_input)
             return
-        
+
         self._clean_model_data(json_input)
-        
+
         if not self._errors and not self._missing_fields:
             self._state = CatFormState.COMPLETE
         else:
@@ -358,15 +356,13 @@ class FilterForm(CatForm):
         - does not confirm: the form continues to call this method
           or the one that does the extraction (+validation) if new data is provided.
         """
-        
+
         # Extract the requested fields that actually exist, to be showed
         form_data_filters: dict = self._model.get("filters", [])
-        form_data_kql = "" # TODO: implement support for queries from scratch, from the form data for queries
+        form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
         requested_keys: set = {element["key"] for element in form_data_filters}
-        fields_to_visualize: list = [
-            field["name"] for field in self._fields_list if field["name"] in requested_keys
-        ]
+        fields_to_visualize: list = [field["name"] for field in self._fields_list if field["name"] in requested_keys]
 
         # Add to the visualize
         for key, _ in MAIN_FIELDS_DICT.items():
@@ -377,8 +373,8 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Kibana query: {form_data_kql}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get('end_time'))
-        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get('start_time'))
+        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get("end_time"))
+        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get("start_time"))
 
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
@@ -406,7 +402,7 @@ class FilterForm(CatForm):
             "output": f'Kibana <a href="{url}" target="_blank">URL</a>\nVuoi apportare modifiche ai filtri o va bene così?',
             # TODO: replace hard-coded confirmation string
         }
-    
+
     def submit(self, form_data: FilterData) -> dict[str, str]:
         """
         Handles the form submission.

@@ -30,15 +30,19 @@ jobs:
 
     - name: Check formatting with black
       run: black --check .
+      working-directory: ${{ github.workspace }}
 
     - name: Check import sorting with isort
       run: isort --check-only .
+      working-directory: ${{ github.workspace }}
 
     - name: Run mypy
       run: mypy .
+      working-directory: ${{ github.workspace }}
 
     - name: Run pylint
       run: pylint .
+      working-directory: ${{ github.workspace }}
 
     - name: Run tests with pytest
       run: |
