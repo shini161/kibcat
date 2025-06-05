@@ -148,7 +148,7 @@ In questo esempio viene generato l'url di kibana che porta ad un filtraggio dei 
 
 Invece per quanto riguarda l'API di Kibana è stato risolto l'errore del certificato creando un wrapper per la classe dell'API di Kibana su Python
 
-[kibcat_api.py](/src/kibcat_api/kibcat_api.py)
+[kibcat_api.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/kibana-api/kibcat_api.py)
 ```python
 class NotCertifiedKibana(Kibana):
     """Kibana class wrapper to disable SSL certificate"""
@@ -172,11 +172,11 @@ Inoltre per poter ottenere la lista delle field per il filtraggio dei dati (quel
 
 ---
 
-[URL JSONifier](src/url_jsonifier/) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
+[URL JSONifier](https://github.com/shini161/kib-cat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
 
 È stata utilizzata la libreria [`prison`](https://pypi.org/project/prison/) per parsare il rison, regex per identificare gli argomenti dell'URL (ovvero la parte `_g` e la parte `_a`)
 
-[url_jsonifier/utils.py](/src/url_jsonifier/utils.py)
+[url_jsonifier/utils.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier/utils.py)
 ```py
 def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
