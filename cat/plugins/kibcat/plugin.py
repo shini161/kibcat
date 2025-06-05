@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
-
+import isodate
 from pydantic import BaseModel
 
 from cat.mad_hatter.decorators import tool
