@@ -1,3 +1,12 @@
+"""Utilities for processing and organizing Elasticsearch field names.
+
+Includes:
+- Grouping hierarchical field names into nested structures
+- Cleaning up empty nodes from these structures
+- Flattening nested dictionaries into strings
+- Querying Elasticsearch for distinct keyword field values
+"""
+
 from collections import defaultdict
 from enum import Enum, auto
 from typing import Any, Optional, TypeAlias
@@ -41,7 +50,7 @@ def recursive_field_group(elements: set[str] | list[str], level: int = 0) -> Fie
     if not elements:
         return []
 
-    grouped: dict[str, list] = defaultdict(list)
+    grouped: dict[str, list[str]] = defaultdict(list)
 
     for element in elements:
         parts: list[str] = element.split("-")
