@@ -1,0 +1,22 @@
+{
+    "$state": {
+        "store": "appState"
+    },
+    "meta": {
+        "alias": null,
+        "disabled": false,
+        "field": "{{ field_name }}",
+        "index": "{{ data_view_id }}",
+        "key": "{{ field_name }}",
+        "negate": {{ 'true' if negate else 'false' }},
+        "params": {
+            "query": "{{ expected_value }}"
+        },
+        "type": "phrase"
+    },
+    "query": {
+        "match_phrase": {
+            "{{ field_name }}": "{{ expected_value }}"
+        }
+    }
+}

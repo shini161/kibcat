@@ -3,8 +3,8 @@
     "_g": {
         "filters": [],
         "refreshInterval": {
-            "pause": true,
-            "value": 60000
+            "pause": {{ 'true' if refresh_paused else 'false' }},
+            "value": {{ refresh_interval }}
         },
         "time": {
             "from": "{{ start_time }}",
@@ -22,29 +22,8 @@
             "type": "dataView"
         },
         "filters": [
-            {% for field_name, expected_value in filters %}
-                {
-                    "$state": {
-                        "store": "appState"
-                    },
-                    "meta": {
-                        "alias": null,
-                        "disabled": false,
-                        "field": "{{ field_name }}",
-                        "index": "{{ data_view_id }}",
-                        "key": "{{ field_name }}",
-                        "negate": false,
-                        "params": {
-                            "query": "{{ expected_value }}"
-                        },
-                        "type": "phrase"
-                    },
-                    "query": {
-                        "match_phrase": {
-                            "{{ field_name }}" : "{{ expected_value }}"
-                        }
-                    }
-                }{% if not loop.last %},{% endif %}
+            {% for fil in filters %}
+                {{ fil }}{% if not loop.last %},{% endif %}
             {% endfor %}
         ],
         "grid": {

@@ -3,15 +3,22 @@
 import inspect
 import json
 import os
+from collections import defaultdict
 from typing import Any, Type, cast
 
 from jinja2 import Template
 
 from kiblog import BaseLogger
 from kibtypes import ParsedKibanaURL
+from .kibcat_filter import FilterOperators, KibCatFilter
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
+
+TEMPLATE_MAIN_NAME = "url.json.jinja2"
+FILTER_IS_TEMPLATE_NAME = "filter_is.json.jinja2"
+FILTER_IS_ONE_OF_TEMPLATE_NAME = "filter_is_one_of.json.jinja2"
+FILTER_EXISTS_NAME = "filter_exists.json.jinja2"
 
 
 def generic_template_renderer(
@@ -89,8 +96,10 @@ def build_template(
     base_url: str,
     start_time: str,
     end_time: str,
+    refresh_interval: int,
+    is_refresh_paused: bool,
     visible_fields: list[str],
-    filters: list[tuple[str, str]],
+    filters: list[KibCatFilter],
     data_view_id: str,
     search_query: str,
     logger: Type[BaseLogger] | None = None,
@@ -111,33 +120,77 @@ def build_template(
     Returns:
         ParsedKibanaURL: Parsed Kibana URL data loaded from rendered JSON.
     """
-
-    msg = "[kibtemplate.build_template] - Loading template for Kibana URL"
     if logger:
+        msg = "[kibtemplate.build_template] - Generating filters from templates"
+        logger.message(msg)
+
+    rendered_filters: list[str] = []
+
+    for filter in filters:
+        filter_operator: FilterOperators = filter.operator
+        filter_field: str = filter.field
+        filter_value: str | list[str] = filter.value
+
+        template_name: str
+        template_args: dict[str, Any] = {}
+
+        template_args["field_name"] = filter_field
+        template_args["data_view_id"] = data_view_id
+
+        match filter_operator:
+            case FilterOperators.IS | FilterOperators.IS_NOT:
+                template_name = "filter_is.json.jinja2"
+
+                template_args["negate"] = filter_operator is FilterOperators.IS_NOT
+                template_args["expected_value"] = filter_value
+
+            case FilterOperators.IS_ONE_OF | FilterOperators.IS_NOT_ONE_OF:
+                template_name = "filter_is_one_of.json.jinja2"
+
+                template_args["negate"] = filter_operator is FilterOperators.IS_NOT_ONE_OF
+                template_args["expected_values"] = filter_value
+
+            case FilterOperators.EXISTS | FilterOperators.NOT_EXISTS:
+                template_name = "filter_exists.json.jinja2"
+
+                template_args["negate"] = filter_operator is FilterOperators.NOT_EXISTS
+
+            case _:
+                continue
+
+        rendered_filter = generic_template_renderer(
+            templates_path=TEMPLATES_FILE_PATH, template_name=template_name, logger=logger, **template_args
+        )
+        rendered_filters.append(rendered_filter)
+
+    if logger:
+        msg = "[kibtemplate.build_template] - Loading template for Kibana URL"
         logger.message(msg)
 
     output_str = generic_template_renderer(
         templates_path=TEMPLATES_FILE_PATH,
-        template_name="url.json.jinja2",
+        template_name=TEMPLATE_MAIN_NAME,
         logger=logger,
         base_url=base_url,
         start_time=start_time,
         end_time=end_time,
+        refresh_paused=is_refresh_paused,
+        refresh_interval=refresh_interval,
         visible_fields=visible_fields,
-        filters=filters,
+        filters=rendered_filters,
         data_view_id=data_view_id,
         search_query=search_query,
     )
 
-    msg = "[kibtemplate.build_template] - Kibana URL template rendered successfully"
     if logger:
+        msg = "[kibtemplate.build_template] - Kibana URL template rendered successfully"
         logger.message(msg)
 
     try:
         result: ParsedKibanaURL = json.loads(output_str)
     except json.JSONDecodeError as e:
-        msg = f"[kibtemplate.build_template] - Rendered template is not valid JSON.\n{e}"
         if logger:
+            msg = f"[kibtemplate.build_template] - Rendered template is not valid JSON.\n{e}"
             logger.error(msg)
 
         current_frame = inspect.currentframe()
