@@ -6,24 +6,19 @@ repos:
         entry: black
         language: system
         types: [python]
-        args: ["--line-length=120"]
-        exclude: ^cat/
 
       - id: isort
         name: isort
         entry: isort
         language: system
         types: [python]
-        args: ["--profile=black"]
-        exclude: ^cat/
 
       - id: mypy
         name: mypy
         entry: mypy
         language: system
         types: [python]
-        args: ["--config-file=mypy.ini", "--explicit-package-bases", "--namespace-packages"]
-        exclude: ^cat/
+        args: ["--config-file=mypy.ini"]
 
       - id: pylint
         name: pylint
@@ -32,4 +27,3 @@ repos:
         types: [python]
         args: ["--rcfile=.pylintrc", "."]
         pass_filenames: false
-        exclude: ^cat/

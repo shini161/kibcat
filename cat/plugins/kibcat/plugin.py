@@ -88,7 +88,8 @@ def check_env_vars() -> str | None:
     """Checks if the env variables loaded really exist.
 
     Returns:
-        str | None: None if every variable has been loaded successfully, and str with the error message if a variable is missing
+        str | None: None if every variable has been loaded successfully
+                    str with the error message if a variable is missing
     """
     if not URL:
         msg = "URL parameter null"
