@@ -161,11 +161,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-cat/data/
-cat/static/
+cat/
+!cat/plugins/kibcat/
 ollama/
 ollamaui/
-cc_vscode_debugpy/
 .vscode
 
 elastic/
