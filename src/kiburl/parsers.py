@@ -1,5 +1,3 @@
-"""Functions for parsing Kibana URLs containing Rison-encoded data."""
-
 import json
 import re
 from typing import TYPE_CHECKING, cast

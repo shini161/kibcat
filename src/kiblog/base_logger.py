@@ -1,6 +1,3 @@
-"""Base logging class used across KibCat modules."""
-
-
 class BaseLogger:
     """
     Base logger class for all functions in this repository.

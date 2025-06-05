@@ -1,5 +1,3 @@
-"""Example script to connect to Elasticsearch and get field values."""
-
 import os
 from typing import Type
 
