@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from copy import deepcopy
 
 import isodate
 from pydantic import BaseModel
@@ -200,33 +201,6 @@ class FilterForm(CatForm):
             "filters": response.get("filters", []),
         }
 
-    def _clean_model_data(self, filters):
-        # Write updated values to the form model, in the format expected by the FilterData model
-        self._model = FilterData(
-            start_time=self._model.get("start_time", DEFAULT_START_TIME),
-            end_time=self._model.get("end_time", DEFAULT_END_TIME),
-            filters=[
-                FilterItem(
-                    key=(
-                        list(filter_item["key"].keys())[0]
-                        if isinstance(filter_item["key"], dict)
-                        else filter_item["key"]
-                    ),
-                    operator=filter_item.get("operator", "is"),
-                    value=filter_item["value"],
-                )
-                for filter_item in filters
-            ],
-            query=[
-                QueryItem(
-                    key=query_item["key"],
-                    operator=query_item.get("operator", "is"),
-                    value=query_item["value"],
-                )
-                for query_item in self._model.get("query", [])
-            ],
-        ).model_dump()
-
     def validate(self):
         """Validate form data"""
         self._missing_fields = []
@@ -305,7 +279,7 @@ class FilterForm(CatForm):
             KibCatLogger.error(msg)
             return msg
 
-        json_input: dict = self._model.get("filters", {})
+        filters: dict = deepcopy(self._model.get("filters", {}))
 
         # Group them with keywords if there are
         grouped_list: list[list[str]] = group_fields(self._fields_list)
@@ -316,12 +290,12 @@ class FilterForm(CatForm):
         }
 
         # Replace the key names with the possible keys in the input
-        for element in json_input:
+        for element in filters:
             key: str = element.get("key", "")
             element["key"] = field_to_group.get(key, [key])
 
         # Now add the list of possible values per each one of the keys using the Kibana API
-        for element in json_input:
+        for element in filters:
             key_fields: list = element.get("key", [])
             new_key: dict = {}
 
@@ -353,7 +327,7 @@ class FilterForm(CatForm):
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
         filter_data: str = build_refine_filter_json(
-            str(json.dumps(json_input, indent=2)), logger=KibCatLogger
+            str(json.dumps(filters, indent=2)), logger=KibCatLogger
         )
 
         # Call the cat using the query
@@ -371,10 +345,10 @@ class FilterForm(CatForm):
                 for error in json_cat_response["errors"]:
                     self._errors.append(error)
                 self._state = CatFormState.INCOMPLETE
-                self._clean_model_data(json_input)
                 return
             else:
-                json_input = json_cat_response
+                # Update model with the filtered data
+                self._model = json_cat_response
             """
         except json.JSONDecodeError as e:
             msg: str = f"Cannot decode cat's JSON filtered - {e}"
@@ -382,10 +356,7 @@ class FilterForm(CatForm):
             KibCatLogger.error(msg)
             self._errors.append(msg)
             self._state = CatFormState.INCOMPLETE
-            self._clean_model_data(json_input)
             return
-
-        self._clean_model_data(json_input)
 
         if not self._errors and not self._missing_fields:
             self._state = CatFormState.COMPLETE
