@@ -159,9 +159,14 @@ class FilterForm(CatForm):
 
     _kibana: NotCertifiedKibana = None
     def __init__(self, cat):
+        # Initialize the NotCertifiedKibana instance with the provided credentials
         self._kibana = NotCertifiedKibana(
             base_url=URL, username=USERNAME, password=PASSWORD
         )
+
+        # Get all the fields using the Kibana API
+        # Type is ignored because env variables are already checked using the check_env_vars function
+        self._fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
         super().__init__(cat)
 
     def extract(self):
@@ -254,12 +259,8 @@ class FilterForm(CatForm):
             KibCatLogger.error(msg)
             return msg
 
-        # Get all the fields using the Kibana API
-        # Type is ignored because env variables are already checked using the check_env_vars function
-        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
-
         # if the field list cant be loaded, return the error
-        if not fields_list:
+        if not self._fields_list:
             msg: str = "Not found fields_list"
 
             KibCatLogger.error(msg)
@@ -268,7 +269,7 @@ class FilterForm(CatForm):
         json_input: dict = self._model.get("filters", {})
 
         # Group them with keywords if there are
-        grouped_list: list[list[str]] = group_fields(fields_list)
+        grouped_list: list[list[str]] = group_fields(self._fields_list)
 
         # Associate a group to every field in this dict
         field_to_group: dict = {field: group for group in grouped_list for field in group}
@@ -291,7 +292,7 @@ class FilterForm(CatForm):
                 # If there are no two keys or the last one doesn't end with .keyword, just keep the original key
                 field = key_fields[-1]
                 # Get the field's properties
-                field_properties: dict[str, Any] = get_field_properties(fields_list, field)
+                field_properties: dict[str, Any] = get_field_properties(self._fields_list, field)
 
                 # Get all the field's possible values
                 # Type is ignored because env variables are already checked using the check_env_vars function
@@ -362,14 +363,9 @@ class FilterForm(CatForm):
         form_data_filters: dict = self._model.get("filters", [])
         form_data_kql = "" # TODO: implement support for queries from scratch, from the form data for queries
 
-        # Get all the fields using the Kibana API
-        # Type is ignored because env variables are already checked using the check_env_vars function
-        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
-        # TODO: remove code duplication with the validate method
-
         requested_keys: set = {element["key"] for element in form_data_filters}
         fields_to_visualize: list = [
-            field["name"] for field in fields_list if field["name"] in requested_keys
+            field["name"] for field in self._fields_list if field["name"] in requested_keys
         ]
 
         # Add to the visualize
