@@ -2,26 +2,23 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
 import isodate
 from pydantic import BaseModel
 
-from cat.mad_hatter.decorators import tool
 from cat.experimental.form import CatForm, CatFormState, form
-
-from cat.plugins.kibcat.imports.kibapi import (
-    NotCertifiedKibana,
-    get_field_properties,
-    group_fields,
-)
+from cat.mad_hatter.decorators import tool
+from cat.plugins.kibcat.imports.kibapi import (NotCertifiedKibana,
+                                               get_field_properties,
+                                               group_fields)
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
-from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
-from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
-from cat.plugins.kibcat.prompts.builders import (
-    build_refine_filter_json,
-    build_form_data_extractor,
-)
+from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import \
+    ParsedKibanaURL
+from cat.plugins.kibcat.imports.kiburl.builders import \
+    build_rison_url_from_json
+from cat.plugins.kibcat.prompts.builders import (build_form_data_extractor,
+                                                 build_refine_filter_json)
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-
 
 ########## ENV variables ##########
 
@@ -408,12 +405,10 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Kibana query: {form_data_kql}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - timedelta(
-            minutes=self._model.get("end_time", 0)
-        )
-        start_time: datetime = datetime.now(timezone.utc) - timedelta(
-            minutes=self._model.get("start_time", 0)
-        )
+        end_time: datetime = datetime.now(timezone.utc) - \
+            isodate.parse_duration(self._model.get("end_time", "PT0S"))
+        start_time: datetime = datetime.now(timezone.utc) - \
+            isodate.parse_duration(self._model.get("start_time", "PT0S"))
 
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
