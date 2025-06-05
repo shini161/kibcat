@@ -214,7 +214,7 @@ Sono stati aggiunti [test automatici](https://github.com/shini161/kib-cat/tree/7
 
 # 28/05/2025
 
-Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](/src/kibcat_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
+Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](https://github.com/shini161/kib-cat/blob/9c778cf51d0e522d9e5e6957f10a91b5e7a875d3/src/kibana_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
 
 La funzione `get_spaces` serve ad ottenere tutti gli `space` di Kibana e in questo caso per verificare se quello che si vuole usare esista.
 
