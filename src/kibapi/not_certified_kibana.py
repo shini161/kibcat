@@ -1,13 +1,3 @@
-"""
-Module NotCertifiedKibana
-
-This module provides a subclass of the Kibana API client which disables SSL certificate verification
-and adds convenience methods for direct GET and POST requests. It also provides methods to interact
-with Kibana spaces, data views, fields, and fetch possible field values.
-
-The class logs messages optionally via a passed logger.
-"""
-
 from typing import Any, Type, cast
 
 import requests  # type: ignore

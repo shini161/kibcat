@@ -1,7 +1,3 @@
-"""
-Utility functions for the kibapi package.
-"""
-
 from collections import defaultdict
 from typing import Any
 

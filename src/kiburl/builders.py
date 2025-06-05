@@ -1,5 +1,3 @@
-"""Functions for rebuilding Kibana URLs from JSON or dict input."""
-
 import json
 from typing import Any, Type
 from urllib.parse import quote

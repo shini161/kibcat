@@ -1,5 +1,3 @@
-"""Tests for parsing and rebuilding Kibana URLs with Rison encoding."""
-
 from pathlib import Path
 
 import pytest

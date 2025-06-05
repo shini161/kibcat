@@ -1,5 +1,3 @@
-"""Example script for generating a Kibana Discover URL."""
-
 from typing import Type
 
 from kiblog import BaseLogger

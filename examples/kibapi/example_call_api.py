@@ -1,5 +1,3 @@
-"""Example script to connect to Kibana, validate environment and fetch field values."""
-
 import os
 from typing import Any, Type, cast
 
