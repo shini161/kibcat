@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def parse_rison_url_to_json(
-    url: str, path: str | None = None, logger: "Type[BaseLogger]" | None = None
+    url: str, path: str | None = None, logger: "Type[BaseLogger] | None" = None
 ) -> "ParsedKibanaURL":
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,

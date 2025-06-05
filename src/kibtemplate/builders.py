@@ -27,7 +27,7 @@ FILTER_EXISTS_NAME = "filter_exists.json.jinja2"
 def generic_template_renderer(
     templates_path: str,
     template_name: str,
-    logger: "Type[BaseLogger]" | None = None,
+    logger: "Type[BaseLogger] | None" = None,
     **kwargs: "Any",
 ) -> str:
     """
@@ -105,7 +105,7 @@ def build_template(
     search_query: str,
     refresh_interval: int = 60000,
     is_refresh_paused: bool = True,
-    logger: "Type[BaseLogger]" | None = None,
+    logger: "Type[BaseLogger] | None" = None,
 ) -> "ParsedKibanaURL":
     """
     Renders a Kibana URL JSON structure using a Jinja2 template and provided parameters.

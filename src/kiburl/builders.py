@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 def build_rison_url_from_json(
     path: str | None = None,
-    json_dict: "ParsedKibanaURL" | None = None,
-    logger: "Type[BaseLogger]" | None = None,
+    json_dict: "ParsedKibanaURL | None" = None,
+    logger: "Type[BaseLogger] | None" = None,
 ) -> str:
     """
     Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them
