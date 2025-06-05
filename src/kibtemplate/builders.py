@@ -3,7 +3,6 @@
 import inspect
 import json
 import os
-from collections import defaultdict
 from typing import Any, Type, cast
 
 from jinja2 import Template
