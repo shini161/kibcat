@@ -162,7 +162,7 @@ cython_debug/
 #.idea/
 
 cat/
-!cat/plugins/kibcat/
+!cat/plugins/kibcat/**
 ollama/
 ollamaui/
 .vscode
