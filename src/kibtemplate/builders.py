@@ -96,12 +96,12 @@ def build_template(
     base_url: str,
     start_time: str,
     end_time: str,
-    refresh_interval: int,
-    is_refresh_paused: bool,
     visible_fields: list[str],
     filters: list[KibCatFilter],
     data_view_id: str,
     search_query: str,
+    refresh_interval: int = 60000,
+    is_refresh_paused: bool = True,
     logger: Type[BaseLogger] | None = None,
 ) -> ParsedKibanaURL:
     """
