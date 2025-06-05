@@ -4,8 +4,6 @@ from kiblog import BaseLogger
 from kibtemplate import build_template, KibCatFilter, FilterOperators
 from kiburl import build_rison_url_from_json
 
-import os
-
 
 # pylint: disable=too-many-positional-arguments
 def generate_kibana_url(
