@@ -30,5 +30,6 @@ repos:
         entry: pylint
         language: system
         types: [python]
-        args: ["--rcfile=.pylintrc"]
+        args: ["--rcfile=.pylintrc", "."]
+        pass_filenames: false
         exclude: ^cat/

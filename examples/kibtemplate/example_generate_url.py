@@ -26,14 +26,15 @@ def generate_kibana_url(
     """
 
     try:
+        # pylint: disable=duplicate-code
         result_json_template = build_template(
-            base_url,
-            start_time,
-            end_time,
-            visible_fields,
-            filters,
-            data_view_id,
-            search_query,
+            base_url=base_url,
+            start_time=start_time,
+            end_time=end_time,
+            visible_fields=visible_fields,
+            filters=filters,
+            data_view_id=data_view_id,
+            search_query=search_query,
             logger=logger,
         )
     except Exception as e:
@@ -70,6 +71,7 @@ if __name__ == "__main__":
     SEARCH_QUERY = 'example.name : \\"backend\\"'
 
     try:
+        # pylint: disable=duplicate-code
         URL = generate_kibana_url(
             base_url=BASE_URL,
             start_time=START_TIME,

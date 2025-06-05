@@ -116,6 +116,7 @@ def build_template(
     if logger:
         logger.message(msg)
 
+    # pylint: disable=duplicate-code
     output_str = generic_template_renderer(
         templates_path=TEMPLATES_FILE_PATH,
         template_name="url.json.jinja2",
