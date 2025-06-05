@@ -3,8 +3,10 @@
 from typing import Type
 
 from kiblog import BaseLogger
-from kibtemplate import build_template
+from kibtemplate import build_template, KibCatFilter, FilterOperators
 from kiburl import build_rison_url_from_json
+
+import os
 
 
 # pylint: disable=too-many-positional-arguments
@@ -13,7 +15,7 @@ def generate_kibana_url(
     start_time: str,
     end_time: str,
     visible_fields: list[str],
-    filters: list[tuple[str, str]],
+    filters: list[KibCatFilter],
     data_view_id: str,
     search_query: str,
     logger: Type[BaseLogger] | None = None,
@@ -54,34 +56,36 @@ def generate_kibana_url(
     return result
 
 
-if __name__ == "__main__":
-    BASE_URL = "https://localhost:9200/discover"
-    START_TIME = "2025-05-09T18:02:40.258Z"
-    END_TIME = "2025-05-10T02:05:46.064Z"
-    VISIBLE_FIELDS = [
-        "example.id",
-        "log.message",
-        "example.namespace",
-        "example.name",
-        "img.name",
-        "log.level",
-    ]
-    FILTERS = [("example.namespace", "qa"), ("log.level", "ERROR")]
-    DATA_VIEW_ID = "logs*"
-    SEARCH_QUERY = 'example.name : \\"backend\\"'
+BASE_URL = "https://localhost:9200/discover"
+START_TIME = "2025-05-09T18:02:40.258Z"
+END_TIME = "2025-05-10T02:05:46.064Z"
+VISIBLE_FIELDS = [
+    "example.id",
+    "log.message",
+    "example.namespace",
+    "example.name",
+    "img.name",
+    "log.level",
+]
+FILTERS = [
+    KibCatFilter("example.namespace", FilterOperators.IS, "qa"),
+    KibCatFilter("log.level", FilterOperators.IS_NOT, "ERROR"),
+]
+DATA_VIEW_ID = "logs*"
+SEARCH_QUERY = 'example.name : \\"backend\\"'
 
-    try:
-        # pylint: disable=duplicate-code
-        URL = generate_kibana_url(
-            base_url=BASE_URL,
-            start_time=START_TIME,
-            end_time=END_TIME,
-            visible_fields=VISIBLE_FIELDS,
-            filters=FILTERS,
-            data_view_id=DATA_VIEW_ID,
-            search_query=SEARCH_QUERY,
-            logger=BaseLogger,
-        )
-        BaseLogger.message(URL)
-    except RuntimeError as e:
-        BaseLogger.error(f"[example.kibtemplate] - Error while executing example\n{e}")
+try:
+    # pylint: disable=duplicate-code
+    URL = generate_kibana_url(
+        base_url=BASE_URL,
+        start_time=START_TIME,
+        end_time=END_TIME,
+        visible_fields=VISIBLE_FIELDS,
+        filters=FILTERS,
+        data_view_id=DATA_VIEW_ID,
+        search_query=SEARCH_QUERY,
+        logger=BaseLogger,
+    )
+    BaseLogger.message(URL)
+except RuntimeError as e:
+    BaseLogger.error(f"[example.kibtemplate] - Error while executing example\n{e}")

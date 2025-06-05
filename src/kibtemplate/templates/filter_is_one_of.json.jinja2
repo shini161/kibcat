@@ -1,0 +1,38 @@
+{
+    "$state": {
+        "store": "appState"
+    },
+    "meta": {
+        "alias": null,
+        "disabled": false,
+        "field": "{{ field_name }}",
+        "index": "{{ data_view_id }}",
+        "key": "{{ field_name }}",
+        "negate": {{ 'true' if negate else 'false' }},
+        "params": [
+            {% for expected_val in expected_values %}
+                "{{ expected_val }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        "type": "phrases",
+        "value": [
+            {% for expected_val in expected_values %}
+                "{{ expected_val }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    },
+    "query": {
+        "bool": {
+            "minimum_should_match": 1,
+            "should": [
+                {% for expected_val in expected_values %}
+                    {
+                        "match_phrase": {
+                            "{{ field_name }}": "{{ expected_val }}"
+                        }
+                    }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }
+    }
+}

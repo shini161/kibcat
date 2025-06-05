@@ -1,0 +1,20 @@
+{
+    "$state": {
+        "store": "appState"
+    },
+    "meta": {
+        "alias": null,
+        "disabled": false,
+        "field": "{{ field_name }}",
+        "index": "{{ data_view_id }}",
+        "key": "{{ field_name }}",
+        "negate": {{ 'true' if negate else 'false' }},
+        "type": "exists",
+        "value": "exists"
+    },
+    "query": {
+        "exists": {
+        "field": "{{ field_name }}"
+        }
+    }
+}
