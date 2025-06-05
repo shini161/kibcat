@@ -103,9 +103,9 @@ Esempio _a:
 
 # 27/05/2025
 
-Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](/src/json-template/templates/url.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [url_jsonifier](/src/url_jsonifier) per generare il link a Kibana.
+Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](https://github.com/shini161/kib-cat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/json-template/url-template.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [url_jsonifier](https://github.com/shini161/kib-cat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/url_jsonifier/utils.py) per generare il link a Kibana.
 
-Per renderizzare il template è stata creata la funzione `render_dict` in [json_template](/src/json_template/builders.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
+Per renderizzare il template è stata creata la funzione `render_dict` in [load_template.py](https://github.com/shini161/kib-cat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/json-template/load_template.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
 
 I parametri possibili sono:
 
