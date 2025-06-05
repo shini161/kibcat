@@ -6,7 +6,7 @@ Inizio analisi dell'URL di Kibana, encoder e decoder.
 
 *Ora non esistente, in quanto non funzionante correttamente e sostituito da quello svolto nel [giorno 27/05/2025](#27052025).*
 
-[url encoder](/src/url_jsonifier)
+[kibana-url-encode/main.py](https://github.com/shini161/kib-cat/blob/4cdde65917956da75fb754c5048ab9603e11831c/kibana-url-encode/main.py)
 ```python
 import os
 import json
