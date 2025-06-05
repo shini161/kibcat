@@ -157,6 +157,8 @@ def get_initial_part_of_fields(
     after_key: Any = None
 
     while True:
+        use_date = start_date and end_date
+
         request_body: dict[str, Any] = {
             "size": 0,
             "query": (
@@ -174,12 +176,12 @@ def get_initial_part_of_fields(
                                     }
                                 }
                             ]
-                            if start_date and end_date
+                            if use_date
                             else []
                         )
                     }
                 }
-                if start_date and end_date
+                if use_date
                 else {"match_all": {}}
             ),
             "aggs": {
