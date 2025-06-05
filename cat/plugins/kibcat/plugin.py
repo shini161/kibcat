@@ -345,14 +345,16 @@ class FilterForm(CatForm):
         else:
             self._state = CatFormState.INCOMPLETE
 
-    def submit(self, form_data: FilterData) -> dict[str, str]:
+    def message_wait_confirm(self):
         """
-        Handles the form submission.
-        This function will be called when user wants to exit the form, since the URL generation
-        logic is already implemented in the confirm method.
+        Generates URL with the provided information, sends it to the user and asks for confirmation.
+        This function is called after the validation is successful (no errors or missing fields).
+        If the user:
+        - confirms: the conversation will continue with the submit method.
+        - does not confirm: the form continues to call this method
+          or the one that does the extraction (+validation) if new data is provided.
         """
-
-        # URL GENERATION
+        
         # Extract the requested fields that actually exist, to be showed
         form_data_filters: dict = self._model.get("filters", [])
         form_data_kql = "" # TODO: implement support for queries from scratch, from the form data for queries
@@ -402,5 +404,20 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Generated URL:\n{url}")
 
         return {
-            "output": f'Kibana <a href="{url}" target="_blank">URL</a>'
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\nVuoi apportare modifiche ai filtri o va bene così?',
+            # TODO: replace hard-coded confirmation string
+        }
+    
+    def submit(self, form_data: FilterData) -> dict[str, str]:
+        """
+        Handles the form submission.
+        This function will be called when user wants to exit the form, since the URL generation
+        logic is already implemented in the confirm method.
+        """
+
+        output_str = self.cat.llm("Write something like 'Thanks for using KibCat!'")
+        # TODO: remove this part, decide what to do when form closes
+
+        return {
+            "output": output_str,
         }
