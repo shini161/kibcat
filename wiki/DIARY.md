@@ -210,7 +210,7 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
     """
 ```
 
-Sono stati aggiunti [test automatici](/tests/) di workflow su github sul modulo di `url_jsonifier`
+Sono stati aggiunti [test automatici](https://github.com/shini161/kib-cat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/tests) di workflow su github sul modulo di `url_jsonifier`
 
 # 28/05/2025
 
@@ -227,7 +227,7 @@ La funzione `group_fields` si occupa di associare ad ogni field una eventuale ke
 
 La funzione `get_field_properties` si occupa semplicemente di ricavare le proprietà di una specifica field, e serve per ricavare i possibili valori di quella field, tramite la funzione `get_field_possible_values` che fa una richiesta API a Kibana per ottenere dei possibili valori che una field specifica può assumere.
 
-[Esempio: call_api_example.py](/examples/kibana_api/call_api_example.py)
+[Esempio: example.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/kibana-api/example.py)
 
 ```python
 
@@ -260,9 +260,9 @@ if __name__ == "__main__":
 
 ```
 
-Inoltre è stata aggiunta una [classe base di logging](/src/logging/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
+Inoltre è stata aggiunta una [classe base di logging](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/logger/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
 
-[base_logger.py](/src/logging/base_logger.py)
+[base_logger.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/logger/base_logger.py)
 
 ```python
 class BaseKibCatLogger:
@@ -282,7 +282,7 @@ class BaseKibCatLogger:
         print(f"ERROR: {message}")
 ```
 
-Esempio di uso in [cat/plugins/kibcat/utils/kib_cat_logger.py](/cat/plugins/kibcat/utils/kib_cat_logger.py):
+Esempio di uso in [cat/plugins/kibcat/utils/kib_cat_logger.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/container/cat/plugins/kibcat/cat_logger.py):
 
 ```python
 from cat.log import log
@@ -310,7 +310,7 @@ La repo è stata sottoposta ad un refactoring completo in modo da migliorare la 
 
 ---
 
-È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](/cat/plugins/kibcat/plugin.py)
+È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](https://github.com/shini161/kib-cat/blob/5d39c4220c6725c13e423b300b6cd1cd93094d08/cat/plugins/kibcat/plugin.py)
 
 ```python
 @tool(return_direct=True)
