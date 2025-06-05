@@ -3,11 +3,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from pydantic import BaseModel
-
-from cat.mad_hatter.decorators import tool
 from cat.experimental.form import CatForm, CatFormState, form
-
+from cat.mad_hatter.decorators import tool
 from cat.plugins.kibcat.imports.kibapi import (
     NotCertifiedKibana,
     get_field_properties,
@@ -16,9 +13,9 @@ from cat.plugins.kibcat.imports.kibapi import (
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
 from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
-from cat.plugins.kibcat.prompts.builders import build_refine_filter_json, build_form_data_extractor
+from cat.plugins.kibcat.prompts.builders import build_form_data_extractor, build_refine_filter_json
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-
+from pydantic import BaseModel
 
 ########## ENV variables ##########
 
@@ -83,7 +80,8 @@ def check_env_vars() -> str | None:
     """Checks if the env variables loaded really exist.
 
     Returns:
-        str | None: None if every variable has been loaded successfully, and str with the error message if a variable is missing
+        str | None: None if every variable has been loaded successfully
+                    str with the error message if a variable is missing
     """
     if not URL:
         msg = "URL parameter null"
@@ -160,7 +158,9 @@ class FilterForm(CatForm):
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        self._fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
+        self._fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(
+            SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger
+        )
         super().__init__(cat)
 
     def extract(self):
@@ -399,7 +399,8 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Generated URL:\n{url}")
 
         return {
-            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\nVuoi apportare modifiche ai filtri o va bene così?',
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>'
+            "\nVuoi apportare modifiche ai filtri o va bene così?"
             # TODO: replace hard-coded confirmation string
         }
 
