@@ -476,13 +476,3 @@ class FilterForm(CatForm):
         return {
             "output": self.cat.llm(prompt),
         }
-
-
-###################################
-
-
-@tool
-def get_token_usage(input, cat):
-    """Get the token usage for the current session."""
-    input_tokens = cat.working_memory.model_interactions[1].input_tokens
-    return f"Input tokens: {input_tokens}"
