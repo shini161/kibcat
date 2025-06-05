@@ -231,19 +231,32 @@ class FilterForm(CatForm):
         # Validate start_time
         if "start_time" in self._model:
             start_time = self._model["start_time"]
-            if not isinstance(start_time, int) or start_time < 0:
-                self._errors.append("start_time: must be a positive integer")
+            if not isinstance(start_time, str):
+                self._errors.append(
+                    "start_time: must be a string in ISO 8601 Duration Format"
+                )
                 del self._model["start_time"]
 
         # Validate end_time
         if "end_time" in self._model:
             end_time = self._model["end_time"]
-            if not isinstance(end_time, int) or end_time < 0:
-                self._errors.append("end_time: must be a positive integer")
+            if not isinstance(end_time, str):
+                self._errors.append(
+                    "end_time: must be a string in ISO 8601 Duration Format"
+                )
                 del self._model["end_time"]
 
+            def to_timedelta(d: timedelta | Any) -> timedelta:
+                return (
+                    d
+                    if isinstance(d, timedelta)
+                    else d.totimedelta(start=datetime.now())
+                )
+
             # Check if end_time is less than start_time
-            if "start_time" in self._model and end_time > self._model["start_time"]:
+            if "start_time" in self._model and to_timedelta(
+                isodate.parse_duration(end_time)
+            ) > to_timedelta(isodate.parse_duration(self._model["start_time"])):
                 self._errors.append(
                     "end_time: must be less than or equal to start_time"
                 )
@@ -405,10 +418,12 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Kibana query: {form_data_kql}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - \
-            isodate.parse_duration(self._model.get("end_time", "PT0S"))
-        start_time: datetime = datetime.now(timezone.utc) - \
-            isodate.parse_duration(self._model.get("start_time", "PT0S"))
+        end_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
+            self._model.get("end_time", "PT0S")
+        )
+        start_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
+            self._model.get("start_time", "PT0S")
+        )
 
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
