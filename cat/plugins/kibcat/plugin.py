@@ -16,7 +16,10 @@ from cat.plugins.kibcat.imports.kibapi import (
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
 from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
-from cat.plugins.kibcat.prompts.builders import build_refine_filter_json, build_form_data_extractor
+from cat.plugins.kibcat.prompts.builders import (
+    build_refine_filter_json,
+    build_form_data_extractor,
+)
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 
@@ -141,10 +144,10 @@ class FilterData(BaseModel):
     query: list[QueryItem] = []
 
 
-@form
+@form  # type: ignore
 class FilterForm(CatForm):
     description = "filter logs"
-    model_class = FilterData
+    model_class = FilterData  # type: ignore
     start_examples = ["filter logs", "obtain logs", "show logs", "search logs"]
     stop_examples = [
         "stop filtering logs",
@@ -152,15 +155,21 @@ class FilterForm(CatForm):
     ]
     ask_confirm = True
 
-    _kibana: NotCertifiedKibana = None
+    _kibana: NotCertifiedKibana
 
     def __init__(self, cat):
         # Initialize the NotCertifiedKibana instance with the provided credentials
-        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
+        self._kibana = NotCertifiedKibana(
+            base_url=URL, username=USERNAME, password=PASSWORD
+        )
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        self._fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
+        optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
+        if not optional_fields_list:
+            self._fields_list: list[dict[str, Any]] = []
+        else:
+            self._fields_list: list[dict[str, Any]] = optional_fields_list
         super().__init__(cat)
 
     def extract(self):
@@ -172,7 +181,9 @@ class FilterForm(CatForm):
         json_str = (
             self.cat.llm(
                 build_form_data_extractor(
-                    conversation_history=history, main_fields_str=main_fields_str, logger=KibCatLogger
+                    conversation_history=history,
+                    main_fields_str=main_fields_str,
+                    logger=KibCatLogger,
                 )
             )
             .replace("```json", "")
@@ -206,7 +217,11 @@ class FilterForm(CatForm):
                 for filter_item in filters
             ],
             query=[
-                QueryItem(key=query_item["key"], operator=query_item.get("operator", "is"), value=query_item["value"])
+                QueryItem(
+                    key=query_item["key"],
+                    operator=query_item.get("operator", "is"),
+                    value=query_item["value"],
+                )
                 for query_item in self._model.get("query", [])
             ],
         ).model_dump()
@@ -232,7 +247,9 @@ class FilterForm(CatForm):
 
             # Check if end_time is less than start_time
             if "start_time" in self._model and end_time > self._model["start_time"]:
-                self._errors.append("end_time: must be less than or equal to start_time")
+                self._errors.append(
+                    "end_time: must be less than or equal to start_time"
+                )
                 del self._model["end_time"]
 
         # Check the variables
@@ -242,7 +259,9 @@ class FilterForm(CatForm):
             return env_check_result
 
         # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(logger=KibCatLogger)
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(
+            logger=KibCatLogger
+        )
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -252,10 +271,14 @@ class FilterForm(CatForm):
             return msg
 
         # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(logger=KibCatLogger)
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(
+            logger=KibCatLogger
+        )
 
         # Check if the dataview needed exists, otherwise return the error
-        if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
+        if (not data_views) or (
+            not any(view["id"] == DATA_VIEW_ID for view in data_views)
+        ):
             msg: str = "Specified data view not found"
 
             KibCatLogger.error(msg)
@@ -274,7 +297,9 @@ class FilterForm(CatForm):
         grouped_list: list[list[str]] = group_fields(self._fields_list)
 
         # Associate a group to every field in this dict
-        field_to_group: dict = {field: group for group in grouped_list for field in group}
+        field_to_group: dict = {
+            field: group for group in grouped_list for field in group
+        }
 
         # Replace the key names with the possible keys in the input
         for element in json_input:
@@ -294,7 +319,9 @@ class FilterForm(CatForm):
                 # If there are no two keys or the last one doesn't end with .keyword, just keep the original key
                 field = key_fields[-1]
                 # Get the field's properties
-                field_properties: dict[str, Any] = get_field_properties(self._fields_list, field)
+                field_properties: dict[str, Any] = get_field_properties(
+                    self._fields_list, field
+                )
 
                 # Get all the field's possible values
                 # Type is ignored because env variables are already checked using the check_env_vars function
@@ -311,10 +338,14 @@ class FilterForm(CatForm):
 
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
-        filter_data: str = build_refine_filter_json(str(json.dumps(json_input, indent=2)), logger=KibCatLogger)
+        filter_data: str = build_refine_filter_json(
+            str(json.dumps(json_input, indent=2)), logger=KibCatLogger
+        )
 
         # Call the cat using the query
-        cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
+        cat_response: str = (
+            self.cat.llm(filter_data).replace("```json", "").replace("`", "")
+        )
 
         try:
             json_cat_response: dict = json.loads(cat_response)
@@ -362,7 +393,11 @@ class FilterForm(CatForm):
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
         requested_keys: set = {element["key"] for element in form_data_filters}
-        fields_to_visualize: list = [field["name"] for field in self._fields_list if field["name"] in requested_keys]
+        fields_to_visualize: list = [
+            field["name"]
+            for field in self._fields_list
+            if field["name"] in requested_keys
+        ]
 
         # Add to the visualize
         for key, _ in MAIN_FIELDS_DICT.items():
@@ -373,14 +408,20 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Kibana query: {form_data_kql}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get("end_time"))
-        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get("start_time"))
+        end_time: datetime = datetime.now(timezone.utc) - timedelta(
+            minutes=self._model.get("end_time", 0)
+        )
+        start_time: datetime = datetime.now(timezone.utc) - timedelta(
+            minutes=self._model.get("start_time", 0)
+        )
 
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
 
         # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
-        filters: list = [(element["key"], element["value"]) for element in form_data_filters]
+        filters: list = [
+            (element["key"], element["value"]) for element in form_data_filters
+        ]
 
         # Type is ignored because env variables are already checked using the check_env_vars function
         result_dict: ParsedKibanaURL = build_template(
