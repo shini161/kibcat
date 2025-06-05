@@ -69,8 +69,6 @@ if __name__ == "__main__":
     DATA_VIEW_ID = "logs*"
     SEARCH_QUERY = 'example.name : \\"backend\\"'
 
-    LOGGER = BaseLogger
-
     try:
         URL = generate_kibana_url(
             base_url=BASE_URL,
@@ -80,11 +78,8 @@ if __name__ == "__main__":
             filters=FILTERS,
             data_view_id=DATA_VIEW_ID,
             search_query=SEARCH_QUERY,
-            logger=LOGGER,
+            logger=BaseLogger,
         )
-
-        if LOGGER is not None:
-            LOGGER.message(URL)
+        BaseLogger.message(URL)
     except RuntimeError as e:
-        if LOGGER is not None:
-            LOGGER.error(f"[example.kibtemplate] - Error while executing example\n{e}")
+        BaseLogger.error(f"[example.kibtemplate] - Error while executing example\n{e}")

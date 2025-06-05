@@ -1,11 +1,11 @@
 """Type definitions related to parsed Kibana URLs."""
 
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 
 class ParsedKibanaURL(TypedDict):
     """TypedDict describing the structure of a parsed Kibana URL."""
 
     base_url: str
-    _g: Optional[dict[str, Any]]
-    _a: Optional[dict[str, Any]]
+    _g: dict[str, Any] | None
+    _a: dict[str, Any] | None

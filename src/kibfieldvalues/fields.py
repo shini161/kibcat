@@ -9,7 +9,7 @@ Includes:
 
 from collections import defaultdict
 from enum import Enum, auto
-from typing import Any, Optional, TypeAlias
+from typing import Any, TypeAlias
 
 from elasticsearch import Elasticsearch
 
@@ -138,8 +138,8 @@ def get_initial_part_of_fields(
     client: Elasticsearch,
     keyword_name: str,
     index_name: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> list[str]:
     """
     Retrieves all unique initial values present in the specified keyword field across
@@ -165,6 +165,7 @@ def get_initial_part_of_fields(
                 {
                     "bool": {
                         "filter": (
+                            # pylint: disable=duplicate-code
                             [
                                 {
                                     "range": {

@@ -106,7 +106,7 @@ def build_template(
         filters (list[tuple[str, str]]): List of key-value filter pairs.
         data_view_id (str): The data view ID to be used.
         search_query (str): The search query string.
-        logger (Type[BaseKibCatLogger] | None): Optional logger instance for messaging.
+        logger (Type[BaseLogger] | None): Optional logger instance for messaging.
 
     Returns:
         ParsedKibanaURL: Parsed Kibana URL data loaded from rendered JSON.

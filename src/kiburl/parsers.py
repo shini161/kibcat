@@ -21,7 +21,7 @@ def parse_rison_url_to_json(
     Args:
         url (str): The full Kibana URL to parse.
         path (str | None): If provided, the decoded result will be saved to this file as JSON.
-        logger (Type[BaseKibCatLogger] | None): Logger for warnings or messages.
+        logger (Type[BaseLogger] | None): Logger for warnings or messages.
 
     Returns:
         ParsedKibanaURL: Dictionary with keys:

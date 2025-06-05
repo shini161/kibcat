@@ -23,7 +23,7 @@ def build_rison_url_from_json(
         path (str | None): Path to a JSON file containing `base_url`, `_g`, and `_a`. Defaults to None.
         json_dict (Type[ParsedKibanaURL] | None): Dictionary containing `base_url`, `_g`, and `_a`.
         Used if `path` is not provided.
-        logger (Type[BaseKibCatLogger] | None): Logger for warnings or status messages.
+        logger (Type[BaseLogger] | None): Logger for warnings or status messages.
 
     Returns:
         str: The reconstructed Kibana URL with Rison-encoded `_g` and `_a` parameters in the fragment.

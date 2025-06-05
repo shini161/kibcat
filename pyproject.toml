@@ -6,13 +6,3 @@ target-version = ['py310']
 profile = "black"
 line_length = 120
 
-#[mypy]
-#python_version = "3.13"
-#ignore_missing_imports = true
-#strict = true
-#disallow_untyped_defs = false
-#explicit_package_bases = true
-#exclude = "cat/"
-
-#[tool.mypy.prison]
-#ignore_missing_imports = true
