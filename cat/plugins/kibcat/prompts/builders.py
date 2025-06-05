@@ -10,14 +10,14 @@ TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
 
 def build_refine_filter_json(
     json_input: str,
-    LOGGER: Optional[Type[BaseLogger]] = None,
+    logger: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
     Renders a the refine_filter_json using the given parameter.
 
     Args:
         json_input (str): The JSON input for the prompt.
-        LOGGER (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
+        logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
         str: The rendered prompt with the given input JSON.
@@ -26,19 +26,19 @@ def build_refine_filter_json(
     result: str = generic_template_renderer(
         templates_path=TEMPLATES_FILE_PATH,
         template_name="refine_filter_json_prompt.jinja2",
-        LOGGER=LOGGER,
+        logger=logger,
         json_input=json_input,
     )
 
     return result
 
 
-def build_agent_prefix(LOGGER: Optional[Type[BaseLogger]] = None) -> str:
+def build_agent_prefix(logger: Optional[Type[BaseLogger]] = None) -> str:
     """
     Returns the LLM prefix from the template.
 
     Args:
-        LOGGER (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
+        logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
         str: The LLM prefix.
@@ -47,7 +47,7 @@ def build_agent_prefix(LOGGER: Optional[Type[BaseLogger]] = None) -> str:
     result: str = generic_template_renderer(
         templates_path=TEMPLATES_FILE_PATH,
         template_name="cat_prefix.jinja2",
-        LOGGER=LOGGER,
+        logger=logger,
     )
 
     return result
@@ -56,7 +56,7 @@ def build_agent_prefix(LOGGER: Optional[Type[BaseLogger]] = None) -> str:
 def build_form_data_extractor(
     conversation_history: str,
     main_fields_str: str,
-    LOGGER: Optional[Type[BaseLogger]] = None,
+    logger: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
     Returns the form data extractor from the template.
@@ -64,7 +64,7 @@ def build_form_data_extractor(
     Args:
         conversation_history (str): The conversation history loaded as string
         main_fields_str (str): The main fields JSON loaded as string
-        LOGGER (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
+        logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
         str: The form data extractor.
@@ -73,7 +73,7 @@ def build_form_data_extractor(
     result: str = generic_template_renderer(
         templates_path=TEMPLATES_FILE_PATH,
         template_name="form_data_extractor.jinja2",
-        LOGGER=LOGGER,
+        logger=logger,
         conversation_history=conversation_history,
         main_fields_str=main_fields_str,
     )

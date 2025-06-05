@@ -174,7 +174,7 @@ class FilterForm(CatForm):
             build_form_data_extractor(
                 conversation_history=history,
                 main_fields_str=main_fields_str,
-                LOGGER=KibCatLogger
+                logger=KibCatLogger
             )
         ).replace("```json", "").replace("`", "")
 
@@ -235,7 +235,7 @@ class FilterForm(CatForm):
             return env_check_result
 
         # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(LOGGER=KibCatLogger)
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(logger=KibCatLogger)
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -245,7 +245,7 @@ class FilterForm(CatForm):
             return msg
 
         # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(LOGGER=KibCatLogger)
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(logger=KibCatLogger)
 
         # Check if the dataview needed exists, otherwise return the error
         if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
@@ -256,7 +256,7 @@ class FilterForm(CatForm):
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
+        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
 
         # if the field list cant be loaded, return the error
         if not fields_list:
@@ -296,7 +296,7 @@ class FilterForm(CatForm):
                 # Get all the field's possible values
                 # Type is ignored because env variables are already checked using the check_env_vars function
                 possible_values: list[Any] = self._kibana.get_field_possible_values(
-                    SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
+                    SPACE_ID, DATA_VIEW_ID, field_properties, logger=KibCatLogger  # type: ignore
                 )
 
                 new_key[field] = possible_values
@@ -309,7 +309,7 @@ class FilterForm(CatForm):
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
         filter_data: str = build_refine_filter_json(
-            str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger
+            str(json.dumps(json_input, indent=2)), logger=KibCatLogger
         )
 
         # Call the cat using the query
@@ -364,7 +364,7 @@ class FilterForm(CatForm):
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
+        fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
         # TODO: remove code duplication with the validate method
 
         requested_keys: set = {element["key"] for element in form_data_filters}
@@ -399,10 +399,10 @@ class FilterForm(CatForm):
             filters,
             DATA_VIEW_ID,  # type: ignore
             form_data_kql,
-            LOGGER=KibCatLogger,
+            logger=KibCatLogger,
         )
 
-        url: str = build_rison_url_from_json(json_dict=result_dict, LOGGER=KibCatLogger)
+        url: str = build_rison_url_from_json(json_dict=result_dict, logger=KibCatLogger)
 
         KibCatLogger.message(f"Generated URL:\n{url}")
 
