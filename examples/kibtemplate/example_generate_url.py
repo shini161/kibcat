@@ -28,6 +28,7 @@ def generate_kibana_url(
     """
 
     try:
+        # pylint: disable=duplicate-code
         result_json_template = build_template(
             base_url=base_url,
             start_time=start_time,
@@ -73,9 +74,8 @@ FILTERS = [
 DATA_VIEW_ID = "logs*"
 SEARCH_QUERY = 'example.name : \\"backend\\"'
 
-LOGGER = BaseLogger
-
 try:
+    # pylint: disable=duplicate-code
     URL = generate_kibana_url(
         base_url=BASE_URL,
         start_time=START_TIME,
@@ -84,11 +84,8 @@ try:
         filters=FILTERS,
         data_view_id=DATA_VIEW_ID,
         search_query=SEARCH_QUERY,
-        logger=LOGGER,
+        logger=BaseLogger,
     )
-
-    if LOGGER:
-        LOGGER.message(URL)
+    BaseLogger.message(URL)
 except RuntimeError as e:
-    if LOGGER:
-        LOGGER.error(f"[example.kibtemplate] - Error while executing example\n{e}")
+    BaseLogger.error(f"[example.kibtemplate] - Error while executing example\n{e}")

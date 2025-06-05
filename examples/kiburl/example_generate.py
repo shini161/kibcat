@@ -3,7 +3,7 @@
 import json
 import os
 
-from kiblog import BaseLogger as logger
+from kiblog import BaseLogger
 from kiburl import build_rison_url_from_json, parse_rison_url_to_json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,17 +30,17 @@ KIBANA_URL = (
 )
 
 # Parse Kibana URL to JSON
-logger.message("[example.kiburl] - PARSE URL")
-JSON_URL = parse_rison_url_to_json(url=KIBANA_URL, path=OUTPUT_FILE_PATH, logger=logger)
-logger.message(json.dumps(JSON_URL, indent=2))
+BaseLogger.message("[example.kiburl] - PARSE URL")
+JSON_URL = parse_rison_url_to_json(url=KIBANA_URL, path=OUTPUT_FILE_PATH, logger=BaseLogger)
+BaseLogger.message(json.dumps(JSON_URL, indent=2))
 
 
 # Rebuild Kibana URL from JSON from file
-logger.message("[example.kiburl] - BUILD URL FROM FILE")
-RISON_URL_FROM_FILE = build_rison_url_from_json(path=OUTPUT_FILE_PATH, logger=logger)
-logger.message(f"{RISON_URL_FROM_FILE}")
+BaseLogger.message("[example.kiburl] - BUILD URL FROM FILE")
+RISON_URL_FROM_FILE = build_rison_url_from_json(path=OUTPUT_FILE_PATH, logger=BaseLogger)
+BaseLogger.message(f"{RISON_URL_FROM_FILE}")
 
 # Rebuild Kibana URL from JSON from json
-logger.message("[example.kiburl] - BUILD URL FROM JSON")
-RISON_URL_FROM_JSON = build_rison_url_from_json(json_dict=JSON_URL, logger=logger)
-logger.message("f{RISON_URL_FROM_JSON}")
+BaseLogger.message("[example.kiburl] - BUILD URL FROM JSON")
+RISON_URL_FROM_JSON = build_rison_url_from_json(json_dict=JSON_URL, logger=BaseLogger)
+BaseLogger.message("f{RISON_URL_FROM_JSON}")

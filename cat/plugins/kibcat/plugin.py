@@ -1,9 +1,12 @@
 import json
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable
+from typing import Any
 
-from cat.mad_hatter.decorators import hook, tool
+from pydantic import BaseModel
+
+from cat.mad_hatter.decorators import tool
+from cat.experimental.form import CatForm, CatFormState, form
 
 from cat.plugins.kibcat.imports.kibapi import (
     NotCertifiedKibana,
@@ -14,11 +17,11 @@ from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
 from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
 from cat.plugins.kibcat.prompts.builders import (
-    build_add_filter_tool_prefix,
-    build_agent_prefix,
     build_refine_filter_json,
+    build_form_data_extractor
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
+
 
 ########## ENV variables ##########
 
@@ -56,6 +59,10 @@ def get_main_fields_dict() -> dict[str, Any]:
 
 
 MAIN_FIELDS_DICT = get_main_fields_dict()
+
+# TODO: move costants like start_time when we decide where to put them
+DEFAULT_START_TIME: int = 14400  # Default to 4 hours
+DEFAULT_END_TIME: int = 0  # Default to now
 
 ###################################
 
@@ -115,191 +122,307 @@ def check_env_vars() -> str | None:
     return None
 
 
-def apply_add_filter_docstring() -> Callable:
-    """
-    A decorator to set dynamically the tool's docstring.
-    """
-
-    def decorator(func: Callable) -> Callable:
-        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
-
-        tool_prefix: str = build_add_filter_tool_prefix(main_fields_str=main_fields_str, LOGGER=KibCatLogger)
-
-        func.__doc__ = tool_prefix
-        return func
-
-    return decorator
-
-
 ###################################
 
 
-@hook
-def agent_prompt_prefix(prefix, cat) -> str:
-    """Prompt prefix hook"""
+class FilterItem(BaseModel):
+    key: str
+    operator: str = "is" # TODO: support other operators
+    value: str
 
-    prefix = build_agent_prefix(LOGGER=KibCatLogger)
+class QueryItem(BaseModel):
+    key: str
+    operator: str = "is" # TODO: support other query operators
+    value: str
 
-    return prefix
+class FilterData(BaseModel):
+    start_time: int = DEFAULT_START_TIME
+    end_time: int = DEFAULT_END_TIME
+    filters: list[FilterItem] = []
+    query: list[QueryItem] = []
 
+@form
+class FilterForm(CatForm):
+    description = "filter logs"
+    model_class = FilterData
+    start_examples = [
+        "filter logs",
+        "obtain logs",
+        "show logs",
+        "search logs"
+    ]
+    stop_examples = [
+        "stop filtering logs",
+        "not interested anymore",
+    ]
+    ask_confirm = True
 
-@tool(return_direct=True)
-@apply_add_filter_docstring()
-def add_filter(input, cat):  # [TODO]: add multiple filter options other than `is`
-    """The main tool for the first demo.
+    _kibana: NotCertifiedKibana = None
+    def __init__(self, cat):
+        # Initialize the NotCertifiedKibana instance with the provided credentials
+        self._kibana = NotCertifiedKibana(
+            base_url=URL, username=USERNAME, password=PASSWORD
+        )
 
-    This works with direct questions, like telling the cat the field and the value to filter it for.
-    Also for the most used fields, written in the main_fields.json files the cat will automatically try to understand the needed field.
+        # Get all the fields using the Kibana API
+        # Type is ignored because env variables are already checked using the check_env_vars function
+        self._fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
+        super().__init__(cat)
 
-    The docstring the cat will use to register this tool is generated dynamically to include the main fields.
-    """
+    def extract(self):
+        """Extracts the filter data from the form."""
 
-    # Check the variables
-    env_check_result: str | None = check_env_vars()
-    if env_check_result:
-        KibCatLogger.error(env_check_result)
-        return env_check_result
+        history = self.cat.working_memory.stringify_chat_history()
+        main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
 
-    # Initialize the Kibana API class
-    kibana: NotCertifiedKibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
-
-    # Get the list of spaces in Kibana
-    spaces: list[dict[str, Any]] | None = kibana.get_spaces(LOGGER=KibCatLogger)
-
-    # Check if the needed space exists, otherwise return the error
-    if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
-        msg: str = "Specified space ID not found"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    # Get the dataviews from the Kibana API
-    data_views: list[dict[str, Any]] | None = kibana.get_dataviews(LOGGER=KibCatLogger)
-
-    # Check if the dataview needed exists, otherwise return the error
-    if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
-        msg: str = "Specified data view not found"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    # Get all the fields using the Kibana API
-    # Type is ignored because env variables are already checked using the check_env_vars function
-    fields_list: list[dict[str, Any]] | None = kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, LOGGER=KibCatLogger)  # type: ignore
-
-    # if the field list cant be loaded, return the error
-    if not fields_list:
-        msg: str = "Not found fields_list"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    # Get cat input in json
-    try:
-        json_input_total: dict = json.loads(input)
-        KibCatLogger.message("Cat JSON parsed correctly")
-
-    except json.JSONDecodeError as e:
-        msg: str = f"Cannot decode cat's JSON input - {e}"
-
-        KibCatLogger.error(msg)
-        return msg
-
-    json_input: dict = json_input_total.get("filters", {})
-    time_ago: int = json_input_total.get("time", 14400)
-    # needed_fields = [element["key"] for element in json_input]
-
-    # Group them with keywords if there are
-    grouped_list: list[list[str]] = group_fields(fields_list)
-
-    # Extract the requested fields that actually exist, to be showed
-    requested_keys: set = {element["key"] for element in json_input}
-    fields_to_visualize: list = [field["name"] for field in fields_list if field["name"] in requested_keys]
-
-    # Add to the visualize
-    for key, _ in MAIN_FIELDS_DICT.items():
-        if key not in fields_to_visualize:
-            fields_to_visualize.append(key)
-
-    # Associate a group to every field in this dict
-    field_to_group: dict = {field: group for group in grouped_list for field in group}
-
-    # Replace the key names with the possible keys in the input
-    for element in json_input:
-        key: str = element.get("key", "")
-        element["key"] = field_to_group.get(key, [key])
-
-    # Now add the list of possible values per each one of the keys using the Kibana API
-    for element in json_input:
-        key_fields: list = element.get("key", [])
-        new_key: dict = {}
-
-        for field in key_fields:
-            # Get the field's properties
-            field_properties: dict[str, Any] = get_field_properties(fields_list, field)
-
-            # Get all the field's possible values
-            # Type is ignored because env variables are already checked using the check_env_vars function
-            possible_values: list[Any] = kibana.get_field_possible_values(
-                SPACE_ID, DATA_VIEW_ID, field_properties, LOGGER=KibCatLogger  # type: ignore
+        json_str = self.cat.llm(
+            build_form_data_extractor(
+                conversation_history=history,
+                main_fields_str=main_fields_str,
+                logger=KibCatLogger
             )
+        ).replace("```json", "").replace("`", "")
 
-            new_key[field] = possible_values
+        response = json.loads(json_str)
 
-        element["key"] = new_key
+        return {
+            "start_time": response.get("start_time", DEFAULT_START_TIME),
+            "end_time": response.get("end_time", DEFAULT_END_TIME),
+            "query": [], # TODO: extract query from conversation using extractor template
+            "filters": response.get("filters", [])
+        }
+    
+    def _clean_model_data(self, filters):
+        # Write updated values to the form model, in the format expected by the FilterData model
+        self._model = FilterData(
+            start_time=self._model.get("start_time", DEFAULT_START_TIME),
+            end_time=self._model.get("end_time", DEFAULT_END_TIME),
+            filters=[
+                FilterItem(key=list(filter_item["key"].keys())[0] if isinstance(filter_item["key"], dict) else filter_item["key"], 
+                          operator=filter_item.get("operator", "is"), 
+                          value=filter_item["value"])
+                for filter_item in filters
+            ],
+            query=[
+                QueryItem(key=query_item["key"], operator=query_item.get("operator", "is"), value=query_item["value"])
+                for query_item in self._model.get("query", [])
+            ]
+        ).model_dump()
+    
+    def validate(self):
+        """Validate form data"""
+        self._missing_fields = []
+        self._errors = []
+        
+        # Validate start_time
+        if "start_time" in self._model:
+            start_time = self._model["start_time"]
+            if not isinstance(start_time, int) or start_time < 0:
+                self._errors.append("start_time: must be a positive integer")
+                del self._model["start_time"]
+        
+        # Validate end_time
+        if "end_time" in self._model:
+            end_time = self._model["end_time"]
+            if not isinstance(end_time, int) or end_time < 0:
+                self._errors.append("end_time: must be a positive integer")
+                del self._model["end_time"]
+            
+            # Check if end_time is less than start_time
+            if "start_time" in self._model and end_time > self._model["start_time"]:
+                self._errors.append("end_time: must be less than or equal to start_time")
+                del self._model["end_time"]
 
-    # Build the LLM query to filter the JSON to get the exact parameters to search on Kibana
-    query_filter_data: str = build_refine_filter_json(str(json.dumps(json_input, indent=2)), LOGGER=KibCatLogger)
+        # Check the variables
+        env_check_result: str | None = check_env_vars()
+        if env_check_result:
+            KibCatLogger.error(env_check_result)
+            return env_check_result
 
-    # Call the cat using the query
-    cat_response: str = cat.llm(query_filter_data).replace("```json", "").replace("`", "")
+        # Get the list of spaces in Kibana
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(logger=KibCatLogger)
 
-    try:
-        json_response: dict = json.loads(cat_response)
-        KibCatLogger.message("Cat JSON parsed correctly")
+        # Check if the needed space exists, otherwise return the error
+        if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
+            msg: str = "Specified space ID not found"
 
-    except json.JSONDecodeError as e:
-        msg: str = f"Cannot decode cat's JSON filtered - {e}"
+            KibCatLogger.error(msg)
+            return msg
 
-        KibCatLogger.error(msg)
-        return msg
+        # Get the dataviews from the Kibana API
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(logger=KibCatLogger)
 
-    # Separate kibana query and filters
-    filters_cat = json_response.get("filters", [])
-    kql_cat = json_response.get("query", []).replace('"', '\\"')
+        # Check if the dataview needed exists, otherwise return the error
+        if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
+            msg: str = "Specified data view not found"
 
-    KibCatLogger.message(f"Filters: {filters_cat}")
-    KibCatLogger.message(f"Kibana query: {kql_cat}")
+            KibCatLogger.error(msg)
+            return msg
 
-    # Calculate time start and end
-    end_time: datetime = datetime.now(timezone.utc)
-    start_time: datetime = end_time - timedelta(minutes=time_ago)
+        # if the field list cant be loaded, return the error
+        if not self._fields_list:
+            msg: str = "Not found fields_list"
 
-    start_time_str: str = format_time_kibana(start_time)
-    end_time_str: str = format_time_kibana(end_time)
+            KibCatLogger.error(msg)
+            return msg
 
-    # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
-    filters: list = [(element["key"], element["value"]) for element in filters_cat]
+        json_input: dict = self._model.get("filters", {})
 
-    # Type is ignored because env variables are already checked using the check_env_vars function
-    result_dict: ParsedKibanaURL = build_template(
-        URL + BASE_URL_PART,  # type: ignore
-        start_time_str,
-        end_time_str,
-        fields_to_visualize,
-        filters,
-        DATA_VIEW_ID,  # type: ignore
-        kql_cat,
-        LOGGER=KibCatLogger,
-    )
+        # Group them with keywords if there are
+        grouped_list: list[list[str]] = group_fields(self._fields_list)
 
-    url: str = build_rison_url_from_json(json_dict=result_dict, LOGGER=KibCatLogger)
+        # Associate a group to every field in this dict
+        field_to_group: dict = {field: group for group in grouped_list for field in group}
 
-    KibCatLogger.message(f"Generated URL:\n{url}")
+        # Replace the key names with the possible keys in the input
+        for element in json_input:
+            key: str = element.get("key", "")
+            element["key"] = field_to_group.get(key, [key])
 
-    return f'Kibana <a href="{url}" target="_blank">URL</a>'
-    # return f"```json\n{cat_response}\n```"
-    # return f"```json\n{str(json.dumps(json_input,indent=2))}\n```"
+        # Now add the list of possible values per each one of the keys using the Kibana API
+        for element in json_input:
+            key_fields: list = element.get("key", [])
+            new_key: dict = {}
+
+            # If there are two keys and last one ends with .keyword, add the .keyword field as well
+            if len(key_fields) == 2 and key_fields[-1].endswith(".keyword"):
+                # TODO: implement support for .keyword fields
+                new_key[key_fields[0]] = []
+            else:
+                # If there are no two keys or the last one doesn't end with .keyword, just keep the original key
+                field = key_fields[-1]
+                # Get the field's properties
+                field_properties: dict[str, Any] = get_field_properties(self._fields_list, field)
+
+                # Get all the field's possible values
+                # Type is ignored because env variables are already checked using the check_env_vars function
+                possible_values: list[Any] = self._kibana.get_field_possible_values(
+                    SPACE_ID, DATA_VIEW_ID, field_properties, logger=KibCatLogger  # type: ignore
+                )
+
+                new_key[field] = possible_values
+
+                # Remove original key
+                del key_fields[0]
+
+            element["key"] = new_key
+
+        # TODO: validate ambiguous filters
+        # TODO: move deterministic validation of accepted values out of the cat
+        filter_data: str = build_refine_filter_json(
+            str(json.dumps(json_input, indent=2)), logger=KibCatLogger
+        )
+
+        # Call the cat using the query
+        cat_response: str = (
+            self.cat.llm(filter_data).replace("```json", "").replace("`", "")
+        )
+
+        try:
+            json_cat_response: dict = json.loads(cat_response)
+            KibCatLogger.message("Cat JSON parsed correctly")
+
+            # TODO: uncomment this when we implement .keyword fields support
+            """
+            if "errors" in json_cat_response:
+                for error in json_cat_response["errors"]:
+                    self._errors.append(error)
+                self._state = CatFormState.INCOMPLETE
+                self._clean_model_data(json_input)
+                return
+            else:
+                json_input = json_cat_response
+            """
+        except json.JSONDecodeError as e:
+            msg: str = f"Cannot decode cat's JSON filtered - {e}"
+
+            KibCatLogger.error(msg)
+            self._errors.append(msg)
+            self._state = CatFormState.INCOMPLETE
+            self._clean_model_data(json_input)
+            return
+        
+        self._clean_model_data(json_input)
+        
+        if not self._errors and not self._missing_fields:
+            self._state = CatFormState.COMPLETE
+        else:
+            self._state = CatFormState.INCOMPLETE
+
+    def message_wait_confirm(self):
+        """
+        Generates URL with the provided information, sends it to the user and asks for confirmation.
+        This function is called after the validation is successful (no errors or missing fields).
+        If the user:
+        - confirms: the conversation will continue with the submit method.
+        - does not confirm: the form continues to call this method
+          or the one that does the extraction (+validation) if new data is provided.
+        """
+        
+        # Extract the requested fields that actually exist, to be showed
+        form_data_filters: dict = self._model.get("filters", [])
+        form_data_kql = "" # TODO: implement support for queries from scratch, from the form data for queries
+
+        requested_keys: set = {element["key"] for element in form_data_filters}
+        fields_to_visualize: list = [
+            field["name"] for field in self._fields_list if field["name"] in requested_keys
+        ]
+
+        # Add to the visualize
+        for key, _ in MAIN_FIELDS_DICT.items():
+            if key not in fields_to_visualize:
+                fields_to_visualize.append(key)
+
+        KibCatLogger.message(f"Filters: {form_data_filters}")
+        KibCatLogger.message(f"Kibana query: {form_data_kql}")
+
+        # Calculate time start and end
+        end_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get('end_time'))
+        start_time: datetime = datetime.now(timezone.utc) - timedelta(minutes=self._model.get('start_time'))
+
+        start_time_str: str = format_time_kibana(start_time)
+        end_time_str: str = format_time_kibana(end_time)
+
+        # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
+        filters: list = [(element["key"], element["value"]) for element in form_data_filters]
+
+        # Type is ignored because env variables are already checked using the check_env_vars function
+        result_dict: ParsedKibanaURL = build_template(
+            URL + BASE_URL_PART,  # type: ignore
+            start_time_str,
+            end_time_str,
+            fields_to_visualize,
+            filters,
+            DATA_VIEW_ID,  # type: ignore
+            form_data_kql,
+            logger=KibCatLogger,
+        )
+
+        url: str = build_rison_url_from_json(json_dict=result_dict, logger=KibCatLogger)
+
+        KibCatLogger.message(f"Generated URL:\n{url}")
+
+        return {
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\nVuoi apportare modifiche ai filtri o va bene così?',
+            # TODO: replace hard-coded confirmation string
+        }
+    
+    def submit(self, form_data: FilterData) -> dict[str, str]:
+        """
+        Handles the form submission.
+        This function will be called when user wants to exit the form, since the URL generation
+        logic is already implemented in the confirm method.
+        """
+
+        output_str = self.cat.llm("Write something like 'Thanks for using KibCat!'")
+        # TODO: remove this part, decide what to do when form closes
+
+        return {
+            "output": output_str,
+        }
+
+
+###################################
 
 
 @tool

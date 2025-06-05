@@ -23,6 +23,6 @@ Interrogazione database su elasticsearch tramite kibana, con filtraggio facilita
 ---
 
 ## Wiki
-- 📘 **[Diario](https://github.com/shini161/kib-cat/blob/main/wiki/diary.md)**
-- 📕 **[Conclusioni](https://github.com/shini161/kib-cat/blob/main/wiki/conclusions.md)**
+- 📘 **[Diario](https://github.com/shini161/kib-cat/blob/main/wiki/DIARY.md)**
+- 📕 **[Conclusioni](https://github.com/shini161/kib-cat/blob/main/wiki/CONCLUSIONS.md)**
 

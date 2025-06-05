@@ -6,4 +6,6 @@ init-hook='import sys; sys.path.append("src")'
 max-line-length=120
 
 [MESSAGES CONTROL]
-disable=too-many-arguments,too-many-return-statements
+disable=too-many-arguments,too-many-return-statements,R0914,too-many-branches,missing-module-docstring
+
+# R0914 = Too many local variables
