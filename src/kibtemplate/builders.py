@@ -124,10 +124,10 @@ def build_template(
 
     rendered_filters: list[str] = []
 
-    for filter in filters:
-        filter_operator: FilterOperators = filter.operator
-        filter_field: str = filter.field
-        filter_value: str | list[str] = filter.value
+    for filter_item in filters:
+        filter_operator: FilterOperators = filter_item.operator
+        filter_field: str = filter_item.field
+        filter_value: str | list[str] = filter_item.value
 
         template_name: str
         template_args: dict[str, Any] = {}

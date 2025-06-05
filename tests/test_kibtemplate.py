@@ -47,10 +47,10 @@ def test_build_template() -> None:
     assert isinstance(filters_meta, list)
     assert len(filters_meta) == len(FILTERS)
 
-    for f_item, filter in zip(filters_meta, FILTERS):
-        assert f_item["meta"]["field"] == filter.field
-        assert f_item["meta"]["params"]["query"] == filter.value
-        assert f_item["query"]["match_phrase"][filter.field] == filter.value
+    for f_item, filterkib in zip(filters_meta, FILTERS):
+        assert f_item["meta"]["field"] == filterkib.field
+        assert f_item["meta"]["params"]["query"] == filterkib.value
+        assert f_item["query"]["match_phrase"][filterkib.field] == filterkib.value
 
     # Search query
     assert output["_a"]["query"]["query"] == SEARCH_QUERY.replace("\\", "")
