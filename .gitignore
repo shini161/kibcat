@@ -190,3 +190,4 @@ cat/plugins/kibcat/requirements.txt
 *.pyi
 
 **/url_jsonifier/data
+**/kiburl/data
