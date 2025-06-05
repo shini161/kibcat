@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -14,7 +13,6 @@ from cat.plugins.kibcat.imports.kibapi import (
     group_fields,
 )
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
-from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
 from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
@@ -22,6 +20,10 @@ from cat.plugins.kibcat.prompts.builders import (
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any
+    from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 
 ########## ENV variables ##########
 
@@ -387,7 +389,7 @@ class FilterForm(CatForm):
         filters: list = [(element["key"], element["value"]) for element in form_data_filters]
 
         # Type is ignored because env variables are already checked using the check_env_vars function
-        result_dict: ParsedKibanaURL = build_template(
+        result_dict: "ParsedKibanaURL" = build_template(
             URL + BASE_URL_PART,  # type: ignore
             start_time_str,
             end_time_str,

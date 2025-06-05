@@ -3,13 +3,19 @@
 import inspect
 import json
 import os
-from typing import Any, Type, cast
+from typing import TYPE_CHECKING, cast
 
 from jinja2 import Template
 
-from kiblog import BaseLogger
-from kibtypes import ParsedKibanaURL
-from .kibcat_filter import FilterOperators, KibCatFilter
+from .kibcat_filter import FilterOperators
+
+if TYPE_CHECKING:
+    from typing import Any, Type
+
+    from kiblog import BaseLogger
+    from kibtypes import ParsedKibanaURL
+
+    from .kibcat_filter import KibCatFilter
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
@@ -23,8 +29,8 @@ FILTER_EXISTS_NAME = "filter_exists.json.jinja2"
 def generic_template_renderer(
     templates_path: str,
     template_name: str,
-    logger: Type[BaseLogger] | None = None,
-    **kwargs: Any,
+    logger: "Type[BaseLogger]" | None = None,
+    **kwargs: "Any",
 ) -> str:
     """
     Renders a Jinja2 template with given arguments.
@@ -96,13 +102,13 @@ def build_template(
     start_time: str,
     end_time: str,
     visible_fields: list[str],
-    filters: list[KibCatFilter],
+    filters: "list[KibCatFilter]",
     data_view_id: str,
     search_query: str,
     refresh_interval: int = 60000,
     is_refresh_paused: bool = True,
-    logger: Type[BaseLogger] | None = None,
-) -> ParsedKibanaURL:
+    logger: "Type[BaseLogger]" | None = None,
+) -> "ParsedKibanaURL":
     """
     Renders a Kibana URL JSON structure using a Jinja2 template and provided parameters.
 
@@ -131,7 +137,7 @@ def build_template(
         filter_value: str | list[str] = filter.value
 
         template_name: str
-        template_args: dict[str, Any] = {}
+        template_args: dict[str, "Any"] = {}
 
         template_args["field_name"] = filter_field
         template_args["data_view_id"] = data_view_id
@@ -187,7 +193,7 @@ def build_template(
         logger.message(msg)
 
     try:
-        result: ParsedKibanaURL = json.loads(output_str)
+        result = cast("ParsedKibanaURL", json.loads(output_str))
     except json.JSONDecodeError as e:
         if logger:
             msg = f"[kibtemplate.build_template] - Rendered template is not valid JSON.\n{e}"

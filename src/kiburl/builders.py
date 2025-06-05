@@ -1,19 +1,22 @@
 """Functions for rebuilding Kibana URLs from JSON or dict input."""
 
 import json
-from typing import Any, Type
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import prison
 
-from kiblog import BaseLogger
-from kibtypes import ParsedKibanaURL
+if TYPE_CHECKING:
+    from typing import Any, Type
+
+    from kiblog import BaseLogger
+    from kibtypes import ParsedKibanaURL
 
 
 def build_rison_url_from_json(
     path: str | None = None,
-    json_dict: ParsedKibanaURL | None = None,
-    logger: Type[BaseLogger] | None = None,
+    json_dict: "ParsedKibanaURL" | None = None,
+    logger: "Type[BaseLogger]" | None = None,
 ) -> str:
     """
     Reconstructs a Kibana URL by encoding `_g` and `_a` parameters as Rison and appending them
@@ -32,7 +35,7 @@ def build_rison_url_from_json(
         ValueError: If neither `path` nor `json_dict` is provided.
     """
 
-    data: ParsedKibanaURL | None = None
+    data: "ParsedKibanaURL" | None = None
 
     # if path is passed read and load from file
     if path:

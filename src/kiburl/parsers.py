@@ -2,18 +2,21 @@
 
 import json
 import re
-from typing import Any, Type
+from typing import TYPE_CHECKING, cast
 from urllib.parse import unquote, urlparse
 
 import prison
 
-from kiblog import BaseLogger
-from kibtypes import ParsedKibanaURL
+if TYPE_CHECKING:
+    from typing import Any, Type
+
+    from kiblog import BaseLogger
+    from kibtypes import ParsedKibanaURL
 
 
 def parse_rison_url_to_json(
-    url: str, path: str | None = None, logger: Type[BaseLogger] | None = None
-) -> ParsedKibanaURL:
+    url: str, path: str | None = None, logger: "Type[BaseLogger]" | None = None
+) -> "ParsedKibanaURL":
     """
     Parses a Kibana URL containing Rison-encoded `_g` and `_a` parameters in the fragment,
     decodes them into Python dictionaries, and optionally writes the output to a JSON file.
@@ -60,11 +63,14 @@ def parse_rison_url_to_json(
         if logger:
             logger.warning(msg)
 
-    result: ParsedKibanaURL = {
-        "base_url": url.split("#")[0],  # URL before the fragment
-        "_g": g_parsed,
-        "_a": a_parsed,
-    }
+    result = cast(
+        "ParsedKibanaURL",
+        {
+            "base_url": url.split("#")[0],  # URL before the fragment
+            "_g": g_parsed,
+            "_a": a_parsed,
+        },
+    )
 
     # if path is passed, save to path
     if path:
