@@ -1,6 +1,6 @@
 """Tests for the build_template function in kibtemplate."""
 
-from kibtemplate import build_template
+from kibtemplate import build_template, KibCatFilter, FilterOperators
 from kibtypes import ParsedKibanaURL
 
 # Params for building template
@@ -8,7 +8,10 @@ BASE_URL = "https://kibana.example.com/app/discover"
 START_TIME = "2025-05-09T18:02:40.258Z"
 END_TIME = "2025-05-10T02:05:46.064Z"
 VISIBLE_FIELDS: list[str] = ["field1", "field2", "field3"]
-FILTERS: list[tuple[str, str]] = [("field1", "value1"), ("field2", "value2")]
+FILTERS: list[KibCatFilter] = [
+    KibCatFilter("field1", FilterOperators.IS, "value1"),
+    KibCatFilter("field2", FilterOperators.IS, "value2"),
+]
 DATA_VIEW_ID = "data-view-123"
 SEARCH_QUERY = 'field3 : \\"value3\\"'
 
@@ -46,10 +49,10 @@ def test_build_template() -> None:
     assert isinstance(filters_meta, list)
     assert len(filters_meta) == len(FILTERS)
 
-    for f_item, (field, val) in zip(filters_meta, FILTERS):
-        assert f_item["meta"]["field"] == field
-        assert f_item["meta"]["params"]["query"] == val
-        assert f_item["query"]["match_phrase"][field] == val
+    for f_item, filter in zip(filters_meta, FILTERS):
+        assert f_item["meta"]["field"] == filter.field
+        assert f_item["meta"]["params"]["query"] == filter.value
+        assert f_item["query"]["match_phrase"][filter.field] == filter.value
 
     # Search query
     assert output["_a"]["query"]["query"] == SEARCH_QUERY.replace("\\", "")
