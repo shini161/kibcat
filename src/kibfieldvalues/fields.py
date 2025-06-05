@@ -144,11 +144,10 @@ def get_initial_part_of_fields(
             processed and grouped.
     """
 
-    all_base_names: set[str] = set()
+    all_field_names: set[str] = set()
     after_key: Any = None
 
     while True:
-        request_body: dict[str, Any] = {
         request_body: dict[str, Any] = {
             "size": 0,
             "query": (
@@ -194,7 +193,6 @@ def get_initial_part_of_fields(
             single_result: str = bucket["key"]["single_result"]
             all_field_names.add(single_result)
 
-        after_key = response["aggregations"]["result_values"].get("after_key")
         after_key = response["aggregations"]["result_values"].get("after_key")
         if not after_key:
             break
