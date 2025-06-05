@@ -163,9 +163,9 @@ cython_debug/
 
 cat/data/
 cat/static/
+cat/plugins/cc_vscode_debugpy/
 ollama/
 ollamaui/
-cc_vscode_debugpy/
 .vscode
 
 elastic/
