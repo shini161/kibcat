@@ -1,5 +1,3 @@
-"""Builders module for rendering Kibana URL templates."""
-
 import inspect
 import json
 import os

@@ -1,5 +1,3 @@
-"""Tests for the build_template function in kibtemplate."""
-
 from kibtemplate import build_template, KibCatFilter, FilterOperators
 from kibtypes import ParsedKibanaURL
 

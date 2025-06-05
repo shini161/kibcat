@@ -1,5 +1,3 @@
-"""Type definitions related to parsed Kibana URLs."""
-
 from typing import Any, TypedDict
 
 

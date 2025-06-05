@@ -1,5 +1,3 @@
-"""Script to parse and rebuild a Kibana Rison URL for testing and debugging purposes."""
-
 import json
 import os
 
