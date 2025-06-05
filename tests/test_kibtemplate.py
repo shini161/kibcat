@@ -1,4 +1,4 @@
-from kibtemplate import build_template, KibCatFilter, FilterOperators
+from kibtemplate import FilterOperators, KibCatFilter, build_template
 from kibtypes import ParsedKibanaURL
 
 # Params for building template

@@ -1,7 +1,7 @@
 from typing import Type
 
 from kiblog import BaseLogger
-from kibtemplate import build_template, KibCatFilter, FilterOperators
+from kibtemplate import FilterOperators, KibCatFilter, build_template
 from kiburl import build_rison_url_from_json
 
 

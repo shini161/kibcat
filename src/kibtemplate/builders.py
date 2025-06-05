@@ -7,6 +7,7 @@ from jinja2 import Template
 
 from kiblog import BaseLogger
 from kibtypes import ParsedKibanaURL
+
 from .kibcat_filter import FilterOperators, KibCatFilter
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
