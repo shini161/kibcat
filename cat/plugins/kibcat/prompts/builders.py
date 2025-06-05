@@ -1,7 +1,8 @@
-from typing import Optional, Type
-from cat.plugins.kibcat.imports.logging.base_logger import BaseKibCatLogger
-from cat.plugins.kibcat.imports.json_template.builders import generic_template_renderer
 import os
+from typing import Optional, Type
+
+from cat.plugins.kibcat.imports.kiblog import BaseLogger
+from cat.plugins.kibcat.imports.kibtemplate.builders import generic_template_renderer
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
@@ -9,14 +10,14 @@ TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
 
 def build_refine_filter_json(
     json_input: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+    LOGGER: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
     Renders a the refine_filter_json using the given parameter.
 
     Args:
         json_input (str): The JSON input for the prompt.
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+        LOGGER (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
         str: The rendered prompt with the given input JSON.
@@ -32,12 +33,12 @@ def build_refine_filter_json(
     return result
 
 
-def build_agent_prefix(LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
+def build_agent_prefix(LOGGER: Optional[Type[BaseLogger]] = None) -> str:
     """
     Returns the LLM prefix from the template.
 
     Args:
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging.
+        LOGGER (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
         str: The LLM prefix.
@@ -55,7 +56,7 @@ def build_agent_prefix(LOGGER: Optional[Type[BaseKibCatLogger]] = None) -> str:
 def build_form_data_extractor(
     conversation_history: str,
     main_fields_str: str,
-    LOGGER: Optional[Type[BaseKibCatLogger]] = None,
+    LOGGER: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
     Returns the form data extractor from the template.
@@ -63,7 +64,7 @@ def build_form_data_extractor(
     Args:
         conversation_history (str): The conversation history loaded as string
         main_fields_str (str): The main fields JSON loaded as string
-        LOGGER (Optional[Type[BaseKibCatLogger]]): Optional logger instance for messaging
+        LOGGER (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
         str: The form data extractor.

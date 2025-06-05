@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Run Python Tests
+    name: Run Python Tests and Linting
     runs-on: ubuntu-22.04
 
     steps:
@@ -26,14 +26,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install flake8 pytest pytest-cov
+        pip install -r requirements.txt -r requirements.dev.txt
 
-    - name: Lint with flake8
+    - name: Run pre-commit hooks (black, isort, mypy, pylint)
       run: |
-        echo "🔍 Running lint checks..."
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        echo "🎯 Running pre-commit hooks..."
+        pre-commit run --all-files --show-diff-on-failure
 
     - name: Run tests with pytest
       run: |
@@ -41,3 +39,4 @@ jobs:
         pytest -v --tb=short \
           --cov=src \
           --cov-report=term-missing tests/
+

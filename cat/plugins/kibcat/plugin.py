@@ -1,24 +1,27 @@
-from cat.plugins.kibcat.imports.kibcat_api.kibcat_api import (
-    NotCertifiedKibana,
-    group_fields,
-    get_field_properties,
-)
-from cat.plugins.kibcat.imports.json_template.builders import build_template
-from cat.plugins.kibcat.prompts.builders import (
-    build_refine_filter_json,
-    build_form_data_extractor,
-)
-from cat.plugins.kibcat.imports.url_jsonifier.builders import build_rison_url_from_json
-from cat.plugins.kibcat.imports.kibcat_types.parsed_kibana_url import ParsedKibanaURL
-from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-
-from pydantic import BaseModel
-from cat.experimental.form import CatForm, CatFormState, form
-
 import json
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+from pydantic import BaseModel
+
+from cat.mad_hatter.decorators import tool
+from cat.experimental.form import CatForm, CatFormState, form
+
+from cat.plugins.kibcat.imports.kibapi import (
+    NotCertifiedKibana,
+    get_field_properties,
+    group_fields,
+)
+from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
+from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
+from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
+from cat.plugins.kibcat.prompts.builders import (
+    build_refine_filter_json,
+    build_form_data_extractor
+)
+from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
+
 
 ########## ENV variables ##########
 
@@ -421,3 +424,13 @@ class FilterForm(CatForm):
         return {
             "output": output_str,
         }
+
+
+###################################
+
+
+@tool
+def get_token_usage(input, cat):
+    """Get the token usage for the current session."""
+    input_tokens = cat.working_memory.model_interactions[1].input_tokens
+    return f"Input tokens: {input_tokens}"
