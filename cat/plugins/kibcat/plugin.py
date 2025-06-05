@@ -19,6 +19,8 @@ from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
 from cat.plugins.kibcat.prompts.builders import (
     build_form_data_extractor,
     build_refine_filter_json,
+    build_form_confirm_message,
+    build_form_end_message
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
@@ -451,9 +453,13 @@ class FilterForm(CatForm):
 
         KibCatLogger.message(f"Generated URL:\n{url}")
 
+        prompt = build_form_confirm_message(
+            self.cat.working_memory.stringify_chat_history()
+        )
+        ask_confirm_message = self.cat.llm(prompt)
+
         return {
-            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\nVuoi apportare modifiche ai filtri o va bene così?',
-            # TODO: replace hard-coded confirmation string
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\n{ask_confirm_message}'
         }
 
     def submit(self, form_data: FilterData) -> dict[str, str]:
@@ -463,11 +469,12 @@ class FilterForm(CatForm):
         logic is already implemented in the confirm method.
         """
 
-        output_str = self.cat.llm("Write something like 'Thanks for using KibCat!'")
-        # TODO: remove this part, decide what to do when form closes
-
+        prompt = build_form_end_message(
+            self.cat.working_memory.stringify_chat_history()
+        )
+        
         return {
-            "output": output_str,
+            "output": self.cat.llm(prompt),
         }
 
 
