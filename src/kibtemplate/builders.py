@@ -1,7 +1,7 @@
 import inspect
 import json
 import os
-from typing import Any, Type, cast
+from typing import Any, Type
 
 from jinja2 import Template
 

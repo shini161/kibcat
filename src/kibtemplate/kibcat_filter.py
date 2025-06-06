@@ -34,4 +34,13 @@ class KibCatFilter(BaseModel):
 
     @field_serializer("operator")
     def serialize_operator(self, operator: FilterOperators) -> str:
+        """
+        Serializes the FilterOperators enum to its name as a string.
+
+        Args:
+            operator (FilterOperators): The operator to serialize.
+
+        Returns:
+            str: The string name of the operator.
+        """
         return operator.name
