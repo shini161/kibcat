@@ -11,8 +11,13 @@ Your task is to:
 ### INPUT STRUCTURE (per item in list):
 
 - `"field"`: a dictionary with one or more field names (some may have `.keyword` variants) as keys, and a list of allowed values for each.
-- `"operator"`: the logical operator (e.g., `"is"`). The possible operators are: {% endraw %}{{ operators_str }}{% raw %}.
+- `"operator"`: the logical operator (e.g., `is`, `is_not`). The possible operators are: {% endraw %}{{ operators_str }}{% raw %}.
 - `"value"`: the value to check against the allowed values (if any are listed).
+
+### IMPORTANT NOTES:
+- `"operator"` must be *EXACTLY* one of the allowed operators.
+- If `"operator"` is "is_one_of", the `"value"` must be a list of values, even if it contains only one item.
+- If there are multiple accepted values for a field (e.g. lowercase and uppercase versions), the value must be a list of strings, and operator must be `"is_one_of"`.
 
 ---
 
@@ -80,8 +85,8 @@ If many filters are invalid:
         "error", "fatal", "info", "information"
       ]
     },
-    "operator": "is",
-    "value": "warning"
+    "operator": "is_one_of",
+    "value": ["warning", "WARNING", "warn"]
   },
   {
     "field": {
