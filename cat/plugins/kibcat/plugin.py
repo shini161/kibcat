@@ -210,6 +210,19 @@ class FilterForm(CatForm):
             self._fields_list: list[dict[str, Any]] = optional_fields_list
         super().__init__(cat)
 
+    def _filters_filter(self, filters: list[Any]) -> list[KibCatFilter]:
+        filters = deepcopy(filters)
+        if not isinstance(filters, list):
+            filters = []
+
+        for index, filter_item in enumerate(filters):
+            filter_item["operator"] = FilterOperators[
+                filter_item.get("operator", "is").upper()
+            ]
+            filters[index] = KibCatFilter(**filter_item)
+
+        return filters
+
     def extract(self):
         """Extracts the filter data from the form."""
 
@@ -234,22 +247,14 @@ class FilterForm(CatForm):
 
         response = json.loads(json_str)
 
-        filters = response.get("filters", [])
-        if not isinstance(filters, list):
-            filters = []
-
-        for index, filter_item in enumerate(filters):
-            filter_item["operator"] = FilterOperators[
-                filter_item.get("operator", "is").upper()
-            ]
-            filters[index] = KibCatFilter(**filter_item)
-
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
             "end_time": response.get("end_time", DEFAULT_END_TIME),
             # Query is not used, only filters are
             "query": [],  # TODO: extract query from conversation using extractor template
-            "filters": filters,
+            "filters": self._filters_filter(
+                response.get("filters", [])
+            ),
         }
 
     def _generate_base_message(self) -> str:
@@ -442,7 +447,9 @@ class FilterForm(CatForm):
                 return
             else:
                 # Update model with the filtered data
-                self._model = json_cat_response
+                self._model = self._filters_filter(
+                    json_cat_response
+                )
 
         except json.JSONDecodeError as e:
             msg: str = f"Cannot decode cat's JSON filtered - {e}"
