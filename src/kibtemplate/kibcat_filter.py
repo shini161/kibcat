@@ -27,7 +27,7 @@ class KibCatFilter(BaseModel):
 
     field: str
     operator: FilterOperators
-    value: Union[str, List[str]]
+    value: Union[str, List[str], None]
 
     def __init__(self, field: str, operator: FilterOperators, value: Union[str, List[str]], **kwargs):
         super().__init__(field=field, operator=operator, value=value, **kwargs)
