@@ -6,3 +6,4 @@ python-dotenv==1.1.0
 elastic-transport==8.17.1
 elasticsearch==8.18.1
 isodate==0.7.2 
+urllib3==2.4.0

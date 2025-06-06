@@ -188,6 +188,7 @@ class FilterForm(CatForm):
         )
 
         # Initialize Elastic instance
+
         node_config: NodeConfig = NodeConfig(
             scheme="https",
             host=cast(str, ELASTIC_URL).split("://")[-1].split(":")[0],
@@ -196,7 +197,8 @@ class FilterForm(CatForm):
         )
         
         self._elastic: Elasticsearch = Elasticsearch(
-            [node_config], basic_auth=(cast(str, USERNAME), cast(str, PASSWORD))
+            [node_config],
+            basic_auth=(cast(str, USERNAME), cast(str, PASSWORD)),
         )
 
         # Get all the fields using the Kibana API
