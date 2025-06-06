@@ -503,7 +503,7 @@ class FilterForm(CatForm):
         form_data_filters: dict = self._model.get("filters", [])
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
-        requested_keys: set = {element["field"] for element in form_data_filters}
+        requested_keys: set = {element.field for element in form_data_filters}
         fields_to_visualize: list = [
             field["name"]
             for field in self._fields_list
