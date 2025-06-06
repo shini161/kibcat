@@ -15,9 +15,14 @@ Ogni dizionario ha varie proprietà:
 "operator": l' [operator] da usare. Usa il *NOME ESATTO* dell'operatore che vuoi usare, tra quelli indicati in precedenza.
 "value": il [value] per l'operatore
 # "start_time" 
-"start_time": indica fino a quanto tempo fa estendere la ricerca in *ISO 8601 Duration Format sempre completo* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
+"start_time": indica fino a quanto tempo fa estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
 # "end_time"
-"end_time": indica fino a quanto tempo estendere la ricerca in *ISO 8601 Duration Format sempre completo* __se l'utente non specifica questo parametro, è "PT0S"__.
+"end_time": indica fino a quanto tempo estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "PT0S"__.
+
+"iso8601Duration": {
+    "type": "string",
+    "description": "Duration in ISO 8601 format (e.g., 'P3Y6M4DT12H30M5S' for 3 years, 6 months, 4 days, 12 hours, 30 minutes, and 5 seconds). The format starts with 'P' for period, followed by date elements: Y (years), M (months), D (days). time elements (H, M, S) must be preceded by a 'T'. For example, 'PT10M' is 10 minutes, and 'P1DT2H' is 1 day and 2 hours. The 'T' is required if time elements are present."
+}
 
 IMPORTANTE:
 Alcune [field] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:
