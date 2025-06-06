@@ -499,6 +499,124 @@ Infine la funzione ritorna una lista di stringhe composta dai nomi univoci utili
 
 ---
 
+Per aprire in una nuova scheda il link di Kibana, è stato necessario modificare il modo in cui il Cat risponde all'utente, sostituendo la sintassi di Markdown con HTML, in modo da poter specificare l'attributo `target="_blank"`.
+
+[plugin.py](https://github.com/shini161/kibcat/commit/1c877d59ec7f4aaf51bf588282d7e70fd486a8d9#diff-2dff3f6ac541a0b1aaa81cfd9b39bff9beef4f25c31a978577191783ecfe4a14R309)
+```python
+return f'Kibana <a href="{url}" target="_blank">URL</a>'
+```
+
+---
+
+Per permettere al Cat di restituire all'utente errori o avvisi per dati forniti non corretti o ambigui, il tool `add_filter` è stato rimosso, e sostituito con un *form*.
+
+[plugin.py](https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/plugin.py#L151)
+```python
+class FilterItem(BaseModel):
+    key: str
+    operator: str = "is"
+    value: str
+
+class FilterData(BaseModel):
+    start_time: int = 14400  # Default to 4 hours
+    end_time: int = 0
+    filters: list[FilterItem] = []
+
+@form
+class FilterForm(CatForm):
+    description = "filter logs"
+    model_class = FilterData
+    start_examples = [
+        "filter logs",
+        "obtain logs",
+        "show logs",
+        "search logs"
+    ]
+    stop_examples = [
+        "stop filtering logs",
+        "not interested anymore",
+    ]
+    ask_confirm = False
+
+    def submit(self, form_data: FilterData) -> dict[str, str]:
+        """Handles the form submission."""
+        
+        # Tutta la logica per la generazione dell'URL di Kibana
+        url = ...
+
+        return {
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>'
+        }
+    
+    def extract(self):
+        """Extracts the filter data from the form."""
+
+        history = self.cat.working_memory.stringify_chat_history()
+
+        json_str = self.cat.llm(build_form_data_extractor(
+            conversation_history=history,
+            LOGGER=KibCatLogger
+        )).replace("```json", "").replace("`", "")
+
+        response = json.loads(json_str)
+
+        return {
+          "start_time": response.get("start_time", 14400),
+          "end_time": response.get("end_time", 0),
+          "filters": response.get("filters", [])
+        }
+```
+
+È stata sovrascritta la funzione `extract` per poter estrarre i dati dal messaggio dell'utente con un prompt personalizzato.
+
+[form_data_extractor.jinja2](https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/prompts/templates/form_data_extractor.jinja2)
+```
+{% raw %}Estrai dalla conversazione dei filtri deterministici da applicare alla ricerca su Kibana, e restituisci un JSON strutturato.
+
+I filtri sono strutturati in questo modo:
+[key] [operator] [value]
+dove [key] indica la chiave, ovvero il valore o variabile per cui filtrare
+[operator] indica la relazione tra i valori, i quali possibili valori sono (in lista JSON): ["is"]
+e infine [value] indica il valore a cui si sta comparando.
+
+FORMATO:
+L'output che devi ritornare è un dict JSON contenente tre elementi, "filters", "start_time" e "end_time":
+# "filters"
+"filters": una lista di dizionari che indicano il filtraggio.
+Ogni dizionario ha varie proprietà:
+"key": la [key] da comparare
+"operator": l' [operator] da usare
+"value": il [value] per l'operatore
+# "start_time" 
+"start_time": indica fino a quanto tempo fa estendere la ricerca in *minuti* __se l'utente non specifica questo parametro, è 14400__.
+# "end_time"
+"end_time": indica fino a quanto tempo estendere la ricerca in *minuti* __se l'utente non specifica questo parametro, è 0__.
+
+CONVERSAZIONE:
+{% endraw %}{{ conversation_history }}{% raw %}
+
+ESEMPIO:
+conversazione: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
+output: "{
+"filters": [{
+"key":"example.test.kubernetes.num",
+"operator":"is",
+"value":8
+},
+{
+"key":"log.level",
+"operator":"is",
+"value":"error"
+}],
+"start_time": 50,
+"end_time": 0
+}"{% endraw %}
+```
+
+Di default, nel core del Cat, viene utilizzata [una funzione che, utilizzando un prompt contente il typing della classe specificata come `model`, estrae i dati dalla `conversation history`](https://github.com/cheshire-cat-ai/core/blob/abafac5cf0aba5dcb7bc3ce7b4d5ae981da15ed7/core/cat/experimental/form/cat_form.py#L200-L245).
+
+---
+
 Successivamente si è deciso di ampliare la possibilità dei filtri, aggiungendo tutti gli operatori di Kibana, ovvero: `IS`, `IS_NOT`, `IS_ONE_OF`, `IS_NOT_ONE_OF`, `EXISTS`, `NOT_EXISTS`.
 
 Per fare questo è stato aggiornato il modulo [kibtemplate](https://github.com/shini161/kibcat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate), aggiungendo [altri template](https://github.com/shini161/kibcat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/templates) `jinja2` per poter implementare tutti gli operatori.
