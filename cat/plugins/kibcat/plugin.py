@@ -471,9 +471,8 @@ class FilterForm(CatForm):
                 return
             else:
                 # Update model with the filtered data
-                self._model = deepcopy(json_cat_response)
                 self._model["filters"] = self._parse_filters(
-                    self._model.get("filters", [])
+                    deepcopy(json_cat_response)["filters"]
                 )
 
         except json.JSONDecodeError as e:
