@@ -252,6 +252,33 @@ class FilterForm(CatForm):
             "filters": filters,
         }
 
+    def _generate_base_message(self) -> str:
+        """Generates the base message for form incomplete response."""
+        dump_obj = deepcopy(self._model)
+        dump_obj["filters"] = [
+            filter_element.model_dump() for filter_element in dump_obj["filters"]
+        ]
+        
+        separator = "\n - "
+        missing_fields = ""
+        if self._missing_fields:
+            missing_fields = "\nMissing fields:"
+            missing_fields += separator + separator.join(self._missing_fields)
+        invalid_fields = ""
+        if self._errors:
+            invalid_fields = "\nInvalid fields:"
+            invalid_fields += separator + separator.join(self._errors)
+
+        out = f"""Info until now:
+
+```json
+{json.dumps(dump_obj, indent=4)}
+```
+{missing_fields}
+{invalid_fields}
+"""
+        return out
+    
     def validate(self):
         """Validate form data"""
         self._missing_fields = []
