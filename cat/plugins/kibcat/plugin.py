@@ -195,7 +195,7 @@ class FilterForm(CatForm):
             port=443,
             verify_certs=False,
         )
-        
+
         self._elastic: Elasticsearch = Elasticsearch(
             [node_config],
             basic_auth=(cast(str, USERNAME), cast(str, PASSWORD)),
@@ -252,9 +252,7 @@ class FilterForm(CatForm):
             "end_time": response.get("end_time", DEFAULT_END_TIME),
             # Query is not used, only filters are
             "query": [],  # TODO: extract query from conversation using extractor template
-            "filters": self._filters_filter(
-                response.get("filters", [])
-            ),
+            "filters": self._filters_filter(response.get("filters", [])),
         }
 
     def _generate_base_message(self) -> str:
@@ -263,7 +261,7 @@ class FilterForm(CatForm):
         dump_obj["filters"] = [
             filter_element.model_dump() for filter_element in dump_obj["filters"]
         ]
-        
+
         separator = "\n - "
         missing_fields = ""
         if self._missing_fields:
@@ -283,7 +281,7 @@ class FilterForm(CatForm):
 {invalid_fields}
 """
         return out
-    
+
     def validate(self):
         """Validate form data"""
         self._missing_fields = []
@@ -447,9 +445,7 @@ class FilterForm(CatForm):
                 return
             else:
                 # Update model with the filtered data
-                self._model = self._filters_filter(
-                    json_cat_response
-                )
+                self._model = self._filters_filter(json_cat_response)  # type: ignore
 
         except json.JSONDecodeError as e:
             msg: str = f"Cannot decode cat's JSON filtered - {e}"
