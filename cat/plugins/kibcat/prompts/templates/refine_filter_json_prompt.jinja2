@@ -10,7 +10,7 @@ Your task is to:
 
 ### INPUT STRUCTURE (per item in list):
 
-- `"key"`: a dictionary with one or more field names (some may have `.keyword` variants) as keys, and a list of allowed values for each.
+- `"field"`: a dictionary with one or more field names (some may have `.keyword` variants) as keys, and a list of allowed values for each.
 - `"operator"`: the logical operator (e.g., `"is"`).
 - `"value"`: the value to check against the allowed values (if any are listed).
 
@@ -19,7 +19,7 @@ Your task is to:
 ### PROCESSING INSTRUCTIONS:
 
 For each object in the input:
-1. Check the fields in the `"key"` dictionary.
+1. Check the fields in the `"field"` dictionary.
 2. If the field's allowed values list is empty, accept the provided `"value"` as-is.
 3. If the allowed values list is not empty:
   - Check if the `"value"` (case-insensitive) matches one of the allowed values.
@@ -31,7 +31,7 @@ For each object in the input:
 4. Build a list of validated filters in the format:
   ```json
   {
-    "key": "<field_name>",
+    "field": "<field_name>",
     "operator": "<operator>",
     "value": "<validated_or_matched_value>"
   }
@@ -42,7 +42,7 @@ If all filters are valid:
 {
   "filters": [
     {
-      "key": "example.pod.name",
+      "field": "example.pod.name",
       "operator": "is",
       "value": "backend"
     },
@@ -74,7 +74,7 @@ If many filters are invalid:
 ```json
 [
   {
-    "key": {
+    "field": {
       "example.logLevel": [
         "CRITICAL", "DEBUG", "ERROR", "INFO", "TRACE", "WARN",
         "error", "fatal", "info", "information"
@@ -84,7 +84,7 @@ If many filters are invalid:
     "value": "warning"
   },
   {
-    "key": {
+    "field": {
       "example.appName.keyword": [
         "container.level.testing.example2",
         "api.app.level.testing"
