@@ -338,9 +338,7 @@ class FilterForm(CatForm):
             if "start_time" in self._model and to_timedelta(
                 isodate.parse_duration(format_T_in_date(end_time))
             ) > to_timedelta(
-                isodate.parse_duration(
-                    format_T_in_date(self._model["start_time"])
-                )
+                isodate.parse_duration(format_T_in_date(self._model["start_time"]))
             ):
                 self._errors.append(
                     "end_time: must be less than or equal to start_time"
