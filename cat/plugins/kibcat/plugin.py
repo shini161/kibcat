@@ -194,7 +194,7 @@ class FilterForm(CatForm):
             port=443,
             verify_certs=False,
         )
-
+        
         self._elastic: Elasticsearch = Elasticsearch(
             [node_config], basic_auth=(cast(str, USERNAME), cast(str, PASSWORD))
         )
