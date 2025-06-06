@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from typing import Any, cast
@@ -84,6 +85,28 @@ def format_time_kibana(dt: datetime) -> str:
         A string formatted as 'YYYY-MM-DDTHH:MM:SS.mmmZ'.
     """
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
+def format_T_in_date(duration: str) -> str:
+    """
+    Adds 'T' to an ISO 8601 duration string if time components (H, M, S) are present
+    but 'T' is missing.
+    """
+    if "T" in duration:
+        return duration
+
+    # Check for time components after date
+    match = re.search(r"(\d+H|\d+M|\d+S)", duration)
+    if match:
+        # Find the position after the date part (after D, M, or Y)
+        date_part_match = re.match(r"^P(?:\d+Y)?(?:\d+M)?(?:\d+D)?", duration)
+        if date_part_match:
+            insert_pos = date_part_match.end()
+            return duration[:insert_pos] + "T" + duration[insert_pos:]
+        else:
+            return "PT" + duration[1:]
+
+    return duration
 
 
 def check_env_vars() -> str | None:
@@ -313,8 +336,12 @@ class FilterForm(CatForm):
 
             # Check if end_time is less than start_time
             if "start_time" in self._model and to_timedelta(
-                isodate.parse_duration(end_time)
-            ) > to_timedelta(isodate.parse_duration(self._model["start_time"])):
+                isodate.parse_duration(format_T_in_date(end_time))
+            ) > to_timedelta(
+                isodate.parse_duration(
+                    format_T_in_date(self._model["start_time"])
+                )
+            ):
                 self._errors.append(
                     "end_time: must be less than or equal to start_time"
                 )
@@ -493,10 +520,10 @@ class FilterForm(CatForm):
 
         # Calculate time start and end
         end_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
-            self._model.get("end_time", "PT0S")
+            format_T_in_date(self._model.get("end_time", "PT0S"))
         )
         start_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
-            self._model.get("start_time", "PT0S")
+            format_T_in_date(self._model.get("start_time", "PT0S"))
         )
 
         start_time_str: str = format_time_kibana(start_time)
