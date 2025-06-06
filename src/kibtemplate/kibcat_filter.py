@@ -1,4 +1,7 @@
 from enum import Enum, auto
+from typing import List, Union
+
+from pydantic import BaseModel, field_serializer
 
 
 class FilterOperators(Enum):
@@ -12,7 +15,7 @@ class FilterOperators(Enum):
     NOT_EXISTS = auto()
 
 
-class KibCatFilter:
+class KibCatFilter(BaseModel):
     """
     Represents a filter condition for querying data.
 
@@ -24,9 +27,11 @@ class KibCatFilter:
 
     field: str
     operator: FilterOperators
-    value: str | list[str]
+    value: Union[str, List[str]]
 
-    def __init__(self, field: str, operator: FilterOperators, value: str | list[str]):
-        self.field = field
-        self.operator = operator
-        self.value = value
+    def __init__(self, field: str, operator: FilterOperators, value: Union[str, List[str]], **kwargs):
+        super().__init__(field=field, operator=operator, value=value, **kwargs)
+
+    @field_serializer("operator")
+    def serialize_operator(self, operator: FilterOperators, _info):
+        return operator.name

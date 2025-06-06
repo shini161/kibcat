@@ -14,6 +14,28 @@ DATA_VIEW_ID = "data-view-123"
 SEARCH_QUERY = 'field3 : \\"value3\\"'
 
 
+def test_kibcat_filter() -> None:
+    """Verify that KibCatFilter can be initialized and serialized correctly."""
+
+    # Create a filter instance
+    filter_instance = KibCatFilter(field="field1", operator=FilterOperators.IS, value="value1")
+
+    # Check attributes
+    assert filter_instance.field == "field1"
+    assert filter_instance.operator == FilterOperators.IS
+    assert filter_instance.value == "value1"
+
+    # Serialize to JSON
+    json_output = filter_instance.model_dump()
+    assert json_output["field"] == "field1"
+    assert json_output["operator"] == "IS"
+    assert json_output["value"] == "value1"
+
+    assert FilterOperators.IS.value == 1
+    assert FilterOperators.IS.name == "IS"
+    assert FilterOperators["IS"].value == 1
+
+
 def test_build_template() -> None:
     """Verify that build_template correctly constructs the Kibana URL JSON structure."""
 

@@ -1,9 +1,9 @@
 {% raw %}Estrai dalla conversazione dei filtri deterministici da applicare alla ricerca su Kibana, e restituisci un JSON strutturato.
 
 I filtri sono strutturati in questo modo:
-[key] [operator] [value]
-dove [key] indica la chiave, ovvero il valore o variabile per cui filtrare
-[operator] indica la relazione tra i valori, i quali possibili valori sono (in lista JSON): ["is"]
+[field] [operator] [value]
+dove [field] indica la chiave, ovvero il valore o variabile per cui filtrare
+[operator] indica la relazione tra i valori. Gli operatori possibili sono: {% endraw %}{{ operators_str }}{% raw %}.
 e infine [value] indica il valore a cui si sta comparando.
 
 FORMATO:
@@ -11,8 +11,8 @@ L'output che devi ritornare è un dict JSON contenente tre elementi, "filters", 
 # "filters"
 "filters": una lista di dizionari che indicano il filtraggio.
 Ogni dizionario ha varie proprietà:
-"key": la [key] da comparare
-"operator": l' [operator] da usare
+"field": la [field] da comparare
+"operator": l' [operator] da usare. Usa il *NOME ESATTO* dell'operatore che vuoi usare, tra quelli indicati in precedenza.
 "value": il [value] per l'operatore
 # "start_time" 
 "start_time": indica fino a quanto tempo fa estendere la ricerca in *ISO 8601 Duration Format* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
@@ -20,20 +20,20 @@ Ogni dizionario ha varie proprietà:
 "end_time": indica fino a quanto tempo estendere la ricerca in *ISO 8601 Duration Format* __se l'utente non specifica questo parametro, è "PT0S"__.
 
 IMPORTANTE:
-Alcune [key] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:
+Alcune [field] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:
 {% endraw %}{{ main_fields_str }}{% raw %}
 
 ESEMPIO:
 conversazione: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
 output: "{
 "filters": [{
-"key":"example.test.kubernetes.num",
+"field":"example.test.kubernetes.num",
 "operator":"is",
 "value":8
 },
 {
-"key":"log.level",
-"operator":"is",
+"field":"log.level",
+"operator":"is_not",
 "value":"error"
 }],
 "start_time": "PT50M",

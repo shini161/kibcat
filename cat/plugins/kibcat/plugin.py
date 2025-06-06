@@ -13,6 +13,7 @@ from cat.plugins.kibcat.imports.kibapi import (
     group_fields,
 )
 from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
+from cat.plugins.kibcat.imports.kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
 from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
 from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
 from cat.plugins.kibcat.prompts.builders import (
@@ -140,12 +141,6 @@ def agent_prompt_prefix(prefix, cat):
 ###################################
 
 
-class FilterItem(BaseModel):
-    key: str
-    operator: str = "is"  # TODO: support other operators
-    value: str
-
-
 class QueryItem(BaseModel):
     key: str
     operator: str = "is"  # TODO: support other query operators
@@ -155,7 +150,7 @@ class QueryItem(BaseModel):
 class FilterData(BaseModel):
     start_time: str = DEFAULT_START_TIME
     end_time: str = DEFAULT_END_TIME
-    filters: list[FilterItem] = []
+    filters: list[KibCatFilter] = []
     query: list[QueryItem] = []
 
 
@@ -190,12 +185,14 @@ class FilterForm(CatForm):
 
         history = self.cat.working_memory.stringify_chat_history()
         main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
+        operators_str: str = json.dumps([op.name.lower() for op in FilterOperators], indent=2)
 
         json_str = (
             self.cat.llm(
                 build_form_data_extractor(
                     conversation_history=history,
                     main_fields_str=main_fields_str,
+                    operators_str=operators_str,
                     logger=KibCatLogger,
                 )
             )
@@ -205,11 +202,19 @@ class FilterForm(CatForm):
 
         response = json.loads(json_str)
 
+        filters = response.get("filters", [])
+        if not isinstance(filters, list):
+            filters = []
+
+        for index, filter_item in enumerate(filters):
+            filter_item["operator"] = FilterOperators[filter_item.get("operator", "is").upper()]
+            filters[index] = KibCatFilter(**filter_item)
+
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
             "end_time": response.get("end_time", DEFAULT_END_TIME),
             "query": [],  # TODO: extract query from conversation using extractor template
-            "filters": response.get("filters", []),
+            "filters": filters,
         }
 
     def validate(self):
@@ -284,12 +289,12 @@ class FilterForm(CatForm):
 
         # Replace the key names with the possible keys in the input
         for element in filters:
-            key: str = element.get("key", "")
-            element["key"] = field_to_group.get(key, [key])
+            key: str = element.field
+            element.field = field_to_group.get(key, [key])
 
         # Now add the list of possible values per each one of the keys using the Kibana API
         for element in filters:
-            key_fields: list = element.get("key", [])
+            key_fields: list = element.field
             new_key: dict = {}
 
             # If there are two keys and last one ends with .keyword, add the .keyword field as well
@@ -313,11 +318,13 @@ class FilterForm(CatForm):
                 # Remove original key
                 del key_fields[0]
 
-            element["key"] = new_key
+            element.field = new_key
 
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
-        filter_data: str = build_refine_filter_json(str(json.dumps(filters, indent=2)), logger=KibCatLogger)
+        filter_data: str = build_refine_filter_json(
+            str(json.dumps([filter_element.model_dump() for filter_element in filters], indent=2)), logger=KibCatLogger
+        )
 
         # Call the cat using the query
         cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
@@ -364,7 +371,7 @@ class FilterForm(CatForm):
         form_data_filters: dict = self._model.get("filters", [])
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
-        requested_keys: set = {element["key"] for element in form_data_filters}
+        requested_keys: set = {element.field for element in form_data_filters}
         fields_to_visualize: list = [field["name"] for field in self._fields_list if field["name"] in requested_keys]
 
         # Add to the visualize
@@ -384,16 +391,13 @@ class FilterForm(CatForm):
         start_time_str: str = format_time_kibana(start_time)
         end_time_str: str = format_time_kibana(end_time)
 
-        # [TODO]: Here is needed to implement the possibility to set the operator, other than 'is'
-        filters: list = [(element["key"], element["value"]) for element in form_data_filters]
-
         # Type is ignored because env variables are already checked using the check_env_vars function
         result_dict: ParsedKibanaURL = build_template(
             URL + BASE_URL_PART,  # type: ignore
             start_time_str,
             end_time_str,
             fields_to_visualize,
-            filters,
+            self._model.get("filters", []),
             DATA_VIEW_ID,  # type: ignore
             form_data_kql,
             logger=KibCatLogger,

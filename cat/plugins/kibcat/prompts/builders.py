@@ -56,6 +56,7 @@ def build_agent_prefix(logger: Optional[Type[BaseLogger]] = None) -> str:
 def build_form_data_extractor(
     conversation_history: str,
     main_fields_str: str,
+    operators_str: str,
     logger: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
@@ -64,6 +65,7 @@ def build_form_data_extractor(
     Args:
         conversation_history (str): The conversation history loaded as string
         main_fields_str (str): The main fields JSON loaded as string
+        operators_str (str): The list of operators from the ENUM as JSON loaded as string
         logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
@@ -76,6 +78,7 @@ def build_form_data_extractor(
         logger=logger,
         conversation_history=conversation_history,
         main_fields_str=main_fields_str,
+        operators_str=operators_str,
     )
 
     return result
