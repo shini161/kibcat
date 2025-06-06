@@ -20,8 +20,9 @@ from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
-    build_form_confirm_message,
     build_form_data_extractor,
+    build_form_confirm_message,
+    build_form_print_message,
     build_form_end_message,
     build_refine_filter_json,
 )
@@ -279,12 +280,23 @@ class FilterForm(CatForm):
 
     def _generate_base_message(self) -> str:
         """Generates the base message for form incomplete response."""
-        separator = "\n - "
-        invalid_fields = ""
-        if self._errors:
-            invalid_fields = "\nDati non corretti:"
-            invalid_fields += separator + separator.join(self._errors)
-        return invalid_fields
+        dump_obj = deepcopy(self._model)
+        dump_obj["filters"] = [
+            filter_element.model_dump() for filter_element in dump_obj["filters"]
+        ]
+
+        input_data = json.dumps(
+            {
+                "errors": self._errors,
+                "form_data": dump_obj,
+            }, indent=2, ensure_ascii=False
+        ).replace("`", "")
+
+        prompt = build_form_print_message(
+            conversation_history=self.cat.working_memory.stringify_chat_history(),
+            form_data_str=input_data
+        )
+        return self.cat.llm(prompt)
 
     def validate(self):
         """Validate form data"""

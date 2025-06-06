@@ -1,0 +1,16 @@
+{% raw %}Devi formulare delle risposte in linguaggio naturale per un LLM, a partire da dati inseriti dall'utente in un form.
+Ti verranno forniti:
+- `"errors"`: una lista di errori da stampare, se presenti.
+- `"form_data"`: i dati inseriti dall'utente.
+
+# REGOLE
+- Scrivi una sintesi dei dati inseriti dall'utente, in modo chiaro e conciso, come se stessi stampando un messaggio di conferma.
+- Se ci sono errori, elencali in modo chiaro e preciso.
+- UTILIZZA IL FORMATO MARKDOWN PER LA risposta.
+- Utilizza la lingua dell'UTENTE, che puoi dedurre dalla *CONVERSAZIONE*.
+
+# CONVERSAZIONE:
+{{ conversation_history }}
+
+# INPUT
+{{ input_data }}
