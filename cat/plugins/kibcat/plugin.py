@@ -2,20 +2,21 @@ import json
 import os
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, cast
 
 import isodate
-from cat.experimental.form import CatForm, CatFormState, form
-from cat.mad_hatter.decorators import hook
-from kibapi import (
-    NotCertifiedKibana,
-    get_field_properties,
-    group_fields,
-)
+from elastic_transport import NodeConfig
+from elasticsearch import Elasticsearch
+from kibapi import NotCertifiedKibana, get_field_properties, group_fields
+from kibfieldvalues import get_initial_part_of_fields
 from kibtemplate.builders import build_template
 from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
 from kibtypes.parsed_kibana_url import ParsedKibanaURL
 from kiburl.builders import build_rison_url_from_json
+from pydantic import BaseModel
+
+from cat.experimental.form import CatForm, CatFormState, form
+from cat.mad_hatter.decorators import hook
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
     build_form_confirm_message,
@@ -24,7 +25,6 @@ from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-from pydantic import BaseModel
 
 ########## ENV variables ##########
 
@@ -141,6 +141,7 @@ def agent_prompt_prefix(prefix, cat):
 ###################################
 
 
+# The query isnt used right now, maybe it will be implemented later
 class QueryItem(BaseModel):
     key: str
     operator: str = "is"  # TODO: support other query operators
@@ -166,10 +167,31 @@ class FilterForm(CatForm):
     ask_confirm = True
 
     _kibana: NotCertifiedKibana
+    _elastic: Elasticsearch
 
     def __init__(self, cat):
+        # Check the variables
+        env_check_result: str | None = check_env_vars()
+        if env_check_result:
+            KibCatLogger.error(env_check_result)
+            raise ValueError(env_check_result)
+
         # Initialize the NotCertifiedKibana instance with the provided credentials
-        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
+        self._kibana = NotCertifiedKibana(
+            base_url=URL, username=USERNAME, password=PASSWORD
+        )
+
+        # Initialize Elastic instance
+        node_config: NodeConfig = NodeConfig(
+            scheme="https",
+            host=cast(str, URL).split("://")[-1].split(":")[0],
+            port=443,
+            verify_certs=False,
+        )
+
+        self._elastic: Elasticsearch = Elasticsearch(
+            [node_config], basic_auth=(cast(str, USERNAME), cast(str, PASSWORD))
+        )
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
@@ -185,7 +207,9 @@ class FilterForm(CatForm):
 
         history = self.cat.working_memory.stringify_chat_history()
         main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
-        operators_str: str = json.dumps([op.name.lower() for op in FilterOperators], indent=2)
+        operators_str: str = json.dumps(
+            [op.name.lower() for op in FilterOperators], indent=2
+        )
 
         json_str = (
             self.cat.llm(
@@ -207,12 +231,15 @@ class FilterForm(CatForm):
             filters = []
 
         for index, filter_item in enumerate(filters):
-            filter_item["operator"] = FilterOperators[filter_item.get("operator", "is").upper()]
+            filter_item["operator"] = FilterOperators[
+                filter_item.get("operator", "is").upper()
+            ]
             filters[index] = KibCatFilter(**filter_item)
 
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
             "end_time": response.get("end_time", DEFAULT_END_TIME),
+            # Query is not used, only filters are
             "query": [],  # TODO: extract query from conversation using extractor template
             "filters": filters,
         }
@@ -226,34 +253,40 @@ class FilterForm(CatForm):
         if "start_time" in self._model:
             start_time = self._model["start_time"]
             if not isinstance(start_time, str):
-                self._errors.append("start_time: must be a string in ISO 8601 Duration Format")
+                self._errors.append(
+                    "start_time: must be a string in ISO 8601 Duration Format"
+                )
                 del self._model["start_time"]
 
         # Validate end_time
         if "end_time" in self._model:
             end_time = self._model["end_time"]
             if not isinstance(end_time, str):
-                self._errors.append("end_time: must be a string in ISO 8601 Duration Format")
+                self._errors.append(
+                    "end_time: must be a string in ISO 8601 Duration Format"
+                )
                 del self._model["end_time"]
 
             def to_timedelta(d: timedelta | Any) -> timedelta:
-                return d if isinstance(d, timedelta) else d.totimedelta(start=datetime.now())
+                return (
+                    d
+                    if isinstance(d, timedelta)
+                    else d.totimedelta(start=datetime.now())
+                )
 
             # Check if end_time is less than start_time
-            if "start_time" in self._model and to_timedelta(isodate.parse_duration(end_time)) > to_timedelta(
-                isodate.parse_duration(self._model["start_time"])
-            ):
-                self._errors.append("end_time: must be less than or equal to start_time")
+            if "start_time" in self._model and to_timedelta(
+                isodate.parse_duration(end_time)
+            ) > to_timedelta(isodate.parse_duration(self._model["start_time"])):
+                self._errors.append(
+                    "end_time: must be less than or equal to start_time"
+                )
                 del self._model["end_time"]
 
-        # Check the variables
-        env_check_result: str | None = check_env_vars()
-        if env_check_result:
-            KibCatLogger.error(env_check_result)
-            return env_check_result
-
         # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(logger=KibCatLogger)
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(
+            logger=KibCatLogger
+        )
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -263,10 +296,14 @@ class FilterForm(CatForm):
             return msg
 
         # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(logger=KibCatLogger)
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(
+            logger=KibCatLogger
+        )
 
         # Check if the dataview needed exists, otherwise return the error
-        if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
+        if (not data_views) or (
+            not any(view["id"] == DATA_VIEW_ID for view in data_views)
+        ):
             msg: str = "Specified data view not found"
 
             KibCatLogger.error(msg)
@@ -285,7 +322,9 @@ class FilterForm(CatForm):
         grouped_list: list[list[str]] = group_fields(self._fields_list)
 
         # Associate a group to every field in this dict
-        field_to_group: dict = {field: group for group in grouped_list for field in group}
+        field_to_group: dict = {
+            field: group for group in grouped_list for field in group
+        }
 
         # Replace the key names with the possible keys in the input
         for element in filters:
@@ -294,47 +333,73 @@ class FilterForm(CatForm):
 
         # Now add the list of possible values per each one of the keys using the Kibana API
         for element in filters:
-            key_fields: list = element.field
-            new_key: dict = {}
+            key_fields: list[str] = element.field
+            new_key: dict[str, Any] = {}
 
-            # If there are two keys and last one ends with .keyword, add the .keyword field as well
-            if len(key_fields) == 2 and key_fields[-1].endswith(".keyword"):
-                # TODO: implement support for .keyword fields
-                new_key[key_fields[0]] = []
-            else:
-                # If there are no two keys or the last one doesn't end with .keyword, just keep the original key
-                field = key_fields[-1]
-                # Get the field's properties
-                field_properties: dict[str, Any] = get_field_properties(self._fields_list, field)
+            normal_field: str | None = None
+            keyword_field: str | None = None
 
-                # Get all the field's possible values
-                # Type is ignored because env variables are already checked using the check_env_vars function
-                possible_values: list[Any] = self._kibana.get_field_possible_values(
-                    SPACE_ID, DATA_VIEW_ID, field_properties, logger=KibCatLogger  # type: ignore
+            for field in key_fields:
+                if field.endswith(".keyword"):
+                    keyword_field = field
+                    continue
+                normal_field = field
+
+            if keyword_field:
+                msg: str = (
+                    f"Getting field {keyword_field} possible values using Elastic"
+                )
+                KibCatLogger.message(msg)
+
+                keyword_field_values: list[str] = get_initial_part_of_fields(
+                    self._elastic, keyword_field, cast(str, DATA_VIEW_ID)
                 )
 
-                new_key[field] = possible_values
+                new_key[keyword_field] = keyword_field_values
+            else:
+                if normal_field:
+                    msg: str = (
+                        f"Getting field {normal_field} possible values using Kibana"
+                    )
+                    KibCatLogger.message(msg)
 
-                # Remove original key
-                del key_fields[0]
+                    field_properties: dict[str, Any] = get_field_properties(
+                        self._fields_list, normal_field
+                    )
+
+                    # Get all the field's possible values
+                    possible_values: list[Any] = self._kibana.get_field_possible_values(
+                        cast(str, SPACE_ID),
+                        cast(str, DATA_VIEW_ID),
+                        field_properties,
+                        logger=KibCatLogger,
+                    )
+
+                    new_key[normal_field] = possible_values
 
             element.field = new_key
 
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
         filter_data: str = build_refine_filter_json(
-            str(json.dumps([filter_element.model_dump() for filter_element in filters], indent=2)), logger=KibCatLogger
+            str(
+                json.dumps(
+                    [filter_element.model_dump() for filter_element in filters],
+                    indent=2,
+                )
+            ),
+            logger=KibCatLogger,
         )
 
         # Call the cat using the query
-        cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
+        cat_response: str = (
+            self.cat.llm(filter_data).replace("```json", "").replace("`", "")
+        )
 
         try:
             json_cat_response: dict = json.loads(cat_response)
             KibCatLogger.message("Cat JSON parsed correctly")
 
-            # TODO: uncomment this when we implement .keyword fields support
-            """
             if "errors" in json_cat_response:
                 for error in json_cat_response["errors"]:
                     self._errors.append(error)
@@ -343,7 +408,7 @@ class FilterForm(CatForm):
             else:
                 # Update model with the filtered data
                 self._model = json_cat_response
-            """
+
         except json.JSONDecodeError as e:
             msg: str = f"Cannot decode cat's JSON filtered - {e}"
 
@@ -372,7 +437,11 @@ class FilterForm(CatForm):
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
         requested_keys: set = {element.field for element in form_data_filters}
-        fields_to_visualize: list = [field["name"] for field in self._fields_list if field["name"] in requested_keys]
+        fields_to_visualize: list = [
+            field["name"]
+            for field in self._fields_list
+            if field["name"] in requested_keys
+        ]
 
         # Add to the visualize
         for key, _ in MAIN_FIELDS_DICT.items():
@@ -383,7 +452,9 @@ class FilterForm(CatForm):
         KibCatLogger.message(f"Kibana query: {form_data_kql}")
 
         # Calculate time start and end
-        end_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(self._model.get("end_time", "PT0S"))
+        end_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
+            self._model.get("end_time", "PT0S")
+        )
         start_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
             self._model.get("start_time", "PT0S")
         )
@@ -407,10 +478,14 @@ class FilterForm(CatForm):
 
         KibCatLogger.message(f"Generated URL:\n{url}")
 
-        prompt = build_form_confirm_message(self.cat.working_memory.stringify_chat_history())
+        prompt = build_form_confirm_message(
+            self.cat.working_memory.stringify_chat_history()
+        )
         ask_confirm_message = self.cat.llm(prompt)
 
-        return {"output": f'Kibana <a href="{url}" target="_blank">URL</a>\n{ask_confirm_message}'}
+        return {
+            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\n{ask_confirm_message}'
+        }
 
     def submit(self, form_data: FilterData) -> dict[str, str]:
         """
@@ -419,7 +494,9 @@ class FilterForm(CatForm):
         logic is already implemented in the confirm method.
         """
 
-        prompt = build_form_end_message(self.cat.working_memory.stringify_chat_history())
+        prompt = build_form_end_message(
+            self.cat.working_memory.stringify_chat_history()
+        )
 
         return {
             "output": self.cat.llm(prompt),
