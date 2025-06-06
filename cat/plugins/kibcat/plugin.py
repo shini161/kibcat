@@ -29,6 +29,7 @@ from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 ########## ENV variables ##########
 
 URL = os.getenv("KIBANA_URL")
+ELASTIC_URL = os.getenv("ELASTIC_URL")
 BASE_URL_PART = os.getenv("KIBANA_BASE_URL_PART")
 USERNAME = os.getenv("KIBANA_USERNAME")
 PASSWORD = os.getenv("KIBANA_PASS")
@@ -94,6 +95,11 @@ def check_env_vars() -> str | None:
     """
     if not URL:
         msg = "URL parameter null"
+
+        KibCatLogger.error(msg)
+        return msg
+    if not ELASTIC_URL:
+        msg = "ELASTIC_URL parameter null"
 
         KibCatLogger.error(msg)
         return msg
@@ -184,7 +190,7 @@ class FilterForm(CatForm):
         # Initialize Elastic instance
         node_config: NodeConfig = NodeConfig(
             scheme="https",
-            host=cast(str, URL).split("://")[-1].split(":")[0],
+            host=cast(str, ELASTIC_URL).split("://")[-1].split(":")[0],
             port=443,
             verify_certs=False,
         )
