@@ -7,15 +7,15 @@ from typing import Any
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
-from cat.plugins.kibcat.imports.kibapi import (
+from kibapi import (
     NotCertifiedKibana,
     get_field_properties,
     group_fields,
 )
-from cat.plugins.kibcat.imports.kibtemplate.builders import build_template
-from cat.plugins.kibcat.imports.kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
-from cat.plugins.kibcat.imports.kibtypes.parsed_kibana_url import ParsedKibanaURL
-from cat.plugins.kibcat.imports.kiburl.builders import build_rison_url_from_json
+from kibtemplate.builders import build_template
+from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
+from kibtypes.parsed_kibana_url import ParsedKibanaURL
+from kiburl.builders import build_rison_url_from_json
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
     build_form_confirm_message,

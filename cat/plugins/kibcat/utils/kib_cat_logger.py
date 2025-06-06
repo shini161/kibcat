@@ -1,5 +1,5 @@
 from cat.log import log
-from cat.plugins.kibcat.imports.kiblog import BaseLogger
+from kiblog import BaseLogger
 
 
 class KibCatLogger(BaseLogger):
