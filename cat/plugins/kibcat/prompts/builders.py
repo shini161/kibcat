@@ -10,6 +10,7 @@ TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
 
 def build_refine_filter_json(
     json_input: str,
+    operators_str: str,
     logger: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
@@ -17,6 +18,7 @@ def build_refine_filter_json(
 
     Args:
         json_input (str): The JSON input for the prompt.
+        operators_str (str): The list of operators from the ENUM as JSON loaded as string.
         logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
@@ -27,6 +29,7 @@ def build_refine_filter_json(
         templates_path=TEMPLATES_FILE_PATH,
         template_name="refine_filter_json_prompt.jinja2",
         logger=logger,
+        operators_str=operators_str,
         json_input=json_input,
     )
 

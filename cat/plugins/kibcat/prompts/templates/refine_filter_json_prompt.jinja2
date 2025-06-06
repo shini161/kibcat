@@ -11,7 +11,7 @@ Your task is to:
 ### INPUT STRUCTURE (per item in list):
 
 - `"field"`: a dictionary with one or more field names (some may have `.keyword` variants) as keys, and a list of allowed values for each.
-- `"operator"`: the logical operator (e.g., `"is"`).
+- `"operator"`: the logical operator (e.g., `"is"`). The possible operators are: {% endraw %}{{ operators_str }}{% raw %}.
 - `"value"`: the value to check against the allowed values (if any are listed).
 
 ---

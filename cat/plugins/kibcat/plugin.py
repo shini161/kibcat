@@ -445,13 +445,15 @@ class FilterForm(CatForm):
 
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
+        operators_str: str = json.dumps(
+            [op.name.lower() for op in FilterOperators], indent=2
+        )
         filter_data: str = build_refine_filter_json(
-            str(
-                json.dumps(
-                    [filter_element.model_dump() for filter_element in filters],
-                    indent=2,
-                )
+            json_input=json.dumps(
+                [filter_element.model_dump() for filter_element in filters],
+                indent=2,
             ),
+            operators_str=operators_str,
             logger=KibCatLogger,
         )
 
