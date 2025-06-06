@@ -86,7 +86,7 @@ def generic_template_renderer(
     if logger:
         logger.message(msg)
 
-    return cast(str, output_str)
+    return output_str
 
 
 # pylint: disable=too-many-positional-arguments

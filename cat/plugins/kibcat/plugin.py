@@ -2,20 +2,11 @@ import json
 import os
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, cast
 
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
-from kibapi import (
-    NotCertifiedKibana,
-    get_field_properties,
-    group_fields,
-)
-from kibtemplate.builders import build_template
-from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
-from kibtypes.parsed_kibana_url import ParsedKibanaURL
-from kiburl.builders import build_rison_url_from_json
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
     build_form_confirm_message,
@@ -25,6 +16,15 @@ from cat.plugins.kibcat.prompts.builders import (
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 from pydantic import BaseModel
+
+from kibapi import (
+    NotCertifiedKibana,
+    get_field_properties,
+    group_fields,
+)
+from kibtemplate import FilterOperators, KibCatFilter, build_template
+from kibtypes import ParsedKibanaURL
+from kiburl import build_rison_url_from_json
 
 ########## ENV variables ##########
 
@@ -52,7 +52,7 @@ def get_main_fields_dict() -> dict[str, Any]:
 
     try:
         with open(fields_json_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            return cast(dict[str, Any], json.load(f))
 
     except (OSError, json.JSONDecodeError) as e:
         # OSError covers file not found, permission issues, etc.
@@ -154,10 +154,10 @@ class FilterData(BaseModel):
     query: list[QueryItem] = []
 
 
-@form  # type: ignore
-class FilterForm(CatForm):
+@form
+class FilterForm(CatForm):  # type: ignore
     description = "filter logs"
-    model_class = FilterData  # type: ignore
+    model_class = FilterData
     start_examples = ["filter logs", "obtain logs", "show logs", "search logs"]
     stop_examples = [
         "stop filtering logs",
@@ -171,13 +171,15 @@ class FilterForm(CatForm):
         # Initialize the NotCertifiedKibana instance with the provided credentials
         self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
 
+        self._fields_list: list[dict[str, Any]] = []
+
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
         optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
         if not optional_fields_list:
-            self._fields_list: list[dict[str, Any]] = []
+            self._fields_list = []
         else:
-            self._fields_list: list[dict[str, Any]] = optional_fields_list
+            self._fields_list = optional_fields_list
         super().__init__(cat)
 
     def extract(self):
@@ -219,7 +221,7 @@ class FilterForm(CatForm):
 
     def validate(self):
         """Validate form data"""
-        self._missing_fields = []
+        self._missing_fields: list[Any] = []
         self._errors = []
 
         # Validate start_time
@@ -257,7 +259,7 @@ class FilterForm(CatForm):
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
-            msg: str = "Specified space ID not found"
+            msg = "Specified space ID not found"
 
             KibCatLogger.error(msg)
             return msg
@@ -267,25 +269,25 @@ class FilterForm(CatForm):
 
         # Check if the dataview needed exists, otherwise return the error
         if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
-            msg: str = "Specified data view not found"
+            msg = "Specified data view not found"
 
             KibCatLogger.error(msg)
             return msg
 
         # if the field list cant be loaded, return the error
         if not self._fields_list:
-            msg: str = "Not found fields_list"
+            msg = "Not found fields_list"
 
             KibCatLogger.error(msg)
             return msg
 
-        filters: dict = deepcopy(self._model.get("filters", {}))
+        filters: dict[Any, Any] = deepcopy(self._model.get("filters", {}))
 
         # Group them with keywords if there are
         grouped_list: list[list[str]] = group_fields(self._fields_list)
 
         # Associate a group to every field in this dict
-        field_to_group: dict = {field: group for group in grouped_list for field in group}
+        field_to_group: dict[str, Any] = {field: group for group in grouped_list for field in group}
 
         # Replace the key names with the possible keys in the input
         for element in filters:
@@ -294,8 +296,8 @@ class FilterForm(CatForm):
 
         # Now add the list of possible values per each one of the keys using the Kibana API
         for element in filters:
-            key_fields: list = element.field
-            new_key: dict = {}
+            key_fields: list[Any] = element.field
+            new_key: dict[Any, Any] = {}
 
             # If there are two keys and last one ends with .keyword, add the .keyword field as well
             if len(key_fields) == 2 and key_fields[-1].endswith(".keyword"):
@@ -330,7 +332,7 @@ class FilterForm(CatForm):
         cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
 
         try:
-            json_cat_response: dict = json.loads(cat_response)
+            json_cat_response: dict[Any, Any] = json.loads(cat_response)
             KibCatLogger.message("Cat JSON parsed correctly")
 
             # TODO: uncomment this when we implement .keyword fields support
@@ -345,7 +347,7 @@ class FilterForm(CatForm):
                 self._model = json_cat_response
             """
         except json.JSONDecodeError as e:
-            msg: str = f"Cannot decode cat's JSON filtered - {e}"
+            msg = f"Cannot decode cat's JSON filtered - {e}"
 
             KibCatLogger.error(msg)
             self._errors.append(msg)
@@ -368,11 +370,13 @@ class FilterForm(CatForm):
         """
 
         # Extract the requested fields that actually exist, to be showed
-        form_data_filters: dict = self._model.get("filters", [])
+        form_data_filters: dict[Any, KibCatFilter] = self._model.get("filters", [])
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
-        requested_keys: set = {element.field for element in form_data_filters}
-        fields_to_visualize: list = [field["name"] for field in self._fields_list if field["name"] in requested_keys]
+        requested_keys: set[Any] = {element.field for element in form_data_filters}
+        fields_to_visualize: list[Any] = [
+            field["name"] for field in self._fields_list if field["name"] in requested_keys
+        ]
 
         # Add to the visualize
         for key, _ in MAIN_FIELDS_DICT.items():

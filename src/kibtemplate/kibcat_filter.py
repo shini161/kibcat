@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List, Union
+from typing import Any, Union
 
 from pydantic import BaseModel, field_serializer
 
@@ -27,11 +27,11 @@ class KibCatFilter(BaseModel):
 
     field: str
     operator: FilterOperators
-    value: Union[str, List[str]]
+    value: Union[str, list[str]]
 
-    def __init__(self, field: str, operator: FilterOperators, value: Union[str, List[str]], **kwargs):
+    def __init__(self, field: str, operator: FilterOperators, value: Union[str, list[str]], **kwargs: Any) -> None:
         super().__init__(field=field, operator=operator, value=value, **kwargs)
 
     @field_serializer("operator")
-    def serialize_operator(self, operator: FilterOperators, _info):
+    def serialize_operator(self, operator: FilterOperators) -> str:
         return operator.name

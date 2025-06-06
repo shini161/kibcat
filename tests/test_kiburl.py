@@ -67,7 +67,7 @@ EXPECTED_OUTPUT_1: ParsedKibanaURL = {
 }
 
 
-@pytest.mark.parametrize("url", KIBANA_URLS)  # type: ignore[misc]
+@pytest.mark.parametrize("url", KIBANA_URLS)
 def test_parse_and_rebuild_rison_url(url: str, tmp_path: Path) -> None:
     """Test parsing a Kibana URL to JSON, rebuilding it, and reparsing for consistency."""
 
