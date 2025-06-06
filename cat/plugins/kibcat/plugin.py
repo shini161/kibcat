@@ -210,8 +210,7 @@ class FilterForm(CatForm):
             self._fields_list: list[dict[str, Any]] = optional_fields_list
         super().__init__(cat)
 
-    def _filters_filter(self, filters: list[Any]) -> list[KibCatFilter]:
-        filters = deepcopy(filters)
+    def _parse_filters(self, filters: list[Any]) -> list[KibCatFilter]:
         if not isinstance(filters, list):
             filters = []
 
@@ -252,7 +251,7 @@ class FilterForm(CatForm):
             "end_time": response.get("end_time", DEFAULT_END_TIME),
             # Query is not used, only filters are
             "query": [],  # TODO: extract query from conversation using extractor template
-            "filters": self._filters_filter(response.get("filters", [])),
+            "filters": self._parse_filters(response.get("filters", [])),
         }
 
     def _generate_base_message(self) -> str:
@@ -445,7 +444,10 @@ class FilterForm(CatForm):
                 return
             else:
                 # Update model with the filtered data
-                self._model = self._filters_filter(json_cat_response)  # type: ignore
+                self._model = deepcopy(json_cat_response)
+                self._model["filters"] = self._parse_filters(
+                    self._model.get("filters", [])
+                )
 
         except json.JSONDecodeError as e:
             msg: str = f"Cannot decode cat's JSON filtered - {e}"
