@@ -6,7 +6,7 @@ Inizio analisi dell'URL di Kibana, encoder e decoder.
 
 *Ora non esistente, in quanto non funzionante correttamente e sostituito da quello svolto nel [giorno 27/05/2025](#27052025).*
 
-[kibana-url-encode/main.py](https://github.com/shini161/kib-cat/blob/4cdde65917956da75fb754c5048ab9603e11831c/kibana-url-encode/main.py)
+[kibana-url-encode/main.py](https://github.com/shini161/kibcat/blob/4cdde65917956da75fb754c5048ab9603e11831c/kibana-url-encode/main.py)
 ```python
 import os
 import json
@@ -103,9 +103,9 @@ Esempio _a:
 
 # 27/05/2025
 
-Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](https://github.com/shini161/kib-cat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/json-template/url-template.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [url_jsonifier](https://github.com/shini161/kib-cat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/url_jsonifier/utils.py) per generare il link a Kibana.
+Per poter generare URL di Kibana con i desiderati parametri è stato creato un [template `jinja2`](https://github.com/shini161/kibcat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/json-template/url-template.json.jinja2), che serve a generare il `dict` da codificare in rison tramite la funzione `build_rison_url_from_json` in [url_jsonifier](https://github.com/shini161/kibcat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/url_jsonifier/utils.py) per generare il link a Kibana.
 
-Per renderizzare il template è stata creata la funzione `render_dict` in [load_template.py](https://github.com/shini161/kib-cat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/json-template/load_template.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
+Per renderizzare il template è stata creata la funzione `render_dict` in [load_template.py](https://github.com/shini161/kibcat/blob/60c101874696f0e250c03abeb2d44e8b1d66ff87/json-template/load_template.py) alla quale è possibile passare i parametri necessari per ottenere il dict json da utilizzare per l'url.
 
 I parametri possibili sono:
 
@@ -148,7 +148,7 @@ In questo esempio viene generato l'url di kibana che porta ad un filtraggio dei 
 
 Invece per quanto riguarda l'API di Kibana è stato risolto l'errore del certificato creando un wrapper per la classe dell'API di Kibana su Python
 
-[kibcat_api.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/kibana-api/kibcat_api.py)
+[kibcat_api.py](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/kibana-api/kibcat_api.py)
 ```python
 class NotCertifiedKibana(Kibana):
     """Kibana class wrapper to disable SSL certificate"""
@@ -172,11 +172,11 @@ Inoltre per poter ottenere la lista delle field per il filtraggio dei dati (quel
 
 ---
 
-[URL JSONifier](https://github.com/shini161/kib-cat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
+[URL JSONifier](https://github.com/shini161/kibcat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier) è il modulo utilizzato per convertire gli URL Rison di Kibana in JSON (oppure dict python) e viceversa.
 
 È stata utilizzata la libreria [`prison`](https://pypi.org/project/prison/) per parsare il rison, regex per identificare gli argomenti dell'URL (ovvero la parte `_g` e la parte `_a`)
 
-[url_jsonifier/utils.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier/utils.py)
+[url_jsonifier/utils.py](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier/utils.py)
 ```py
 def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
@@ -210,11 +210,11 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
     """
 ```
 
-Sono stati aggiunti [test automatici](https://github.com/shini161/kib-cat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/tests) di workflow su github sul modulo di `url_jsonifier`
+Sono stati aggiunti [test automatici](https://github.com/shini161/kibcat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/tests) di workflow su github sul modulo di `url_jsonifier`
 
 # 28/05/2025
 
-Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](https://github.com/shini161/kib-cat/blob/9c778cf51d0e522d9e5e6957f10a91b5e7a875d3/src/kibana_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
+Riguardo all'API di Kibana sono state create varie funzioni, nel file [kibcat_api.py](https://github.com/shini161/kibcat/blob/9c778cf51d0e522d9e5e6957f10a91b5e7a875d3/src/kibana_api/kibcat_api.py), per poter rendere più semplice la richiesta di dati a Kibana, da usare per poi generare gli URL tramite il Cat.
 
 La funzione `get_spaces` serve ad ottenere tutti gli `space` di Kibana e in questo caso per verificare se quello che si vuole usare esista.
 
@@ -227,7 +227,7 @@ La funzione `group_fields` si occupa di associare ad ogni field una eventuale ke
 
 La funzione `get_field_properties` si occupa semplicemente di ricavare le proprietà di una specifica field, e serve per ricavare i possibili valori di quella field, tramite la funzione `get_field_possible_values` che fa una richiesta API a Kibana per ottenere dei possibili valori che una field specifica può assumere.
 
-[Esempio: example.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/kibana-api/example.py)
+[Esempio: example.py](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/kibana-api/example.py)
 
 ```python
 
@@ -260,9 +260,9 @@ if __name__ == "__main__":
 
 ```
 
-Inoltre è stata aggiunta una [classe base di logging](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/logger/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
+Inoltre è stata aggiunta una [classe base di logging](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/logger/base_logger.py), per facilitare il log durante lo sviluppo sul Cat, semplicemente wrappando la classe base.
 
-[base_logger.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/logger/base_logger.py)
+[base_logger.py](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/logger/base_logger.py)
 
 ```python
 class BaseKibCatLogger:
@@ -282,7 +282,7 @@ class BaseKibCatLogger:
         print(f"ERROR: {message}")
 ```
 
-Esempio di uso in [cat/plugins/kibcat/utils/kib_cat_logger.py](https://github.com/shini161/kib-cat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/container/cat/plugins/kibcat/cat_logger.py):
+Esempio di uso in [cat/plugins/kibcat/utils/kib_cat_logger.py](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/container/cat/plugins/kibcat/cat_logger.py):
 
 ```python
 from cat.log import log
@@ -310,7 +310,7 @@ La repo è stata sottoposta ad un refactoring completo in modo da migliorare la 
 
 ---
 
-È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](https://github.com/shini161/kib-cat/blob/5d39c4220c6725c13e423b300b6cd1cd93094d08/cat/plugins/kibcat/plugin.py)
+È stata creata la prima demo, ovvero un tool di esempio per il Cat, dentro a [plugin.py](https://github.com/shini161/kibcat/blob/5d39c4220c6725c13e423b300b6cd1cd93094d08/cat/plugins/kibcat/plugin.py)
 
 ```python
 @tool(return_direct=True)
@@ -465,9 +465,9 @@ Nell'esempio riportato sopra sarebbe quindi necessario estrarre i nomi in questo
 ]
 ```
 
-Per risolvere questo problema è stato creato un nuovo modulo, [`kibfieldvalues`](https://github.com/shini161/kib-cat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibfieldvalues).
+Per risolvere questo problema è stato creato un nuovo modulo, [`kibfieldvalues`](https://github.com/shini161/kibcat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibfieldvalues).
 
-[fields.py](https://github.com/shini161/kib-cat/blob/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibfieldvalues/fields.py)
+[fields.py](https://github.com/shini161/kibcat/blob/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibfieldvalues/fields.py)
 ```py
 def get_initial_part_of_fields(
     client: Elasticsearch,
@@ -501,9 +501,9 @@ Infine la funzione ritorna una lista di stringhe composta dai nomi univoci utili
 
 Successivamente si è deciso di ampliare la possibilità dei filtri, aggiungendo tutti gli operatori di Kibana, ovvero: `IS`, `IS_NOT`, `IS_ONE_OF`, `IS_NOT_ONE_OF`, `EXISTS`, `NOT_EXISTS`.
 
-Per fare questo è stato aggiornato il modulo [kibtemplate](https://github.com/shini161/kib-cat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate), aggiungendo [altri template](https://github.com/shini161/kib-cat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/templates) `jinja2` per poter implementare tutti gli operatori.
+Per fare questo è stato aggiornato il modulo [kibtemplate](https://github.com/shini161/kibcat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate), aggiungendo [altri template](https://github.com/shini161/kibcat/tree/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/templates) `jinja2` per poter implementare tutti gli operatori.
 
-Inoltre per rappresentare un filtro di Kibana è stata creata la classe `KibCatFilter`, che si trova all'interno di [kibcat_filter.py](https://github.com/shini161/kib-cat/blob/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/kibcat_filter.py):
+Inoltre per rappresentare un filtro di Kibana è stata creata la classe `KibCatFilter`, che si trova all'interno di [kibcat_filter.py](https://github.com/shini161/kibcat/blob/cd6f208a55fe7917984675dd8c6e1609c18c325d/src/kibtemplate/kibcat_filter.py):
 
 ```python
 from enum import Enum, auto
