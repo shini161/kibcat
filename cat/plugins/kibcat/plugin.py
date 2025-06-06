@@ -294,7 +294,7 @@ class FilterForm(CatForm):
 
         prompt = build_form_print_message(
             conversation_history=self.cat.working_memory.stringify_chat_history(),
-            form_data_str=input_data
+            input_data_str=input_data
         )
         return self.cat.llm(prompt)
 
