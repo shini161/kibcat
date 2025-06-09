@@ -26,7 +26,13 @@ from kibtypes import ParsedKibanaURL
 from kiburl import build_rison_url_from_json
 
 from .defaults import DEFAULT_END_TIME, DEFAULT_START_TIME
-from .utils import KibCatLogger, check_env_vars, format_T_in_date, format_time_kibana, get_main_fields_dict
+from .utils import (
+    KibCatLogger,
+    check_env_vars,
+    format_T_in_date,
+    format_time_kibana,
+    get_main_fields_dict,
+)
 
 # Environment Variables
 URL = os.getenv("KIBANA_URL")
@@ -49,7 +55,7 @@ def after_cat_bootstrap(cat):
     check_env_vars(
         url=URL,
         elastic_url=ELASTIC_URL,
-        base_url=BASE_URL_PART,
+        base_url_part=BASE_URL_PART,
         username=USERNAME,
         password=PASSWORD,
         space_id=SPACE_ID,
