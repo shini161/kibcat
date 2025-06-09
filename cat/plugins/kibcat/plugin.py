@@ -6,6 +6,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, cast
 
 import isodate
+from elastic_transport import NodeConfig
+from elasticsearch import Elasticsearch
+from kibapi import NotCertifiedKibana
+from kibtemplate.builders import build_template
+from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
+from kibtypes.parsed_kibana_url import ParsedKibanaURL
+from kiburl.builders import build_rison_url_from_json
+from pydantic import BaseModel
+
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
 from cat.plugins.kibcat.prompts.builders import (
@@ -16,17 +25,12 @@ from cat.plugins.kibcat.prompts.builders import (
     build_form_print_message,
     build_refine_filter_json,
 )
+from cat.plugins.kibcat.utils.generate_field_values import (
+    automated_field_value_extraction,
+    generate_field_to_group,
+    verify_data_views_space_id,
+)
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-from elastic_transport import NodeConfig
-from elasticsearch import Elasticsearch
-from pydantic import BaseModel
-
-from kibapi import NotCertifiedKibana, get_field_properties, group_fields
-from kibfieldvalues import get_initial_part_of_fields
-from kibtemplate.builders import build_template
-from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
-from kibtypes.parsed_kibana_url import ParsedKibanaURL
-from kiburl.builders import build_rison_url_from_json
 
 ########## ENV variables ##########
 
@@ -343,101 +347,34 @@ class FilterForm(CatForm):  # type: ignore
                 )
                 del self._model["end_time"]
 
-        # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(
-            logger=KibCatLogger
+        verify_result: str | None = verify_data_views_space_id(
+            kibana=self._kibana,
+            space_id=cast(str, SPACE_ID),
+            data_view_id=cast(str, DATA_VIEW_ID),
+            fields_list=self._fields_list,
+            logger=KibCatLogger,
         )
-
-        # Check if the needed space exists, otherwise return the error
-        if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
-            msg = "Specified space ID not found"
-
-            KibCatLogger.error(msg)
-            return msg
-
-        # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(
-            logger=KibCatLogger
-        )
-
-        # Check if the dataview needed exists, otherwise return the error
-        if (not data_views) or (
-            not any(view["id"] == DATA_VIEW_ID for view in data_views)
-        ):
-            msg: str = "Specified data view not found"
-
-            KibCatLogger.error(msg)
-            return msg
-
-        # if the field list cant be loaded, return the error
-        if not self._fields_list:
-            msg = "Not found fields_list"
-
-            KibCatLogger.error(msg)
-            return msg
+        if verify_result:
+            return verify_result
 
         filters: dict[Any, Any] = deepcopy(self._model.get("filters", {}))
 
-        # Group them with keywords if there are
-        grouped_list: list[list[str]] = group_fields(self._fields_list)
-
         # Associate a group to every field in this dict
-        field_to_group: dict = {
-            field: group for group in grouped_list for field in group
-        }
+        field_to_group: dict[str, Any] = generate_field_to_group(self._fields_list)
 
         # Replace the key names with the possible keys in the input
         for element in filters:
             key: str = element.field
-            element.field = field_to_group.get(key, [key])
-
-        # Now add the list of possible values per each one of the keys using the Kibana API
-        for element in filters:
-            key_fields: list[str] = element.field
-            new_key: dict[str, Any] = {}
-
-            normal_field: str | None = None
-            keyword_field: str | None = None
-
-            for field in key_fields:
-                if field.endswith(".keyword"):
-                    keyword_field = field
-                    continue
-                normal_field = field
-
-            if keyword_field:
-                msg: str = (
-                    f"Getting field {keyword_field} possible values using Elastic"
-                )
-                KibCatLogger.message(msg)
-
-                keyword_field_values: list[str] = get_initial_part_of_fields(
-                    self._elastic, keyword_field, cast(str, DATA_VIEW_ID)
-                )
-
-                new_key[keyword_field] = keyword_field_values
-            else:
-                if normal_field:
-                    msg: str = (
-                        f"Getting field {normal_field} possible values using Kibana"
-                    )
-                    KibCatLogger.message(msg)
-
-                    field_properties: dict[str, Any] = get_field_properties(
-                        self._fields_list, normal_field
-                    )
-
-                    # Get all the field's possible values
-                    possible_values: list[Any] = self._kibana.get_field_possible_values(
-                        cast(str, SPACE_ID),
-                        cast(str, DATA_VIEW_ID),
-                        field_properties,
-                        logger=KibCatLogger,
-                    )
-
-                    new_key[normal_field] = possible_values
-
-            element.field = new_key
+            element_field_group = field_to_group.get(key, [key])
+            element.field = automated_field_value_extraction(
+                element_field=element_field_group,
+                data_view_id=cast(str, DATA_VIEW_ID),
+                space_id=cast(str, SPACE_ID),
+                fields_list=self._fields_list,
+                kibana=self._kibana,
+                elastic=self._elastic,
+                logger=KibCatLogger,
+            )
 
         # TODO: validate ambiguous filters
         # TODO: move deterministic validation of accepted values out of the cat
