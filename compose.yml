@@ -23,6 +23,8 @@ services:
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      # Cat UI
+      - ./cat.js:/admin/assets/cat.js
     logging:
       driver: json-file
       options:
