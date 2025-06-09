@@ -1,6 +1,8 @@
 services:
   cheshire-cat-core:
-    image: ghcr.io/cheshire-cat-ai/core:latest
+    build:
+      context: ./cc_docker_image
+      dockerfile: Dockerfile
     container_name: cheshire_cat_core
     extra_hosts:
       - "${ELASTIC_URL_PRIVATE}:${IP_PRIVATE}"
@@ -23,8 +25,6 @@ services:
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
-      # Cat UI
-      - ./cat.js:/admin/assets/cat.js
     logging:
       driver: json-file
       options:
