@@ -1,19 +1,23 @@
 from cat.log import log
 
-from cat.plugins.kibcat.imports.kiblog import BaseLogger
+from kiblog import BaseLogger
 
 
 class KibCatLogger(BaseLogger):
     """Wrapper of the class BaseLogger to log using the cat's logger"""
 
     @staticmethod
-    def message(message: str):
+    def debug(message: str) -> None:
+        log.debug(message)
+
+    @staticmethod
+    def message(message: str) -> None:
         log.info(message)
 
     @staticmethod
-    def warning(message: str):
+    def warning(message: str) -> None:
         log.warning(message)
 
     @staticmethod
-    def error(message: str):
+    def error(message: str) -> None:
         log.error(message)

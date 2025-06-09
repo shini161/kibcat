@@ -1,10 +1,11 @@
 [tool.black]
 line-length = 120
 target-version = ['py310']
-exclude = '^(cat/|venv/)'
+exclude = '/(venv|\.git)/'
 
 [tool.isort]
 profile = "black"
 line_length = 120
-skip = ["cat", "venv"]
+skip = ["venv", ".git"]
+src_paths = ["src", "tests", "examples", "cat/plugins/kibcat"]
 

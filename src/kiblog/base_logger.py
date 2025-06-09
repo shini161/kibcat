@@ -7,6 +7,16 @@ class BaseLogger:
     """
 
     @staticmethod
+    def debug(message: str) -> None:
+        """
+        Log a debug message.
+
+        Args:
+            message (str): The message to log.
+        """
+        print(message)
+
+    @staticmethod
     def message(message: str) -> None:
         """
         Log a general informational message.

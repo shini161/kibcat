@@ -1,11 +1,12 @@
 [MASTER]
-ignore=cat,venv,.venv
+ignore=venv,.venv,cat
 init-hook='import sys; sys.path.append("src")'
 
 [FORMAT]
 max-line-length=120
 
 [MESSAGES CONTROL]
-disable=too-many-arguments,too-many-return-statements,R0914,too-many-branches,missing-module-docstring,too-few-public-methods
+disable=too-many-arguments,too-many-return-statements,R0914,too-many-branches,missing-module-docstring,too-few-public-methods,W0511,missing-docstring
 
 # R0914 = Too many local variables
+# W0511 = TODO
