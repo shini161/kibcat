@@ -2,6 +2,9 @@ services:
   cheshire-cat-core:
     image: ghcr.io/cheshire-cat-ai/core:latest
     container_name: cheshire_cat_core
+    extra_hosts:
+      - "${ELASTIC_URL_PRIVATE}:${IP_PRIVATE}"
+      - "${KIBANA_URL_PRIVATE}:${IP_PRIVATE}"
     ports:
       - 1865:80
       - 5678:5678
@@ -19,6 +22,7 @@ services:
       - ./src:/app/cat/plugins/kibcat/imports
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
     logging:
       driver: json-file
       options:
