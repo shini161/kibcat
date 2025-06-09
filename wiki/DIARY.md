@@ -567,7 +567,33 @@ class FilterForm(CatForm):
         }
 ```
 
-È stata sovrascritta la funzione `extract` per poter estrarre i dati dal messaggio dell'utente con un prompt personalizzato.
+I form sono una `FSM` _(dall'inglese finite state machine)_: un'architettura che si basa su determinati <u>stati</u> e <u>transizioni</u> tra questi stati, utili in questo caso per poter ottenere i dati in modo preciso dall'utente, validarli, chiedere conferma e infine restituire l'URL per Kibana.  
+Gli stati presenti all'interno del form sono:
+1. `INCOMPLETE` - Lo stato iniziale del form, indica che i dati necessari devono ancora essere raccolti o completati. In questa fase il Cat estrae informazioni dalla richiesta dell'utente o chiede ulteriori dettagli.
+2. `WAIT_CONFIRM` - Stato in cui il form ha raccolto tutti i dati necessari e sta aspettando una conferma dall'utente prima di procedere con l'elaborazione della richiesta. Opzionale, si può saltare se `ask_confirm=False`.
+3. `CLOSED` - Stato che indica che l'utente ha annullato la compilazione del form o ha interrotto il processo, terminando la raccolta dei dati.
+4. `COMPLETE` - Stato finale raggiunto quando tutti i dati sono stati raccolti, confermati ed elaborati con successo, permettendo al Cat di generare l'URL di Kibana richiesto.
+
+Questo è il flusso di funzionamento dei form in _Cheshire Cat_:
+1. Il form inizia nello stato `INCOMPLETE`
+2. Ad ogni chiamata a `next()`:
+    - Verifica se l'utente vuole uscire con `check_exit_intent()` _(viene realizzato e collegato un semplice tool che verifica se nell'ultimo messaggio l'utente chiede di uscire dal form)_
+    - Se lo stato è `WAIT_CONFIRM`, controlla la risposta con `confirm()` _(viene utilizzato un altro tool che verifica se l'utente ha confermato o meno i dati estratti e sanitizzati)_
+    - Se lo stato è `INCOMPLETE`, chiama `update()` per:
+      - Estrarre informazioni con `extract()`
+      - Sanitizzare i dati con `sanitize()`
+      - Aggiornare i valori contenuti negli attributi della classe `_model`
+      - Validare i dati con `validate()`
+      - Cambio stato a `COMPLETE` se validazione ok, altrimenti resta `INCOMPLETE`
+    - Se lo stato diventa `COMPLETE`:
+      - Se `ask_confirm=True`, passa a `WAIT_CONFIRM`
+      - Altrimenti chiama `submit()` e passa a `CLOSED`
+    - Restituisce un messaggio tramite `message()` in base allo stato corrente
+
+Di default, nel core del Cat, per la funzione `extract` viene utilizzato [un prompt a cui viene passato il typing della classe specificata come `model`, estraendo i dati dalla `conversation history`](https://github.com/cheshire-cat-ai/core/blob/abafac5cf0aba5dcb7bc3ce7b4d5ae981da15ed7/core/cat/experimental/form/cat_form.py#L200-L245).
+
+Nel nostro caso specifico, questo non era sufficiente, in quanto ci serviva una struttura più complessa _(soprattutto per gestire la validazione e il controllo automatico delle "typo" grazie al controllo dei possibili valori delle field)_.  
+È stata quindi, prima di tutto, sovrascritta la funzione `extract` per poter estrarre i dati dal messaggio dell'utente con un prompt personalizzato.
 
 [form_data_extractor.jinja2](https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/prompts/templates/form_data_extractor.jinja2)
 ```
@@ -613,7 +639,26 @@ output: "{
 }"{% endraw %}
 ```
 
-Di default, nel core del Cat, viene utilizzata [una funzione che, utilizzando un prompt contente il typing della classe specificata come `model`, estrae i dati dalla `conversation history`](https://github.com/cheshire-cat-ai/core/blob/abafac5cf0aba5dcb7bc3ce7b4d5ae981da15ed7/core/cat/experimental/form/cat_form.py#L200-L245).
+[plugin.py](https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/plugin.py#L311-L327)
+```python
+def extract(self):
+    """Extracts the filter data from the form."""
+
+    history = self.cat.working_memory.stringify_chat_history()
+
+    json_str = self.cat.llm(build_form_data_extractor(
+        conversation_history=history,
+        LOGGER=KibCatLogger
+    )).replace("```json", "").replace("`", "")
+
+    response = json.loads(json_str)
+
+    return {
+        "start_time": response.get("start_time", 14400),
+        "end_time": response.get("end_time", 0),
+        "filters": response.get("filters", [])
+    }
+```
 
 ---
 
