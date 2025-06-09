@@ -701,5 +701,97 @@ class KibCatFilter:
         self.field = field
         self.operator = operator
         self.value = value
-
 ```
+
+---
+
+Per poter validare i dati inseriti dall'utente, è stata creata la funzione `validate` all'interno del form. Nei giorni successivi, è stata implementata anche la logica per validare i filtri, attualmente mancante.
+
+[plugin.py](https://github.com/shini161/kibcat/blob/fc3b1b676d6e2307d9e3ef5b4981283c5febd78e/cat/plugins/kibcat/plugin.py#L176-L211)
+```python
+def validate(self):
+    """Validate form data"""
+    self._missing_fields = []
+    self._errors = []
+    
+    # Validate start_time
+    if "start_time" in self._model:
+        start_time = self._model["start_time"]
+        if not isinstance(start_time, int) or start_time < 0:
+        self._errors.append("start_time: must be a positive integer")
+        del self._model["start_time"]
+    
+    # Validate end_time
+    if "end_time" in self._model:
+        end_time = self._model["end_time"]
+        if not isinstance(end_time, int) or end_time < 0:
+        self._errors.append("end_time: must be a positive integer")
+        del self._model["end_time"]
+        
+        # Check if end_time is less than start_time
+        if "start_time" in self._model and end_time > self._model["start_time"]:
+        self._errors.append("end_time: must be less than or equal to start_time")
+        del self._model["end_time"]
+    
+    # Validate filters
+
+    if not self._errors and not self._missing_fields:
+        self._state = CatFormState.COMPLETE
+    else:
+        self._state = CatFormState.INCOMPLETE
+```
+
+---
+
+Dopo un'analisi del funzionamento del plugin e qualche ipotesi sull'utilizzo effettivo da parte degli utilizzatori finali, abbiamo deciso di spostare la logica di generazione dell'URL di Kibana dalla fase di `submit` a quella di `confirm`: in questo modo, l'utente può vedere l'URL generato prima di uscire dal form, e in questo modo può aggiornare i dati inseriti, senza dover reinserire tutto da capo.
+```python
+def message_wait_confirm(self):
+    # URL generation logic moved here
+    return {
+        "output": f'Kibana <a href="{url}" target="_blank">URL</a>'
+    }
+
+def submit(self, form_data: FilterData):
+    # Do nothing
+    # Maybe return "Thanks for using out plugin!" or something similar
+    return {
+        "output": 'Thanks for using our plugin!'
+    }
+```
+
+# 06/06/2025
+
+Abbiamo deciso di implementare un tool utile in debug per visualizzare il conteggio di token di input e output utilizzati dal LLM.
+E' stato quindi creato il tool `token_counter` all'interno del plugin, che utilizza le variabili esposte dal Cat all'interno della classe `working_memory`.  
+
+[class ModelInteractionHandler(BaseCallbackHandler) del CC](https://github.com/cheshire-cat-ai/core/blob/abafac5cf0aba5dcb7bc3ce7b4d5ae981da15ed7/core/cat/looking_glass/callbacks.py#L20-L36)
+```python
+class ModelInteractionHandler(BaseCallbackHandler):
+    """
+    Langchain callback handler for tracking model interactions.
+    """
+
+    def __init__(self, cat, source: str):
+        self.cat = cat
+        self.cat.working_memory.model_interactions.append(
+            LLMModelInteraction(
+                source=source,
+                prompt=[],
+                reply="",
+                input_tokens=0,
+                output_tokens=0,
+                ended_at=0,
+            )
+        )
+```
+
+[plugin.py](https://github.com/shini161/kibcat/blob/bd9839060d60ec90de6a3df2485fad1965dd31af/cat/plugins/kibcat/plugin.py#L313-L317)
+```python
+@tool
+def get_token_usage(input, cat):
+    """Get the token usage for the current session."""
+    input_tokens = cat.working_memory.model_interactions[1].input_tokens
+    return f"Input tokens: {input_tokens}"
+```
+Il grosso problema che abbiamo riscontrato, però, è che gli `output_tokens` non vengono aggiornati correttamente, e rimangono fissi a 22. Gli `input_tokens`, invece, vengono aggiornati correttamente, ma un tool che restituisce solamente i token di input non è molto utile.  
+Nelle successive modifiche al codice lo abbiamo quindi rimosso, in quanto non pienamente funzionante.
