@@ -6,27 +6,27 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, cast
 
 import isodate
+from cat.experimental.form import CatForm, CatFormState, form
+from cat.mad_hatter.decorators import hook
+from cat.plugins.kibcat.prompts.builders import (
+    build_agent_prefix,
+    build_form_confirm_message,
+    build_form_data_extractor,
+    build_form_end_message,
+    build_form_print_message,
+    build_refine_filter_json,
+)
+from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 from elastic_transport import NodeConfig
 from elasticsearch import Elasticsearch
+from pydantic import BaseModel
+
 from kibapi import NotCertifiedKibana, get_field_properties, group_fields
 from kibfieldvalues import get_initial_part_of_fields
 from kibtemplate.builders import build_template
 from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
 from kibtypes.parsed_kibana_url import ParsedKibanaURL
 from kiburl.builders import build_rison_url_from_json
-from pydantic import BaseModel
-
-from cat.experimental.form import CatForm, CatFormState, form
-from cat.mad_hatter.decorators import hook
-from cat.plugins.kibcat.prompts.builders import (
-    build_agent_prefix,
-    build_form_data_extractor,
-    build_form_confirm_message,
-    build_form_print_message,
-    build_form_end_message,
-    build_refine_filter_json,
-)
-from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
 ########## ENV variables ##########
 
