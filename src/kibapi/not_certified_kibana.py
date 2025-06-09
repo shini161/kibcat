@@ -1,3 +1,4 @@
+import time
 from typing import Any, Type, cast
 
 import requests
@@ -16,6 +17,16 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
 
     Inherits from the base Kibana class.
     """
+
+    def __init__(
+        self,
+        base_url: str,
+        username: str | None = None,
+        password: str | None = None,
+        logger: Type[BaseLogger] | None = None,
+    ) -> None:
+        self.logger = logger
+        super().__init__(base_url=base_url, username=username, password=password)
 
     # Some types are ignored here, that's because the Kibana base class does not have Typings
     def requester(self, **kwargs: Any) -> requests.Response:
@@ -38,7 +49,15 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             else {"kbn-xsrf": "True"}
         )
         auth: tuple[str, str] | None = (self.username, self.password) if (self.username and self.password) else None
-        return requests.request(headers=headers, auth=auth, verify=False, timeout=10, **kwargs)
+        start_time = time.time()
+        response = requests.request(headers=headers, auth=auth, verify=False, timeout=10, **kwargs)
+        elapsed_ms = (time.time() - start_time) * 1000
+        if self.logger:
+            self.logger.debug(
+                "[kibapi.NotCertifiedKibana.requester] - "
+                f"Request to {kwargs.get('url')} completed in {elapsed_ms:.2f}ms"
+            )
+        return response
 
     def get(self, path: str) -> requests.Response:
         """
@@ -65,7 +84,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         """
         return self.requester(method="POST", url=f"{self.base_url}{path}", json=body)
 
-    def get_spaces(self, logger: Type[BaseLogger] | None = None) -> list[dict[str, Any]] | None:
+    def get_spaces(self) -> list[dict[str, Any]] | None:
         """
         Retrieve the list of Kibana spaces.
 
@@ -80,23 +99,23 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             response: requests.Response = self.space().all()
             if response.status_code == 200:
                 spaces = response.json()
-                if logger:
-                    logger.message("[kibapi.NotCertifiedKibana.get_spaces] - Connected to Kibana API")
-                    logger.message("[kibapi.NotCertifiedKibana.get_spaces] - Available spaces:")
+                if self.logger:
+                    self.logger.message("[kibapi.NotCertifiedKibana.get_spaces] - Connected to Kibana API")
+                    self.logger.message("[kibapi.NotCertifiedKibana.get_spaces] - Available spaces:")
                     for space in spaces:
-                        logger.message(f"- ID: {space['id']}, Name: {space['name']}")
+                        self.logger.message(f"- ID: {space['id']}, Name: {space['name']}")
                 return cast(list[dict[str, Any]] | None, spaces)
             msg = f"[kibapi.NotCertifiedKibana.get_spaces] - Unexpected status code: {response.status_code}"
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return None
         except requests.RequestException as e:
             msg = f"[kibapi.NotCertifiedKibana.get_spaces]: Exception while getting spaces.\n{e}"
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return None
 
-    def get_dataviews(self, logger: Type[BaseLogger] | None = None) -> list[dict[str, Any]] | None:
+    def get_dataviews(self) -> list[dict[str, Any]] | None:
         """
         Retrieve all available data views.
 
@@ -112,21 +131,16 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             if response.status_code == 200:
                 return cast(list[dict[str, Any]] | None, response.json().get("data_view", []))
             msg = f"[kibapi.NotCertifiedKibana.get_dataviews] - Can't get data views - Code {response.status_code}"
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return None
         except requests.RequestException as e:
             msg = f"[kibapi.NotCertifiedKibana.get_dataviews] - Exception while getting dataviews.\n{e}"
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return None
 
-    def get_fields_list(
-        self,
-        space_id: str,
-        data_view_id: str,
-        logger: Type[BaseLogger] | None = None,
-    ) -> list[dict[str, Any]] | None:
+    def get_fields_list(self, space_id: str, data_view_id: str) -> list[dict[str, Any]] | None:
         """
         Retrieve the list of fields for a specified space and data view.
 
@@ -145,13 +159,13 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             if response.status_code == 200:
                 return cast(list[dict[str, Any]] | None, response.json().get("fields", []))
             msg = f"[kibapi.NotCertifiedKibana.get_fields_list] - Unexpected status code: {response.status_code}"
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return None
         except requests.RequestException as e:
             msg = f"[kibapi.NotCertifiedKibana.get_fields_list] - Exception while getting fields list.\n{e}"
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return None
 
     # pylint: disable=too-many-positional-arguments
@@ -162,7 +176,6 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         field_dict: dict[str, Any],
         start_date: str | None = None,
         end_date: str | None = None,
-        logger: Type[BaseLogger] | None = None,
     ) -> list[Any]:
         """
         Retrieve suggested possible values for a given field within a space and data view,
@@ -226,14 +239,14 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
                 "[kibapi.NotCertifiedKibana.get_field_possible_values] - "
                 f"Unexpected status code: {response.status_code}"
             )
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return []
         except requests.RequestException as e:
             msg = (
                 "[kibapi.NotCertifiedKibana.get_field_possible_values] - "
                 f"Exception while getting field possible values.\n{e}"
             )
-            if logger:
-                logger.error(msg)
+            if self.logger:
+                self.logger.error(msg)
             return []

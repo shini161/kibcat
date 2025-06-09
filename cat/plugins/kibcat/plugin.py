@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from typing import Any, cast
@@ -32,17 +31,16 @@ from cat.plugins.kibcat.utils.generate_field_values import (
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 
-########## ENV variables ##########
-
+# Environment Variables
 URL = os.getenv("KIBANA_URL")
 ELASTIC_URL = os.getenv("ELASTIC_URL")
 BASE_URL_PART = os.getenv("KIBANA_BASE_URL_PART")
 USERNAME = os.getenv("KIBANA_USERNAME")
 PASSWORD = os.getenv("KIBANA_PASS")
-
 SPACE_ID = os.getenv("KIBANA_SPACE_ID")
 DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
 
+FIELDS_JSON_PATH = os.getenv("FIELDS_JSON_PATH")
 
 def get_main_fields_dict() -> dict[str, Any]:
     """
@@ -149,18 +147,19 @@ def check_env_vars() -> str | None:
     if not SPACE_ID:
         msg = "SPACE_ID parameter null"
 
-        KibCatLogger.error(msg)
-        return msg
-    if not DATA_VIEW_ID:
-        msg = "DATA_VIEW_ID parameter null"
 
-        KibCatLogger.error(msg)
-        return msg
-
-    return None
-
-
-####################################
+######################## Hooks #######################
+@hook
+def after_cat_bootstrap(cat):
+    check_env_vars(
+        url=URL,
+        elastic_url=ELASTIC_URL,
+        base_url_part=BASE_URL_PART,
+        username=USERNAME,
+        password=PASSWORD,
+        space_id=SPACE_ID,
+        data_view_id=DATA_VIEW_ID,
+    )
 
 
 @hook
@@ -172,9 +171,7 @@ def agent_prompt_prefix(prefix, cat):
     return prefix
 
 
-###################################
-
-
+######################## FORMS #######################
 # The query isnt used right now, maybe it will be implemented later
 class QueryItem(BaseModel):
     key: str
@@ -204,36 +201,36 @@ class FilterForm(CatForm):  # type: ignore
     _elastic: Elasticsearch
 
     def __init__(self, cat):
-        # Check the variables
-        env_check_result: str | None = check_env_vars()
-        if env_check_result:
-            KibCatLogger.error(env_check_result)
-            raise ValueError(env_check_result)
-
         # Initialize the NotCertifiedKibana instance with the provided credentials
-        self._kibana = NotCertifiedKibana(
-            base_url=URL, username=USERNAME, password=PASSWORD
-        )
+        assert URL is not None
+        assert USERNAME is not None
+        assert PASSWORD is not None
+        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD, logger=KibCatLogger)
 
         # Initialize Elastic instance
-
+        assert ELASTIC_URL is not None
         node_config: NodeConfig = NodeConfig(
             scheme="https",
-            host=cast(str, ELASTIC_URL).split("://")[-1].split(":")[0],
+            host=ELASTIC_URL.split("://")[-1].split(":")[0],
             port=443,
             verify_certs=False,
         )
 
         self._elastic: Elasticsearch = Elasticsearch(
             [node_config],
-            basic_auth=(cast(str, USERNAME), cast(str, PASSWORD)),
+            basic_auth=(USERNAME, PASSWORD),
         )
 
         self._fields_list: list[dict[str, Any]] = []
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
+        assert SPACE_ID is not None
+        assert DATA_VIEW_ID is not None
+        optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(
+            space_id=SPACE_ID, data_view_id=DATA_VIEW_ID
+        )
+
         if not optional_fields_list:
             self._fields_list = []
         else:
@@ -290,7 +287,6 @@ class FilterForm(CatForm):  # type: ignore
                 filter_item.get("operator", "is").upper()
             ]
             filters[index] = KibCatFilter(**filter_item)
-
         return filters
 
     def extract(self):
@@ -302,20 +298,20 @@ class FilterForm(CatForm):  # type: ignore
             [op.name.lower() for op in FilterOperators], indent=2
         )
 
-        json_str = (
-            self.cat.llm(
-                build_form_data_extractor(
-                    conversation_history=history,
-                    main_fields_str=main_fields_str,
-                    operators_str=operators_str,
-                    logger=KibCatLogger,
+        try:
+            response = parse_json(
+                self.cat.llm(
+                    build_form_data_extractor(
+                        conversation_history=history,
+                        main_fields_str=main_fields_str,
+                        operators_str=operators_str,
+                        logger=KibCatLogger,
+                    )
                 )
             )
-            .replace("```json", "")
-            .replace("`", "")
-        )
-
-        response = json.loads(json_str)
+        except OutputParserException as e:
+            KibCatLogger.error(f"Failed to parse JSON: {e}")
+            return
 
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
@@ -345,7 +341,7 @@ class FilterForm(CatForm):  # type: ignore
             conversation_history=self.cat.working_memory.stringify_chat_history(),
             input_data_str=input_data,
         )
-        return self.cat.llm(prompt)
+        return cast(str, self.cat.llm(prompt))
 
     def validate(self):
         """Validate form data"""
@@ -437,7 +433,8 @@ class FilterForm(CatForm):  # type: ignore
         )
 
         try:
-            json_cat_response: dict[Any, Any] = json.loads(cat_response)
+            # Call the cat using the query
+            json_cat_response: dict[Any, Any] = parse_json(self.cat.llm(filter_data))
             KibCatLogger.message("Cat JSON parsed correctly")
 
             if "errors" in json_cat_response:
@@ -451,9 +448,8 @@ class FilterForm(CatForm):  # type: ignore
                     deepcopy(json_cat_response)["filters"]
                 )
 
-        except json.JSONDecodeError as e:
+        except OutputParserException as e:
             msg = f"Cannot decode cat's JSON filtered - {e}"
-
             KibCatLogger.error(msg)
             self._errors.append(msg)
             self._state = CatFormState.INCOMPLETE
@@ -495,24 +491,26 @@ class FilterForm(CatForm):  # type: ignore
 
         # Calculate time start and end
         end_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
-            format_T_in_date(self._model.get("end_time", "PT0S"))
+            format_T_in_date(duration=self._model.get("end_time", "PT0S"))
         )
         start_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
-            format_T_in_date(self._model.get("start_time", "PT0S"))
+            format_T_in_date(duration=self._model.get("start_time", "PT0S"))
         )
 
-        start_time_str: str = format_time_kibana(start_time)
-        end_time_str: str = format_time_kibana(end_time)
+        start_time_str: str = format_time_kibana(dt=start_time)
+        end_time_str: str = format_time_kibana(dt=end_time)
 
         # Type is ignored because env variables are already checked using the check_env_vars function
+        assert URL is not None
+        assert BASE_URL_PART is not None
         result_dict: ParsedKibanaURL = build_template(
-            URL + BASE_URL_PART,  # type: ignore
-            start_time_str,
-            end_time_str,
-            fields_to_visualize,
-            self._model.get("filters", []),
-            DATA_VIEW_ID,  # type: ignore
-            form_data_kql,
+            base_url=URL + BASE_URL_PART,
+            start_time=start_time_str,
+            end_time=end_time_str,
+            visible_fields=fields_to_visualize,
+            filters=self._model.get("filters", []),
+            data_view_id=DATA_VIEW_ID,  # type: ignore
+            search_query=form_data_kql,
             logger=KibCatLogger,
         )
 

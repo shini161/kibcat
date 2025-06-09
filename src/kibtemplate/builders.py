@@ -127,6 +127,9 @@ def build_template(
     for filter_item in filters:
         filter_operator: FilterOperators = filter_item.operator
         filter_field: str = filter_item.field
+
+        assert filter_item.value is not None
+
         filter_value: str | list[str] = filter_item.value
 
         template_name: str
