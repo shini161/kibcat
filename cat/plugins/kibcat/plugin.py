@@ -106,19 +106,23 @@ class FilterForm(CatForm):  # type: ignore
 
     def __init__(self, cat):
         # Initialize the NotCertifiedKibana instance with the provided credentials
+        assert URL is not None
+        assert USERNAME is not None
+        assert PASSWORD is not None
         self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD, logger=KibCatLogger)
 
         # Initialize Elastic instance
+        assert ELASTIC_URL is not None
         node_config: NodeConfig = NodeConfig(
             scheme="https",
-            host=cast(str, ELASTIC_URL).split("://")[-1].split(":")[0],
+            host=ELASTIC_URL.split("://")[-1].split(":")[0],
             port=443,
             verify_certs=False,
         )
 
         self._elastic: Elasticsearch = Elasticsearch(
             [node_config],
-            basic_auth=(cast(str, USERNAME), cast(str, PASSWORD)),
+            basic_auth=(USERNAME, PASSWORD),
         )
 
         self._fields_list: list[dict[str, Any]] = []
