@@ -89,6 +89,7 @@ def build_form_data_extractor(
 
 def build_form_confirm_message(
     conversation_history: str,
+    applied_filters: str,
     logger: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
@@ -108,6 +109,7 @@ def build_form_confirm_message(
         template_name="form_confirm_message.jinja2",
         logger=logger,
         conversation_history=conversation_history,
+        applied_filters=applied_filters,
     )
 
     return result
