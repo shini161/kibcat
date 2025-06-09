@@ -41,15 +41,14 @@ def run_example(
         logger.message(f"{get_initial_part_of_fields(es, example_field, data_view_id)}")
 
 
-if __name__ == "__main__":
-    BASE_URL: str | None = os.getenv("ELASTIC_URL")
-    USERNAME: str | None = os.getenv("KIBANA_USERNAME")
-    PASS: str | None = os.getenv("KIBANA_PASS")
-    DATA_VIEW_ID: str | None = os.getenv("KIBANA_DATA_VIEW_ID")
+BASE_URL: str | None = os.getenv("ELASTIC_URL")
+USERNAME: str | None = os.getenv("KIBANA_USERNAME")
+PASS: str | None = os.getenv("KIBANA_PASS")
+DATA_VIEW_ID: str | None = os.getenv("KIBANA_DATA_VIEW_ID")
 
-    if not BASE_URL or not USERNAME or not PASS or not DATA_VIEW_ID:
-        msg = "[examples.kibfieldvalues] - One of the fields is missing."  # pylint: disable=invalid-name
-        BaseLogger.error(msg)
-        raise RuntimeError(msg)
+if not BASE_URL or not USERNAME or not PASS or not DATA_VIEW_ID:
+    msg = "[examples.kibfieldvalues] - One of the fields is missing."  # pylint: disable=invalid-name
+    BaseLogger.error(msg)
+    raise RuntimeError(msg)
 
-    run_example(base_url=BASE_URL, username=USERNAME, password=PASS, data_view_id=DATA_VIEW_ID, logger=BaseLogger)
+run_example(base_url=BASE_URL, username=USERNAME, password=PASS, data_view_id=DATA_VIEW_ID, logger=BaseLogger)

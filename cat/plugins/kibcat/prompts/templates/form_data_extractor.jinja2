@@ -15,9 +15,35 @@ Ogni dizionario ha varie proprietà:
 "operator": l' [operator] da usare. Usa il *NOME ESATTO* dell'operatore che vuoi usare, tra quelli indicati in precedenza.
 "value": il [value] per l'operatore
 # "start_time" 
-"start_time": indica fino a quanto tempo fa estendere la ricerca in *ISO 8601 Duration Format* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
+"start_time": indica fino a quanto tempo fa estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
 # "end_time"
-"end_time": indica fino a quanto tempo estendere la ricerca in *ISO 8601 Duration Format* __se l'utente non specifica questo parametro, è "PT0S"__.
+"end_time": indica fino a quanto tempo estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "PT0S"__.
+
+**iso8601Duration**  
+*Type:* `string`  
+*Description:* A duration expressed in ISO 8601 format.
+
+**Format:**
+- Always starts with `P` (for "period")
+- **Date components** (optional):
+  - `Y` = years  
+  - `M` = months (in the date part)  
+  - `D` = days  
+- **Time components** (optional, must be preceded by `T`):
+  - `H` = hours  
+  - `M` = minutes (in the time part)  
+  - `S` = seconds  
+
+**Rules:**
+1. Time components must be preceded by `T`
+2. Only include components that are needed
+3. Use the order: `P` → `Y` → `M` → `D` → `T` → `H` → `M` → `S`
+
+**Examples:**
+- `PT10M` → 10 minutes  
+- `P1DT2H` → 1 day and 2 hours  
+- `P3Y6M4DT12H30M5S` → 3 years, 6 months, 4 days, 12 hours, 30 minutes, and 5 seconds
+
 
 IMPORTANTE:
 Alcune [field] possono essere sottointese dall'utente, ecco la lista di esse e delle loro descrizioni:

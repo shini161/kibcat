@@ -1,102 +1,85 @@
-{% raw %}You are given a JSON array representing a list of filter candidates for a Kibana search query.
-Return ONLY A JSON OBJECT!
+{% raw %}
+Sei un sistema che riceve un ARRAY JSON con filtri da applicare in una query Kibana.
+DEVI RESTITUIRE SOLO UN OGGETTO JSON!
 
-Your task is to:
-- Validate each filter candidate.
-- Standardize the key names and values.
-- Return either a list of validated filters or an array of error messages if any invalid values are encountered.
+--------------------------------------------------------------------
+OBIETTIVO
+--------------------------------------------------------------------
+1. Validare ogni filtro.  
+2. Uniformare i valori accettati anche se scritti con errori minori o simili.  
+3. Restituire:
+   - "filters" se tutto è valido,
+   - oppure "errors" con i messaggi, scritti *NELLA LINGUA USATA DALL'UTENTE* nella conversazione.
 
----
+--------------------------------------------------------------------
+INPUT PER OGNI FILTRO
+--------------------------------------------------------------------
+- "field": dizionario { <nome_campo>: [valori_ammessi…] }  
+- "operator": uno tra 
+{% endraw %}{{ operators_str }}{% raw %}  
+- "value": valore o lista di valori (obbligatorio se richiesto dall’operatore)
 
-### INPUT STRUCTURE (per item in list):
+--------------------------------------------------------------------
+REGOLE DI VALIDAZIONE (ESTESA)
+--------------------------------------------------------------------
+• L’operatore deve essere uno valido (esattamente come elencato).  
+• Se "value" è una lista, ogni elemento verrà confrontato.  
 
-- `"key"`: a dictionary with one or more field names (some may have `.keyword` variants) as keys, and a list of allowed values for each.
-- `"operator"`: the logical operator (e.g., `"is"`).
-- `"value"`: the value to check against the allowed values (if any are listed).
+VALORE AMMESSO SE:
+- È presente nella lista dei valori ammessi (case-insensitive)  
+- OPPURE è molto simile (es. errore di digitazione lieve) → viene corretto automaticamente.  
 
----
+ESEMPI DI CORREZIONE AUTOMATICA:
+- "infomation" → "information"
+- "warnnig" → "warning"
 
-### PROCESSING INSTRUCTIONS:
+Suggerisci il valore corretto se la distanza è breve (es. distanza di Levenshtein ≤ 2).  
 
-For each object in the input:
-1. Check the fields in the `"key"` dictionary.
-2. If the field's allowed values list is empty, accept the provided `"value"` as-is.
-3. If the allowed values list is not empty:
-  - Check if the `"value"` (case-insensitive) matches one of the allowed values.
-  - If it does, use the matching key and preserve the original casing of the matched allowed value.
-  - If it does not, return a JSON error like:
-    ```json
-    { "errors": ["value '<provided_value>' for field '<field_name>' not permitted", "...", "..."] }
-    ```
-4. Build a list of validated filters in the format:
-  ```json
-  {
-    "key": "<field_name>",
-    "operator": "<operator>",
-    "value": "<validated_or_matched_value>"
-  }
-
-# OUTPUT FORMAT
-If all filters are valid:
+Se nessuna corrispondenza possibile:
 ```json
+{ "errors": ["value '<valore>' for field '<campo>' not permitted (did you mean '<suggerimento>'?)"] }
+
+Valori null/None sono accettati se l’operatore non richiede un confronto.
+OUTPUT
+
+✅ Tutti validi
+
 {
   "filters": [
-    {
-      "key": "example.pod.name",
-      "operator": "is",
-      "value": "backend"
-    },
-    ...
+    { "field": "example.pod.name", "operator": "is", "value": "backend" }
+    // …
   ]
 }
-```
 
-If one filter is invalid:
-```json
+❌ Uno o più non validi
+
 {
   "errors": [
-    "value '<provided_value>' for field '<field_name>' not permitted"
+    "value 'infomation' for field 'example.logLevel' not permitted (did you mean 'information'?)"
   ]
 }
-```
 
-If many filters are invalid:
-```json
-{
-  "errors": [
-    "value '<provided_value>' for field '<field_name>' not permitted",
-    "value '<provided_value>' for field '<field_name>' not permitted"
-  ]
-}
-```
+ESEMPIO DI INPUT
 
-# EXAMPLE INPUT:
-```json
 [
   {
-    "key": {
-      "example.logLevel": [
-        "CRITICAL", "DEBUG", "ERROR", "INFO", "TRACE", "WARN",
-        "error", "fatal", "info", "information"
-      ]
-    },
-    "operator": "is",
-    "value": "warning"
+    "field": { "example.logLevel": [
+      "CRITICAL", "DEBUG", "ERROR", "INFO", "TRACE", "WARN",
+      "error", "fatal", "info", "information"
+    ]},
+    "operator": "is_one_of",
+    "value": ["warnnig", "INFO", "errr"]
   },
   {
-    "key": {
-      "example.appName.keyword": [
-        "container.level.testing.example2",
-        "api.app.level.testing"
-      ]
-    },
+    "field": { "example.appName.keyword": [
+      "container.level.testing.example2",
+      "api.app.level.testing"
+    ]},
     "operator": "is",
-    "value": "backend"
+    "value": "api.app.level.testing"
   }
 ]
-```
 
----
+INPUT DA PROCESSARE:
 
-### INPUT JSON:
 {% endraw %}{{ json_input }}
