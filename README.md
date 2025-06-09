@@ -2,7 +2,7 @@
   <img width="auto" height="auto" src="assets/kib-cat-logo.png">
 </p>
 
-![Tests](https://github.com/shini161/kib-cat/actions/workflows/python-ci.yml/badge.svg?branch=main)
+![Tests](https://github.com/shini161/kibcat/actions/workflows/python-ci.yml/badge.svg?branch=main)
 <br>
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
@@ -23,5 +23,5 @@ Interrogazione database su elasticsearch tramite kibana, con filtraggio facilita
 ---
 
 ## Wiki
-- 📘 **[Diario](https://github.com/shini161/kib-cat/blob/main/wiki/DIARY.md)**
-- 📕 **[Conclusioni](https://github.com/shini161/kib-cat/blob/main/wiki/CONCLUSIONS.md)**
+- 📘 **[Diario](https://github.com/shini161/kibcat/blob/main/wiki/DIARY.md)**
+- 📕 **[Conclusioni](https://github.com/shini161/kibcat/blob/main/wiki/CONCLUSIONS.md)**
