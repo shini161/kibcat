@@ -1,6 +1,6 @@
 from typing import Any, Type, cast
 
-import requests  # type: ignore
+import requests
 from kibana_api import Kibana
 
 from kiblog import BaseLogger

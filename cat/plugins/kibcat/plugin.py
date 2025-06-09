@@ -55,7 +55,7 @@ def get_main_fields_dict() -> dict[str, Any]:
 
     try:
         with open(fields_json_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            return cast(dict[str, Any], json.load(f))
 
     except (OSError, json.JSONDecodeError) as e:
         # OSError covers file not found, permission issues, etc.
@@ -185,10 +185,10 @@ class FilterData(BaseModel):
     query: list[QueryItem] = []
 
 
-@form  # type: ignore
-class FilterForm(CatForm):
+@form
+class FilterForm(CatForm):  # type: ignore
     description = "filter logs"
-    model_class = FilterData  # type: ignore
+    model_class = FilterData
     start_examples = ["filter logs", "obtain logs", "show logs", "search logs"]
     stop_examples = [
         "stop filtering logs",
@@ -225,13 +225,15 @@ class FilterForm(CatForm):
             basic_auth=(cast(str, USERNAME), cast(str, PASSWORD)),
         )
 
+        self._fields_list: list[dict[str, Any]] = []
+
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
         optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
         if not optional_fields_list:
-            self._fields_list: list[dict[str, Any]] = []
+            self._fields_list = []
         else:
-            self._fields_list: list[dict[str, Any]] = optional_fields_list
+            self._fields_list = optional_fields_list
         super().__init__(cat)
 
     def _parse_filters(self, filters: list[Any]) -> list[KibCatFilter]:
@@ -300,7 +302,7 @@ class FilterForm(CatForm):
 
     def validate(self):
         """Validate form data"""
-        self._missing_fields = []
+        self._missing_fields: list[Any] = []
         self._errors = []
 
         # Validate start_time
@@ -346,7 +348,7 @@ class FilterForm(CatForm):
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
-            msg: str = "Specified space ID not found"
+            msg = "Specified space ID not found"
 
             KibCatLogger.error(msg)
             return msg
@@ -367,12 +369,12 @@ class FilterForm(CatForm):
 
         # if the field list cant be loaded, return the error
         if not self._fields_list:
-            msg: str = "Not found fields_list"
+            msg = "Not found fields_list"
 
             KibCatLogger.error(msg)
             return msg
 
-        filters: dict = deepcopy(self._model.get("filters", {}))
+        filters: dict[Any, Any] = deepcopy(self._model.get("filters", {}))
 
         # Group them with keywords if there are
         grouped_list: list[list[str]] = group_fields(self._fields_list)
@@ -455,7 +457,7 @@ class FilterForm(CatForm):
         )
 
         try:
-            json_cat_response: dict = json.loads(cat_response)
+            json_cat_response: dict[Any, Any] = json.loads(cat_response)
             KibCatLogger.message("Cat JSON parsed correctly")
 
             if "errors" in json_cat_response:
@@ -470,7 +472,7 @@ class FilterForm(CatForm):
                 )
 
         except json.JSONDecodeError as e:
-            msg: str = f"Cannot decode cat's JSON filtered - {e}"
+            msg = f"Cannot decode cat's JSON filtered - {e}"
 
             KibCatLogger.error(msg)
             self._errors.append(msg)
@@ -493,7 +495,7 @@ class FilterForm(CatForm):
         """
 
         # Extract the requested fields that actually exist, to be showed
-        form_data_filters: dict = self._model.get("filters", [])
+        form_data_filters: dict[Any, KibCatFilter] = self._model.get("filters", [])
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
         requested_keys: set = {element.field for element in form_data_filters}

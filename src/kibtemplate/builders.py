@@ -1,7 +1,7 @@
 import inspect
 import json
 import os
-from typing import Any, Type, cast
+from typing import Any, Type
 
 from jinja2 import Template
 
@@ -86,7 +86,7 @@ def generic_template_renderer(
     if logger:
         logger.message(msg)
 
-    return cast(str, output_str)
+    return output_str
 
 
 # pylint: disable=too-many-positional-arguments
