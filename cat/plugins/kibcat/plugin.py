@@ -68,7 +68,7 @@ def get_main_fields_dict() -> dict[str, Any]:
         return {}
 
 
-MAIN_FIELDS_DICT = get_main_fields_dict()
+MAIN_FIELDS_DICT: dict[str, Any] | None = None
 
 # TODO: move costants like start_time when we decide where to put them
 DEFAULT_START_TIME: str = "PT4H"  # Default to 4 hours
@@ -238,6 +238,47 @@ class FilterForm(CatForm):  # type: ignore
             self._fields_list = []
         else:
             self._fields_list = optional_fields_list
+
+        verify_result: str | None = verify_data_views_space_id(
+            kibana=self._kibana,
+            space_id=cast(str, SPACE_ID),
+            data_view_id=cast(str, DATA_VIEW_ID),
+            fields_list=self._fields_list,
+            logger=KibCatLogger,
+        )
+        if verify_result:
+            return verify_result
+
+        # Associate a group to every field in this dict
+        field_to_group: dict[str, Any] = generate_field_to_group(self._fields_list)
+
+        global MAIN_FIELDS_DICT
+        MAIN_FIELDS_DICT = get_main_fields_dict()
+
+        new_main_fields: dict[str, Any] = {}
+
+        # Replace the key names with the possible keys in the input
+        for key, element in MAIN_FIELDS_DICT.items():
+            description: str = element
+
+            element_field_group = field_to_group.get(key, [key])
+            possible_vals: dict[str, Any] = automated_field_value_extraction(
+                element_field=element_field_group,
+                data_view_id=cast(str, DATA_VIEW_ID),
+                space_id=cast(str, SPACE_ID),
+                fields_list=self._fields_list,
+                kibana=self._kibana,
+                elastic=self._elastic,
+                logger=KibCatLogger,
+            )
+
+            new_main_fields[key] = {
+                "description": description,
+                "possible_values": possible_vals,
+            }
+
+        MAIN_FIELDS_DICT = new_main_fields
+
         super().__init__(cat)
 
     def _parse_filters(self, filters: list[Any]) -> list[KibCatFilter]:
@@ -445,7 +486,7 @@ class FilterForm(CatForm):  # type: ignore
         ]
 
         # Add to the visualize
-        for key, _ in MAIN_FIELDS_DICT.items():
+        for key, _ in cast(dict[str, Any], MAIN_FIELDS_DICT).items():
             if key not in fields_to_visualize:
                 fields_to_visualize.append(key)
 
