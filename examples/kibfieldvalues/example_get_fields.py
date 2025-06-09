@@ -35,7 +35,7 @@ def run_example(
         logger.message(f"[examples.kibfieldvalues] - {es.info()}\n")
 
     # This is just an example, it can be changed when using this file
-    example_field = "kubernetes.pod.name.keyword"
+    example_field = "kubernetes.container.name.keyword"
 
     if logger:
         logger.message(f"{get_initial_part_of_fields(es, example_field, data_view_id)}")
