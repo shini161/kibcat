@@ -8,8 +8,6 @@ from typing import Any, cast
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
-from cat.utils import parse_json
-from langchain_core.exceptions import OutputParserException
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
     build_form_confirm_message,
@@ -19,8 +17,10 @@ from cat.plugins.kibcat.prompts.builders import (
     build_refine_filter_json,
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
+from cat.utils import parse_json
 from elastic_transport import NodeConfig
 from elasticsearch import Elasticsearch
+from langchain_core.exceptions import OutputParserException
 from pydantic import BaseModel
 
 from kibapi import NotCertifiedKibana, get_field_properties, group_fields
@@ -396,9 +396,7 @@ class FilterForm(CatForm):  # type: ignore
 
                     # Get all the field's possible values
                     possible_values: list[Any] = self._kibana.get_field_possible_values(
-                        cast(str, SPACE_ID),
-                        cast(str, DATA_VIEW_ID),
-                        field_properties
+                        cast(str, SPACE_ID), cast(str, DATA_VIEW_ID), field_properties
                     )
 
                     new_key[normal_field] = possible_values
@@ -419,9 +417,7 @@ class FilterForm(CatForm):  # type: ignore
 
         try:
             # Call the cat using the query
-            json_cat_response: dict[Any, Any] = parse_json(
-                self.cat.llm(filter_data)
-            )
+            json_cat_response: dict[Any, Any] = parse_json(self.cat.llm(filter_data))
             KibCatLogger.message("Cat JSON parsed correctly")
 
             if "errors" in json_cat_response:

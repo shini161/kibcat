@@ -1,6 +1,6 @@
+import time
 from typing import Any, Type, cast
 
-import time
 import requests
 from kibana_api import Kibana
 
@@ -53,7 +53,10 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         response = requests.request(headers=headers, auth=auth, verify=False, timeout=10, **kwargs)
         elapsed_ms = (time.time() - start_time) * 1000
         if self.logger:
-            self.logger.debug(f"[kibapi.NotCertifiedKibana.requester] - Request to {kwargs.get('url')} completed in {elapsed_ms:.2f}ms")
+            self.logger.debug(
+                "[kibapi.NotCertifiedKibana.requester] - "
+                f"Request to {kwargs.get('url')} completed in {elapsed_ms:.2f}ms"
+            )
         return response
 
     def get(self, path: str) -> requests.Response:
@@ -137,11 +140,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
                 self.logger.error(msg)
             return None
 
-    def get_fields_list(
-        self,
-        space_id: str,
-        data_view_id: str
-    ) -> list[dict[str, Any]] | None:
+    def get_fields_list(self, space_id: str, data_view_id: str) -> list[dict[str, Any]] | None:
         """
         Retrieve the list of fields for a specified space and data view.
 
@@ -176,7 +175,7 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         data_view_id: str,
         field_dict: dict[str, Any],
         start_date: str | None = None,
-        end_date: str | None = None
+        end_date: str | None = None,
     ) -> list[Any]:
         """
         Retrieve suggested possible values for a given field within a space and data view,
