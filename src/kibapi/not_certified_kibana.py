@@ -2,6 +2,7 @@ import time
 from typing import Any, Type, cast
 
 import requests
+import urllib3
 from kibana_api import Kibana
 
 from kiblog import BaseLogger
@@ -26,6 +27,10 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
         logger: Type[BaseLogger] | None = None,
     ) -> None:
         self.logger = logger
+
+        # Disable SSL warnings for self-signed certificates
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
         super().__init__(base_url=base_url, username=username, password=password)
 
     # Some types are ignored here, that's because the Kibana base class does not have Typings
