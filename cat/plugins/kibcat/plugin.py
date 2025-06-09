@@ -209,7 +209,7 @@ class FilterForm(CatForm):  # type: ignore
             raise ValueError(env_check_result)
 
         # Initialize the NotCertifiedKibana instance with the provided credentials
-        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
+        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD, logger=KibCatLogger)
 
         # Initialize Elastic instance
 
@@ -229,7 +229,7 @@ class FilterForm(CatForm):  # type: ignore
 
         # Get all the fields using the Kibana API
         # Type is ignored because env variables are already checked using the check_env_vars function
-        optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID, logger=KibCatLogger)  # type: ignore
+        optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(SPACE_ID, DATA_VIEW_ID)  # type: ignore
         if not optional_fields_list:
             self._fields_list = []
         else:
@@ -325,7 +325,7 @@ class FilterForm(CatForm):  # type: ignore
                 del self._model["end_time"]
 
         # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(logger=KibCatLogger)
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces()
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -335,7 +335,7 @@ class FilterForm(CatForm):  # type: ignore
             return msg
 
         # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(logger=KibCatLogger)
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews()
 
         # Check if the dataview needed exists, otherwise return the error
         if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
@@ -398,8 +398,7 @@ class FilterForm(CatForm):  # type: ignore
                     possible_values: list[Any] = self._kibana.get_field_possible_values(
                         cast(str, SPACE_ID),
                         cast(str, DATA_VIEW_ID),
-                        field_properties,
-                        logger=KibCatLogger,
+                        field_properties
                     )
 
                     new_key[normal_field] = possible_values

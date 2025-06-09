@@ -7,6 +7,10 @@ class KibCatLogger(BaseLogger):
     """Wrapper of the class BaseLogger to log using the cat's logger"""
 
     @staticmethod
+    def debug(message: str) -> None:
+        log.debug(message)
+
+    @staticmethod
     def message(message: str) -> None:
         log.info(message)
 

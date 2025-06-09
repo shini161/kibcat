@@ -33,7 +33,7 @@ def run_example(logger: Type[BaseLogger] | None = None) -> list[Any] | None:
         return None
 
     # Initialize Kibana API
-    kibana = NotCertifiedKibana(base_url=BASE_URL, username=USERNAME, password=PASS)
+    kibana = NotCertifiedKibana(base_url=BASE_URL, username=USERNAME, password=PASS, logger=logger)
 
     # Validate space
     spaces = kibana.get_spaces()
