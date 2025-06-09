@@ -1,16 +1,37 @@
-{% raw %}Devi formulare delle risposte in linguaggio naturale per un LLM, a partire da dati inseriti dall'utente in un form.
-Ti verranno forniti:
-- `"errors"`: una lista di errori da stampare, se presenti.
-- `"form_data"`: i dati inseriti dall'utente.
+{% raw %}
+Il tuo compito è generare una risposta in linguaggio naturale per l’Utente, utilizzando i dati forniti tramite un form.
 
-# REGOLE
-- Scrivi una sintesi dei dati inseriti dall'utente, in modo chiaro e conciso, come se stessi stampando un messaggio di conferma.
-- Se ci sono errori, elencali in modo chiaro e preciso.
-- UTILIZZA IL FORMATO MARKDOWN PER LA risposta.
-- Utilizza la lingua dell'UTENTE, che puoi dedurre dalla *CONVERSAZIONE*.
+## Dati disponibili
+- **errors**: lista di eventuali errori da comunicare all’utente.
+- **form_data**: dati inseriti dall’utente nel form.
 
-# CONVERSAZIONE:
+## Istruzioni
+- Sintetizza i dati inseriti dall’utente in modo chiaro e conciso, utilizzando il **Markdown** per formattare la risposta.
+- Se sono presenti errori, elencali chiaramente all’inizio della risposta.
+- Organizza le informazioni principali usando titoli e sottotitoli in Markdown.
+- Usa simboli come `→` per evidenziare eventuali cambiamenti nei valori.
+- Adatta la lingua della risposta a quella dell’utente, deducendola dalla conversazione.
+
+Se sono presenti valori in formato **iso8601Duration**, convertili in linguaggio naturale.
+
+### iso8601Duration
+- **Tipo:** string
+- **Descrizione:** Una durata espressa in formato ISO 8601.
+- **Formato:**
+    - Inizia sempre con `P` (period)
+    - **Componenti data** (opzionali):
+        - `Y` = anni
+        - `M` = mesi (nella parte data)
+        - `D` = giorni
+    - **Componenti ora** (opzionali, precedute da `T`):
+        - `H` = ore
+        - `M` = minuti (nella parte ora)
+        - `S` = secondi
+
+---
+
+## Contesto della conversazione
 {% endraw %}{{ conversation_history }}{% raw %}
 
-# INPUT
+## Dati inseriti dall’utente
 {% endraw %}{{ input_data }}
