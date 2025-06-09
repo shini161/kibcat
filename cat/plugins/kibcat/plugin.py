@@ -8,6 +8,8 @@ from typing import Any, cast
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
+from cat.utils import parse_json
+from langchain_core.exceptions import OutputParserException
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
     build_form_confirm_message,
@@ -251,20 +253,20 @@ class FilterForm(CatForm):  # type: ignore
         main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
         operators_str: str = json.dumps([op.name.lower() for op in FilterOperators], indent=2)
 
-        json_str = (
-            self.cat.llm(
-                build_form_data_extractor(
-                    conversation_history=history,
-                    main_fields_str=main_fields_str,
-                    operators_str=operators_str,
-                    logger=KibCatLogger,
+        try:
+            response = parse_json(
+                self.cat.llm(
+                    build_form_data_extractor(
+                        conversation_history=history,
+                        main_fields_str=main_fields_str,
+                        operators_str=operators_str,
+                        logger=KibCatLogger,
+                    )
                 )
             )
-            .replace("```json", "")
-            .replace("`", "")
-        )
-
-        response = json.loads(json_str)
+        except OutputParserException as e:
+            KibCatLogger.error(f"Failed to parse JSON: {e}")
+            return
 
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
@@ -416,11 +418,11 @@ class FilterForm(CatForm):  # type: ignore
             logger=KibCatLogger,
         )
 
-        # Call the cat using the query
-        cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
-
         try:
-            json_cat_response: dict[Any, Any] = json.loads(cat_response)
+            # Call the cat using the query
+            json_cat_response: dict[Any, Any] = parse_json(
+                self.cat.llm(filter_data)
+            )
             KibCatLogger.message("Cat JSON parsed correctly")
 
             if "errors" in json_cat_response:
@@ -432,7 +434,7 @@ class FilterForm(CatForm):  # type: ignore
                 # Update model with the filtered data
                 self._model["filters"] = self._parse_filters(deepcopy(json_cat_response)["filters"])
 
-        except json.JSONDecodeError as e:
+        except OutputParserException as e:
             msg = f"Cannot decode cat's JSON filtered - {e}"
 
             KibCatLogger.error(msg)
