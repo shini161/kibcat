@@ -12,6 +12,7 @@ from kibtemplate.builders import build_template
 from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
 from kibtypes.parsed_kibana_url import ParsedKibanaURL
 from kiburl.builders import build_rison_url_from_json
+from langchain_core.exceptions import OutputParserException
 from pydantic import BaseModel
 
 from cat.experimental.form import CatForm, CatFormState, form
@@ -24,12 +25,14 @@ from cat.plugins.kibcat.prompts.builders import (
     build_form_print_message,
     build_refine_filter_json,
 )
+from cat.plugins.kibcat.utils import check_env_vars, format_T_in_date
 from cat.plugins.kibcat.utils.generate_field_values import (
     automated_field_value_extraction,
     generate_field_to_group,
     verify_data_views_space_id,
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
+from cat.utils import parse_json
 
 # Environment Variables
 URL = os.getenv("KIBANA_URL")
@@ -41,6 +44,7 @@ SPACE_ID = os.getenv("KIBANA_SPACE_ID")
 DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
 
 FIELDS_JSON_PATH = os.getenv("FIELDS_JSON_PATH")
+
 
 def get_main_fields_dict() -> dict[str, Any]:
     """
@@ -88,64 +92,6 @@ def format_time_kibana(dt: datetime) -> str:
         A string formatted as 'YYYY-MM-DDTHH:MM:SS.mmmZ'.
     """
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
-
-def format_T_in_date(duration: str) -> str:
-    """
-    Adds 'T' to an ISO 8601 duration string if time components (H, M, S) are present
-    but 'T' is missing.
-    """
-    if "T" in duration:
-        return duration
-
-    # Check for time components after date
-    match = re.search(r"(\d+H|\d+M|\d+S)", duration)
-    if match:
-        # Find the position after the date part (after D, M, or Y)
-        date_part_match = re.match(r"^P(?:\d+Y)?(?:\d+M)?(?:\d+D)?", duration)
-        if date_part_match:
-            insert_pos = date_part_match.end()
-            return duration[:insert_pos] + "T" + duration[insert_pos:]
-        else:
-            return "PT" + duration[1:]
-
-    return duration
-
-
-def check_env_vars() -> str | None:
-    """Checks if the env variables loaded really exist.
-
-    Returns:
-        str | None: None if every variable has been loaded successfully
-                    str with the error message if a variable is missing
-    """
-    if not URL:
-        msg = "URL parameter null"
-
-        KibCatLogger.error(msg)
-        return msg
-    if not ELASTIC_URL:
-        msg = "ELASTIC_URL parameter null"
-
-        KibCatLogger.error(msg)
-        return msg
-    if not BASE_URL_PART:
-        msg = "BASE_URL_PART parameter null"
-
-        KibCatLogger.error(msg)
-        return msg
-    if not USERNAME:
-        msg = "USERNAME parameter null"
-
-        KibCatLogger.error(msg)
-        return msg
-    if not PASSWORD:
-        msg = "PASSWORD parameter null"
-
-        KibCatLogger.error(msg)
-        return msg
-    if not SPACE_ID:
-        msg = "SPACE_ID parameter null"
 
 
 ######################## Hooks #######################
@@ -205,7 +151,9 @@ class FilterForm(CatForm):  # type: ignore
         assert URL is not None
         assert USERNAME is not None
         assert PASSWORD is not None
-        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD, logger=KibCatLogger)
+        self._kibana = NotCertifiedKibana(
+            base_url=URL, username=USERNAME, password=PASSWORD, logger=KibCatLogger
+        )
 
         # Initialize Elastic instance
         assert ELASTIC_URL is not None
@@ -227,8 +175,8 @@ class FilterForm(CatForm):  # type: ignore
         # Type is ignored because env variables are already checked using the check_env_vars function
         assert SPACE_ID is not None
         assert DATA_VIEW_ID is not None
-        optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(
-            space_id=SPACE_ID, data_view_id=DATA_VIEW_ID
+        optional_fields_list: list[dict[str, Any]] | None = (
+            self._kibana.get_fields_list(space_id=SPACE_ID, data_view_id=DATA_VIEW_ID)
         )
 
         if not optional_fields_list:

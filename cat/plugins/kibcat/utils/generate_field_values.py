@@ -34,9 +34,7 @@ def automated_field_value_extraction(
             msg: str = f"Getting field {keyword_field} possible values using Elastic"
             logger.message(msg)
 
-        keyword_field_values: list[str] = get_initial_part_of_fields(
-            elastic, keyword_field, cast(str, data_view_id)
-        )
+        keyword_field_values: list[str] = get_initial_part_of_fields(elastic, keyword_field, cast(str, data_view_id))
 
         new_key[keyword_field] = keyword_field_values
     else:
@@ -45,16 +43,13 @@ def automated_field_value_extraction(
                 msg: str = f"Getting field {normal_field} possible values using Kibana"
                 logger.message(msg)
 
-            field_properties: dict[str, Any] = get_field_properties(
-                fields_list, normal_field
-            )
+            field_properties: dict[str, Any] = get_field_properties(fields_list, normal_field)
 
             # Get all the field's possible values
             possible_values: list[Any] = kibana.get_field_possible_values(
                 cast(str, space_id),
                 cast(str, data_view_id),
                 field_properties,
-                logger=logger,
             )
 
             new_key[normal_field] = possible_values
@@ -69,9 +64,7 @@ def generate_field_to_group(fields_list: list[dict[str, Any]]):
     grouped_list: list[list[str]] = group_fields(fields_list)
 
     # Associate a group to every field in this dict
-    field_to_group: dict[str, Any] = {
-        field: group for group in grouped_list for field in group
-    }
+    field_to_group: dict[str, Any] = {field: group for group in grouped_list for field in group}
 
     return field_to_group
 
@@ -86,7 +79,7 @@ def verify_data_views_space_id(
     """If an error occurs reurn the error string, else None"""
 
     # Get the list of spaces in Kibana
-    spaces: list[dict[str, Any]] | None = kibana.get_spaces(logger=logger)
+    spaces: list[dict[str, Any]] | None = kibana.get_spaces()
 
     # Check if the needed space exists, otherwise return the error
     if (not spaces) or (not any(space["id"] == space_id for space in spaces)):
@@ -97,7 +90,7 @@ def verify_data_views_space_id(
         return msg
 
     # Get the dataviews from the Kibana API
-    data_views: list[dict[str, Any]] | None = kibana.get_dataviews(logger=logger)
+    data_views: list[dict[str, Any]] | None = kibana.get_dataviews()
 
     # Check if the dataview needed exists, otherwise return the error
     if (not data_views) or (not any(view["id"] == data_view_id for view in data_views)):
