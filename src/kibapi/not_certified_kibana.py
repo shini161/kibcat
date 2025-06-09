@@ -1,5 +1,6 @@
 from typing import Any, Type, cast
 
+import time
 import requests
 from kibana_api import Kibana
 
@@ -48,7 +49,12 @@ class NotCertifiedKibana(Kibana):  # type: ignore[misc]
             else {"kbn-xsrf": "True"}
         )
         auth: tuple[str, str] | None = (self.username, self.password) if (self.username and self.password) else None
-        return requests.request(headers=headers, auth=auth, verify=False, timeout=10, **kwargs)
+        start_time = time.time()
+        response = requests.request(headers=headers, auth=auth, verify=False, timeout=10, **kwargs)
+        elapsed_ms = (time.time() - start_time) * 1000
+        if self.logger:
+            self.logger.debug(f"[kibapi.NotCertifiedKibana.requester] - Request to {kwargs.get('url')} completed in {elapsed_ms:.2f}ms")
+        return response
 
     def get(self, path: str) -> requests.Response:
         """
