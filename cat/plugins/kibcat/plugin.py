@@ -482,7 +482,7 @@ class FilterForm(CatForm):  # type: ignore
         ask_confirm_message = self.cat.llm(prompt)
 
         return {
-            "output": f'Kibana <a href="{url}" target="_blank">URL</a>\n{ask_confirm_message}'
+            "output": f'<a href="{url}" target="_blank">Kibana URL</a>\n{ask_confirm_message}'
         }
 
     def submit(self, form_data: FilterData | None) -> dict[str, str]:
