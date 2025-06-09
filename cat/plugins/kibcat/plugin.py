@@ -3,7 +3,7 @@ import os
 import re
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from typing import Any, cast
+from typing import Any, List, cast
 
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
