@@ -15,8 +15,11 @@ from cat.plugins.kibcat.prompts.builders import (
     build_form_print_message,
     build_refine_filter_json,
 )
+from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
+from cat.utils import parse_json
 from elastic_transport import NodeConfig
 from elasticsearch import Elasticsearch
+from langchain_core.exceptions import OutputParserException
 from pydantic import BaseModel
 
 from kibapi import NotCertifiedKibana, get_field_properties, group_fields
@@ -103,7 +106,7 @@ class FilterForm(CatForm):  # type: ignore
 
     def __init__(self, cat):
         # Initialize the NotCertifiedKibana instance with the provided credentials
-        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD)
+        self._kibana = NotCertifiedKibana(base_url=URL, username=USERNAME, password=PASSWORD, logger=KibCatLogger)
 
         # Initialize Elastic instance
         node_config: NodeConfig = NodeConfig(
@@ -125,7 +128,7 @@ class FilterForm(CatForm):  # type: ignore
         assert SPACE_ID is not None
         assert DATA_VIEW_ID is not None
         optional_fields_list: list[dict[str, Any]] | None = self._kibana.get_fields_list(
-            space_id=SPACE_ID, data_view_id=DATA_VIEW_ID, logger=KibCatLogger
+            space_id=SPACE_ID, data_view_id=DATA_VIEW_ID
         )
 
         if not optional_fields_list:
@@ -150,20 +153,20 @@ class FilterForm(CatForm):  # type: ignore
         main_fields_str: str = json.dumps(MAIN_FIELDS_DICT, indent=2)
         operators_str: str = json.dumps([op.name.lower() for op in FilterOperators], indent=2)
 
-        json_str = (
-            self.cat.llm(
-                build_form_data_extractor(
-                    conversation_history=history,
-                    main_fields_str=main_fields_str,
-                    operators_str=operators_str,
-                    logger=KibCatLogger,
+        try:
+            response = parse_json(
+                self.cat.llm(
+                    build_form_data_extractor(
+                        conversation_history=history,
+                        main_fields_str=main_fields_str,
+                        operators_str=operators_str,
+                        logger=KibCatLogger,
+                    )
                 )
             )
-            .replace("```json", "")
-            .replace("`", "")
-        )
-
-        response = json.loads(json_str)
+        except OutputParserException as e:
+            KibCatLogger.error(f"Failed to parse JSON: {e}")
+            return
 
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
@@ -222,7 +225,7 @@ class FilterForm(CatForm):  # type: ignore
                 del self._model["end_time"]
 
         # Get the list of spaces in Kibana
-        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces(logger=KibCatLogger)
+        spaces: list[dict[str, Any]] | None = self._kibana.get_spaces()
 
         # Check if the needed space exists, otherwise return the error
         if (not spaces) or (not any(space["id"] == SPACE_ID for space in spaces)):
@@ -231,7 +234,7 @@ class FilterForm(CatForm):  # type: ignore
             return msg
 
         # Get the dataviews from the Kibana API
-        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews(logger=KibCatLogger)
+        data_views: list[dict[str, Any]] | None = self._kibana.get_dataviews()
 
         # Check if the dataview needed exists, otherwise return the error
         if (not data_views) or (not any(view["id"] == DATA_VIEW_ID for view in data_views)):
@@ -296,7 +299,7 @@ class FilterForm(CatForm):  # type: ignore
 
                     # Get all the field's possible values
                     possible_values: list[Any] = self._kibana.get_field_possible_values(
-                        space_id=SPACE_ID, data_view_id=DATA_VIEW_ID, field_dict=field_properties, logger=KibCatLogger
+                        space_id=SPACE_ID, data_view_id=DATA_VIEW_ID, field_dict=field_properties
                     )
                     new_key[normal_field] = possible_values
             element.field = new_key
@@ -313,11 +316,9 @@ class FilterForm(CatForm):  # type: ignore
             logger=KibCatLogger,
         )
 
-        # Call the cat using the query
-        cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
-
         try:
-            json_cat_response: dict[Any, Any] = json.loads(cat_response)
+            # Call the cat using the query
+            json_cat_response: dict[Any, Any] = parse_json(self.cat.llm(filter_data))
             KibCatLogger.message("Cat JSON parsed correctly")
 
             if "errors" in json_cat_response:
@@ -329,7 +330,7 @@ class FilterForm(CatForm):  # type: ignore
                 # Update model with the filtered data
                 self._model["filters"] = self._parse_filters(deepcopy(json_cat_response)["filters"])
 
-        except json.JSONDecodeError as e:
+        except OutputParserException as e:
             msg = f"Cannot decode cat's JSON filtered - {e}"
             KibCatLogger.error(msg)
             self._errors.append(msg)
