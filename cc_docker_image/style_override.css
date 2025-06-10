@@ -98,7 +98,6 @@ a.btn,
   pointer-events: none;
 }
 
-
 textarea.textarea.block {
   background: rgba(255, 255, 255, 0.1) !important;
   border-radius: 20px !important;
@@ -124,7 +123,7 @@ textarea.textarea.block {
   border: none; /* No border */
   box-shadow: none; /* No shadow */
   overflow-x: auto; /* Horizontal scroll for long lines */
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* Monospaced font */
+  font-family: "Consolas", "Monaco", "Courier New", monospace; /* Monospaced font */
 }
 
 /* Style for the code block (inner container) */
@@ -154,7 +153,7 @@ textarea.textarea.block {
 
 /* Inline code styling */
 .chat-bubble code {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
   font-size: 13px;
   color: #dcddde;
   background: #2f3136; /* Same background as pre */
