@@ -1,0 +1,17 @@
+h1 {
+    font-size: 1.8rem !important;
+    font-weight: bold !important;
+    margin-top: 1.5rem !important;
+}
+
+h2 {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    margin-top: 1rem !important;
+}
+
+h3 {
+    font-size: 1.2rem !important;
+    font-weight: bold !important;
+    margin-top: 0.75rem !important;
+}
