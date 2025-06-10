@@ -107,6 +107,7 @@ a.btn,
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
 }
+
 textarea.textarea.block {
   background: rgba(255, 255, 255, 0.1) !important;
   border-radius: 20px !important;
@@ -114,7 +115,7 @@ textarea.textarea.block {
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
-.active.router-link-exact-active {
+.active.router-link-exact-active:not(.btn-sm) {
   /* color: linear-gradient(to top right, #8b5cf6 20%, #3b82f6 80%) !important; */
   color: #8b5cf6 !important;
 }
