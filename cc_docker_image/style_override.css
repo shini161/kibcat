@@ -1,17 +1,25 @@
-h1 {
+.chat-bubble h1 {
     font-size: 1.8rem !important;
     font-weight: bold !important;
     margin-top: 1.5rem !important;
 }
 
-h2 {
+.chat-bubble h2 {
     font-size: 1.5rem !important;
     font-weight: bold !important;
     margin-top: 1rem !important;
 }
 
-h3 {
+.chat-bubble h3 {
     font-size: 1.2rem !important;
     font-weight: bold !important;
     margin-top: 0.75rem !important;
+}
+
+.chat-bubble {
+	background: linear-gradient(
+    to top right,
+	#8b5cf6 20%,   /* Purple (Tailwind violet-500) */
+    #3b82f6 80%    /* Bright
+  );
 }
