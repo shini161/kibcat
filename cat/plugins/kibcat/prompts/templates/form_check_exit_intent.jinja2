@@ -1,0 +1,17 @@
+{% raw %}Your task is return a JSON that indicates whether the user wants to exit the form or not. The JSON should be structured as follows:
+```json
+{{
+    "exit": // type boolean, must be `true` or `false`
+}}
+```
+
+Exit ONLY if the user *explicitly states* they want to exit the form.
+Example phrases that indicate the user wants to exit include:
+- "I want to exit the form"
+- "Stop this conversation"
+- "End this chat"
+If the user does not mention exiting, return `false`.
+
+User said "{% endraw %}{user_message}{% raw %}"
+
+Now return a JSON response:{% endraw %}

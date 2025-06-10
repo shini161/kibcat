@@ -5,20 +5,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, cast
 
 import isodate
-from elastic_transport import NodeConfig
-from elasticsearch import Elasticsearch
-from kibapi import NotCertifiedKibana
-from kibtemplate.builders import build_template
-from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
-from kibtypes.parsed_kibana_url import ParsedKibanaURL
-from kiburl.builders import build_rison_url_from_json
-from langchain_core.exceptions import OutputParserException
-from pydantic import BaseModel
-
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
+    build_form_check_exit_intent,
     build_form_confirm_message,
     build_form_data_extractor,
     build_form_end_message,
@@ -33,6 +24,16 @@ from cat.plugins.kibcat.utils.generate_field_values import (
 )
 from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
 from cat.utils import parse_json
+from elastic_transport import NodeConfig
+from elasticsearch import Elasticsearch
+from langchain_core.exceptions import OutputParserException
+from pydantic import BaseModel
+
+from kibapi import NotCertifiedKibana
+from kibtemplate.builders import build_template
+from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
+from kibtypes.parsed_kibana_url import ParsedKibanaURL
+from kiburl.builders import build_rison_url_from_json
 
 # Environment Variables
 URL = os.getenv("KIBANA_URL")
@@ -132,10 +133,10 @@ class FilterData(BaseModel):
     query: list[QueryItem] = []
 
 
-@form  # type: ignore
+@form
 class FilterForm(CatForm):  # type: ignore
     description = "filter logs"
-    model_class = FilterData  # type: ignore
+    model_class = FilterData
     start_examples = ["filter logs", "obtain logs", "show logs", "search logs"]
     stop_examples = [
         "stop filtering logs",
@@ -184,8 +185,8 @@ class FilterForm(CatForm):  # type: ignore
 
         verify_result: str | None = verify_data_views_space_id(
             kibana=self._kibana,
-            space_id=cast(str, SPACE_ID),
-            data_view_id=cast(str, DATA_VIEW_ID),
+            space_id=SPACE_ID,
+            data_view_id=DATA_VIEW_ID,
             fields_list=self._fields_list,
             logger=KibCatLogger,
         )
@@ -207,8 +208,8 @@ class FilterForm(CatForm):  # type: ignore
             element_field_group = field_to_group.get(key, [key])
             possible_vals: dict[str, Any] = automated_field_value_extraction(
                 element_field=element_field_group,
-                data_view_id=cast(str, DATA_VIEW_ID),
-                space_id=cast(str, SPACE_ID),
+                data_view_id=DATA_VIEW_ID,
+                space_id=SPACE_ID,
                 fields_list=self._fields_list,
                 kibana=self._kibana,
                 elastic=self._elastic,
@@ -396,8 +397,10 @@ class FilterForm(CatForm):  # type: ignore
         form_data_filters: dict[Any, KibCatFilter] = self._model.get("filters", [])
         form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
 
-        requested_keys: set = {element.field for element in form_data_filters}
-        fields_to_visualize: list = [field["name"] for field in self._fields_list if field["name"] in requested_keys]
+        requested_keys: set[str] = {element.field for element in form_data_filters}
+        fields_to_visualize: list[str] = [
+            field["name"] for field in self._fields_list if field["name"] in requested_keys
+        ]
 
         # Add to the visualize
         for key, _ in cast(dict[str, Any], MAIN_FIELDS_DICT).items():
@@ -449,6 +452,19 @@ class FilterForm(CatForm):  # type: ignore
         ask_confirm_message = self.cat.llm(prompt)
 
         return {"output": f'<a href="{url}" target="_blank">Kibana URL</a>\n{ask_confirm_message}'}
+
+    def check_exit_intent(self) -> bool:
+        # Get user message
+        last_message = self.cat.working_memory.user_message_json.text
+
+        # Queries the LLM and check if user is agree or not
+        response = self.cat.llm(
+            build_form_check_exit_intent(
+                last_message=last_message,
+                logger=KibCatLogger,
+            )
+        )
+        return "true" in response.lower()
 
     def submit(self, form_data: FilterData | None) -> dict[str, str]:
         """

@@ -115,6 +115,31 @@ def build_form_confirm_message(
     return result
 
 
+def build_form_check_exit_intent(
+    last_message: str,
+    logger: Optional[Type[BaseLogger]] = None,
+) -> str:
+    """
+    Returns the prompt used to check if the user wants to exit the form.
+
+    Args:
+        last_message (str): The last message from the conversation history.
+        logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
+
+    Returns:
+        str: The form print message.
+    """
+
+    result: str = generic_template_renderer(
+        templates_path=TEMPLATES_FILE_PATH,
+        template_name="form_check_exit_intent.jinja2",
+        logger=logger,
+        last_message=last_message,
+    )
+
+    return result
+
+
 def build_form_print_message(
     conversation_history: str,
     input_data_str: str,
