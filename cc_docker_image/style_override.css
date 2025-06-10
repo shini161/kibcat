@@ -1,3 +1,27 @@
+:root {
+  /* Color variables */
+  --color-primary: #8b5cf6;
+  --color-secondary: #3b82f6;
+  --color-primary-light: #b197f8;
+  --color-secondary-light: #90baf8;
+  --color-link: #21163b;
+  --color-text-light: whitesmoke;
+  --color-dark-bg: #2f3136;
+  --color-dark-bg-hover: #32353b;
+  --color-code-text: #dcddde;
+  --color-scrollbar-bg: #444;
+  --color-scrollbar-thumb: #ffffff;
+  --color-storage-bar-bg: #444;
+
+  --margin-top: 10px;
+  --margin-lateral: 10%;
+  --navbar-padding: 25px;
+
+  --scrollbars-height: 4px;
+
+  --p: 0.6231 0.188 259.81 !important;
+}
+
 .chat-bubble h1 {
   font-size: 1.8rem !important;
   font-weight: bold !important;
@@ -31,7 +55,7 @@
 }
 
 .chat-bubble {
-  background: linear-gradient(to top right, #8b5cf6 20%, #3b82f6 80%);
+  background: linear-gradient(to top right, var(--color-primary) 20%, var(--color-secondary) 80%);
   border-end-start-radius: 0.5rem !important;
   border-end-end-radius: 0.5rem !important;
   position: relative;
@@ -42,8 +66,8 @@
 .btn.btn-primary {
   background: linear-gradient(
     to top right,
-    #8b5cf6 20%,
-    #3b82f6 80%
+    var(--color-primary) 20%,
+    var(--color-secondary) 80%
   ) !important;
   border: none !important;
   transition: all 0.5s ease-in-out !important;
@@ -52,8 +76,8 @@
 .btn.btn-primary:hover {
   background: linear-gradient(
     to top right,
-    #b197f8 20%,
-    #90baf8 80%
+    var(--color-primary-light) 20%,
+    var(--color-secondary-light) 80%
   ) !important;
   transition: all 0.5s ease-in-out !important;
 }
@@ -66,20 +90,7 @@
 a.btn,
 .btn.btn-primary,
 .btn-primary svg {
-  color: whitesmoke !important;
-}
-
-* {
-  --margin-top: 10px;
-  --margin-lateral: 10%;
-  --navbar-padding: 25px;
-
-  --p: 0.6231 0.188 259.81 !important;
-  --scrollbar-bg: #444;
-  --scrollbar-thumb: #ffffff;
-  --storage-bar-bg: #444;
-  --bars-height: 8px;
-  --scrollbars-height: 4px;
+  color: var(--color-text-light) !important;
 }
 
 *::-webkit-scrollbar {
@@ -87,17 +98,17 @@ a.btn,
 }
 
 *::-webkit-scrollbar-track {
-  background: var(--scrollbar-bg);
+  background: var(--color-scrollbar-bg);
   border-radius: var(--scrollbars-height);
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb);
+  background-color: var(--color-scrollbar-thumb);
   border-radius: var(--scrollbars-height);
 }
 
 * {
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-bg);
   scrollbar-width: thin;
 }
 
@@ -190,7 +201,7 @@ textarea.textarea.block {
 }
 
 .chat-bubble pre {
-  background: #2f3136;
+  background: var(--color-dark-bg);
   border-radius: 4px;
   padding: 12px;
   margin: 8px 0;
@@ -203,7 +214,7 @@ textarea.textarea.block {
 .chat-bubble pre code {
   display: block;
   font-size: 13px;
-  color: #dcddde;
+  color: var(--color-code-text);
   background: transparent;
   padding: 0;
   border: none;
@@ -218,14 +229,14 @@ textarea.textarea.block {
 }
 
 .chat-bubble pre:hover {
-  background: #32353b;
+  background: var(--color-dark-bg-hover);
 }
 
 .chat-bubble code {
   font-family: "Consolas", "Monaco", "Courier New", monospace;
   font-size: 13px;
-  color: #dcddde;
-  background: #2f3136;
+  color: var(--color-code-text);
+  background: var(--color-dark-bg);
   border-radius: 4px;
   padding: 2px 6px;
   border: none;
@@ -239,11 +250,11 @@ textarea.textarea.block {
 }
 
 .chat-bubble code:hover {
-  background: #32353b;
+  background: var(--color-dark-bg-hover);
 }
 
 [data-theme="light"] {
   .chat-bubble:not(code) {
-    color: whitesmoke !important;
+    color: var(--color-text-light) !important;
   }
 }
