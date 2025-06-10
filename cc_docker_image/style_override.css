@@ -17,13 +17,26 @@
 }
 
 .chat-bubble::before {
-  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .chat-bubble {
   background: linear-gradient(to top right, #8b5cf6 20%, #3b82f6 80%);
   border-end-start-radius: 0.5rem !important;
   border-end-end-radius: 0.5rem !important;
+  position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn.btn-primary {
@@ -61,8 +74,7 @@ a.btn,
   --margin-lateral: 10%;
   --navbar-padding: 25px;
 
-  --p: 0.6353 0.1332 259.81 !important;
-
+  --p: 0.6231 0.188 259.81 !important;
   --scrollbar-bg: #444;
   --scrollbar-thumb: #ffffff;
   --storage-bar-bg: #444;
@@ -89,12 +101,30 @@ a.btn,
   scrollbar-width: thin;
 }
 
+.navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: 16px;
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.3), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.chat-bubble::before {
+  display: none !important;
+}
+
 .navbar.sticky {
   background: rgba(255, 255, 255, 0.1) !important;
   border-radius: 16px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border: none !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
   margin: var(--margin-top) var(--margin-lateral) var(--margin-top)
     var(--margin-lateral) !important;
@@ -105,24 +135,24 @@ a.btn,
   padding-right: var(--navbar-padding) !important;
   padding-bottom: 8px;
   padding-top: 8px;
-  border: none !important;
+  position: relative;
 }
 
-.navbar::before {
+.flex.h-full.flex-col.bg-base-300::before {
   content: "";
   position: absolute;
   inset: 0;
   padding: 2px;
-  border-radius: 16px;
-
-  background: linear-gradient(to bottom, #3b82f6 10%, transparent);
-
+  border-top-left-radius: 20px !important;
+  border-bottom-left-radius: 20px !important;
+  border-top-right-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-
   pointer-events: none;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .flex.h-full.flex-col.bg-base-300 {
@@ -133,6 +163,21 @@ a.btn,
   border-bottom-right-radius: 0px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
+  position: relative;
+}
+
+textarea.textarea.block::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: 20px !important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 textarea.textarea.block {
@@ -140,55 +185,47 @@ textarea.textarea.block {
   border-radius: 20px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
-}
-
-.textarea {
+  position: relative;
   outline: none !important;
 }
 
-/* Style for the pre block (outer container) */
 .chat-bubble pre {
-  background: #2f3136; /* Discord-like dark background */
-  border-radius: 4px; /* Tighter radius */
-  padding: 12px; /* Consistent padding */
-  margin: 8px 0; /* Vertical spacing */
-  border: none; /* No border */
-  box-shadow: none; /* No shadow */
-  overflow-x: auto; /* Horizontal scroll for long lines */
-  font-family: "Consolas", "Monaco", "Courier New", monospace; /* Monospaced font */
+  background: #2f3136;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 8px 0;
+  border: none;
+  box-shadow: none;
+  overflow-x: auto;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
 }
 
-/* Style for the code block (inner container) */
 .chat-bubble pre code {
-  display: block; /* Ensure code fills pre */
-  font-size: 13px; /* Consistent font size */
-  color: #dcddde; /* Default text color for non-highlighted text */
-  background: transparent; /* No background to avoid mismatch */
-  padding: 0; /* No extra padding */
-  border: none; /* No border */
-  box-shadow: none; /* No shadow */
-  white-space: pre-wrap; /* Preserve spaces, tabs, and line breaks */
+  display: block;
+  font-size: 13px;
+  color: #dcddde;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  white-space: pre-wrap;
 }
 
-/* Style for individual tokens (span elements) */
 .chat-bubble pre code span {
-  display: inline; /* Inline behavior for tokens */
-  background: transparent; /* Transparent to match pre */
-  white-space: pre-wrap; /* Respect spaces and breaks */
-  /* Remove color: inherit to allow syntax highlighting colors */
+  display: inline;
+  background: transparent;
+  white-space: pre-wrap;
 }
 
-/* Hover effect for the entire block */
 .chat-bubble pre:hover {
-  background: #32353b; /* Slightly lighter on hover, Discord style */
+  background: #32353b;
 }
 
-/* Inline code styling */
 .chat-bubble code {
   font-family: "Consolas", "Monaco", "Courier New", monospace;
   font-size: 13px;
   color: #dcddde;
-  background: #2f3136; /* Same background as pre */
+  background: #2f3136;
   border-radius: 4px;
   padding: 2px 6px;
   border: none;
@@ -197,12 +234,10 @@ textarea.textarea.block {
   vertical-align: middle;
 }
 
-/* Ensure pre code doesn’t inherit inline code styles */
 .chat-bubble pre code {
-  background: transparent !important; /* Force transparent background */
+  background: transparent !important;
 }
 
-/* Hover effect for inline code */
 .chat-bubble code:hover {
-  background: #32353b; /* Match pre hover background */
+  background: #32353b;
 }
