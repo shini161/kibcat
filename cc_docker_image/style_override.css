@@ -60,6 +60,8 @@ a.btn,
   --margin-top: 10px;
   --margin-lateral: 10%;
   --navbar-padding: 25px;
+
+  --p: 217 76 96.5 !important;
 }
 
 .navbar.sticky {
@@ -88,7 +90,7 @@ a.btn,
   padding: 2px;
   border-radius: 16px;
 
-  background: linear-gradient(to bottom, #8b5cf6 10%, transparent);
+  background: linear-gradient(to bottom, #3b82f6 10%, transparent);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
 
@@ -113,11 +115,6 @@ textarea.textarea.block {
   border-radius: 20px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
-}
-
-.active.router-link-exact-active:not(.btn-sm) {
-  /* color: linear-gradient(to top right, #8b5cf6 20%, #3b82f6 80%) !important; */
-  color: #8b5cf6 !important;
 }
 
 .textarea {
