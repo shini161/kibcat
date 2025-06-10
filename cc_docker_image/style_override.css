@@ -97,3 +97,64 @@ a.btn,
 
   pointer-events: none;
 }
+
+/* Style for the pre block (outer container) */
+.chat-bubble pre {
+  background: #2f3136; /* Discord-like dark background */
+  border-radius: 4px; /* Tighter radius */
+  padding: 12px; /* Consistent padding */
+  margin: 8px 0; /* Vertical spacing */
+  border: none; /* No border */
+  box-shadow: none; /* No shadow */
+  overflow-x: auto; /* Horizontal scroll for long lines */
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* Monospaced font */
+}
+
+/* Style for the code block (inner container) */
+.chat-bubble pre code {
+  display: block; /* Ensure code fills pre */
+  font-size: 13px; /* Consistent font size */
+  color: #dcddde; /* Default text color for non-highlighted text */
+  background: transparent; /* No background to avoid mismatch */
+  padding: 0; /* No extra padding */
+  border: none; /* No border */
+  box-shadow: none; /* No shadow */
+  white-space: pre-wrap; /* Preserve spaces, tabs, and line breaks */
+}
+
+/* Style for individual tokens (span elements) */
+.chat-bubble pre code span {
+  display: inline; /* Inline behavior for tokens */
+  background: transparent; /* Transparent to match pre */
+  white-space: pre-wrap; /* Respect spaces and breaks */
+  /* Remove color: inherit to allow syntax highlighting colors */
+}
+
+/* Hover effect for the entire block */
+.chat-bubble pre:hover {
+  background: #32353b; /* Slightly lighter on hover, Discord style */
+}
+
+/* Inline code styling */
+.chat-bubble code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #dcddde;
+  background: #2f3136; /* Same background as pre */
+  border-radius: 4px;
+  padding: 2px 6px;
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s ease;
+  vertical-align: middle;
+}
+
+/* Ensure pre code doesn’t inherit inline code styles */
+.chat-bubble pre code {
+  background: transparent !important; /* Force transparent background */
+}
+
+/* Hover effect for inline code */
+.chat-bubble code:hover {
+  background: #32353b; /* Match pre hover background */
+}
