@@ -45,7 +45,8 @@
   transition: all 0.5s ease-in-out !important;
 }
 
-.btn a,
+a.btn,
+.btn.btn-primary,
 .btn-primary svg {
   color: whitesmoke !important;
 }
