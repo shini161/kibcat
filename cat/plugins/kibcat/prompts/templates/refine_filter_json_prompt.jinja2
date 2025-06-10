@@ -14,9 +14,15 @@ OBIETTIVO
 --------------------------------------------------------------------
 INPUT PER OGNI FILTRO
 --------------------------------------------------------------------
-- "field": dizionario { <nome_campo>: [valori_ammessi…] }  
+- "field": dizionario { <nome_campo>: [valori_ammessi…] }
+  # IMPORTANTE: Nel JSON di INPUT possono esserci più filtri con la stessa field. In tal caso, UNISCILI in un unico filtro per quella field prima di procedere.
 - "operator": uno tra {% endraw %}{{ operators_str }}{% raw %} (case-insensitive, underscore ammesso)  
-- "value": valore o lista di valori (obbligatorio se richiesto dall’operatore)
+- "value": valore o lista di valori (obbligatorio se richiesto dall’operatore) (es: IS -> valore singolo; IS_ONE_OF -> lista).
+  ATTENZIONE: se tra i valori ammessi per un campo ci sono più opzioni che differiscono solo per maiuscole/minuscole (es: "ERROR" e "error"), oppure sono molto simili tra loro (es: "info" e "information"), e il valore fornito dall’utente corrisponde (case-insensitive o per similarità) a più di una di queste opzioni, DEVI:
+    - Restituire SEMPRE una lista con tutte le possibili corrispondenze in "value".
+    - Impostare SEMPRE l’operatore a "is_one_of" (anche se l’input usava "is"), senza chiedere conferma.
+    - Esempio: se l’input è "error" e tra i valori ammessi ci sono sia "ERROR" che "error", restituisci "value": ["ERROR", "error"] e "operator": "is_one_of".
+    - Se invece il valore corrisponde esattamente (anche solo per differenza di maiuscole/minuscole) a un solo valore ammesso, correggi automaticamente e restituisci il valore corretto come stringa singola, mantenendo l’operatore originale.
 
 --------------------------------------------------------------------
 VALIDAZIONE E CORREZIONE
