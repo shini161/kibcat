@@ -241,3 +241,9 @@ textarea.textarea.block {
 .chat-bubble code:hover {
   background: #32353b;
 }
+
+[data-theme="light"] {
+  .chat-bubble:not(code) {
+    color: whitesmoke !important;
+  }
+}
