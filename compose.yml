@@ -27,8 +27,8 @@ services:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       # Custom style override
       - ./cc_docker_image/style_override.css:/admin/assets/style_override.css
-      - ./assets/kib-cat-logo.svg:/app/cat/routes/static/core_static_folder/img/logo.svg:ro
-      - ./assets/kib-cat-logo.svg:/app/cat/routes/static/core_static_folder/img/logo_no_writing.svg:ro
+      - ./cc_docker_image/kib-cat-logo.svg:/app/cat/routes/static/core_static_folder/img/logo.svg:ro
+      - ./cc_docker_image/kib-cat-logo.svg:/app/cat/routes/static/core_static_folder/img/logo_no_writing.svg:ro
     logging:
       driver: json-file
       options:
