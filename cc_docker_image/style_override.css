@@ -4,7 +4,7 @@
   --color-secondary: #3b82f6;
   --color-primary-light: #b197f8;
   --color-secondary-light: #90baf8;
-  --color-link: #21163b;
+  --color-link: #c8cfff;
   --color-text-light: whitesmoke;
   --color-dark-bg: #2f3136;
   --color-dark-bg-hover: #32353b;
@@ -84,7 +84,7 @@
 
 .chat-bubble a,
 .chat-bubble a:hover {
-  color: #c8cfff !important;
+  color: var(--color-link) !important;
 }
 
 a.btn,
