@@ -14,47 +14,82 @@ OBIETTIVO
 --------------------------------------------------------------------
 INPUT PER OGNI FILTRO
 --------------------------------------------------------------------
-- "field": dizionario { <nome_campo>: [valori_ammessi…] }  
-- "operator": uno tra {% endraw %}{{ operators_str }}{% raw %} (case-insensitive, underscore ammesso)  
-- "value": valore o lista di valori (obbligatorio se richiesto dall’operatore)
+Ogni filtro ha i seguenti elementi:
 
---------------------------------------------------------------------
-VALIDAZIONE E CORREZIONE
---------------------------------------------------------------------
+- **"field"**: dizionario nel formato { <nome_campo>: [<valori_ammessi>…] }  
+  ⚠️ Se più filtri usano lo stesso campo, UNISCILI PRIMA in un solo filtro per quel campo.
 
-🔧 **Operatori**:
-- Se il valore dell’operatore è simile (es. `"IS_NOT"`), correggilo automaticamente in `"is_not"` senza chiedere conferma.
+- **"operator"**: uno tra {% endraw %}{{ operators_str }}{% raw %}  
+  ▸ Case-insensitive, underscore permesso (es. `IS_NOT`, `is_not`, `Is` sono tutti accettati)
 
-🔍 **Valori**:
-Per ogni valore in input, considera valido se:
+- **"value"**: valore o lista di valori.  
+  ▸ Obbligatorio se richiesto dall’operatore (es. "is" → 1 valore, "is_one_of" → lista)
 
-1. È presente nella lista dei valori ammessi (confronto case-insensitive) → ✅ valido.
-2. È simile a un solo valore della lista (es. `warn` → `WARN`) → ✅ correggi automaticamente **senza chiedere conferma**.
-3. È simile a più valori (es. `err` → `ERROR`, `ERRONEOUS`) → ❓ **chiedi conferma all’utente UNA sola volta**.
-4. Se non trovi nessuna corrispondenza accettabile, genera un errore:
-```json
-{ "errors": ["value '<valore>' for field '<campo>' not permitted (did you mean '<suggerimento>'?)"] }
-```
+🔍 **Normalizzazione e correzione automatica dei valori**:
+
+Per ogni valore in input:
+
+1. Se è uguale a uno dei valori ammessi (case-insensitive) → ✅ accettato e normalizzato.
+2. Se è simile a **uno solo** dei valori ammessi (es. `warnnig` → `WARNING`) → ✅ correggilo automaticamente.
+3. Se è simile a **più** valori ammessi (es. `err` corrisponde a `ERROR`, `ERRONEOUS`) → 🔁 restituisci tutte le possibili corrispondenze in una lista.  
+   - Imposta SEMPRE l’operatore a `"is_one_of"` (anche se l’originale era `"is"` o altro).
+4. Se non è compatibile con nessun valore ammesso → ❌ errore, suggerisci il valore corretto se possibile.
 
 📌 Mai chiedere conferma se:
+- Il valore è corretto (anche con differenza di maiuscole).
+- C’è solo una correzione plausibile.
 
-    Il valore è corretto a livello di case-insensitive (warn → WARN)
+🔁 **Uso forzato di `"is_one_of"`**:
+Se il valore dell’utente corrisponde a **più** valori ammessi (per case-insensitive o similarità), imposta SEMPRE:
+```json
+"operator": "is_one_of",
+"value": ["<tutte le corrispondenze>"]
 
-    C’è una sola possibile correzione (warnnig → WARNING)
+ESEMPIO:
+Input:
+
+"value": "error"
+
+Valori ammessi: ["ERROR", "error"]
+⇒ Output:
+
+"operator": "is_one_of",
+"value": ["ERROR", "error"]
+
+VALIDAZIONE E CORREZIONE
+
+🛠️ Operatori:
+
+    Se l’operatore è scritto in modo errato ma simile (es. IS_NOT) → correggilo in "is_not" automaticamente.
+
+📥 Valori:
+Un valore è considerato valido se:
+
+    È presente tra i valori ammessi (case-insensitive).
+
+    È simile a un solo valore ammesso → correggi senza conferma.
+
+    È simile a più valori → restituisci tutte le opzioni con "is_one_of".
+
+❌ Se non ci sono corrispondenze → restituisci errore:
+
+{ "errors": ["value '<valore>' for field '<campo>' not permitted (did you mean '<suggerimento>'?)"] }
 
 ESEMPI DI CORREZIONE AUTOMATICA
 
-    "warn" (input) → "WARN" (output): ✅ automatico
+    "warn" → "WARN": ✅
 
-    "warnnig" → "WARNING": ✅ automatico
+    "warnnig" → "WARNING": ✅
 
-    "IS_NOT" → "is_not": ✅ automatico
+    "IS_NOT" → "is_not": ✅
 
-    "ERR" → può essere "ERROR" o "ERRONEOUS": ❓ chiedi conferma
+    "err" → ["ERROR", "ERRONEOUS"] ⇒ "is_one_of": ✅
+
+    "erro" → ❌ "not permitted" con suggerimento
 
 FORMATO OUTPUT
 
-✅ Tutti validi
+✅ Tutti i filtri validi:
 
 {
   "filters": [
@@ -62,7 +97,7 @@ FORMATO OUTPUT
   ]
 }
 
-❌ Uno o più non validi
+❌ Almeno un filtro non valido:
 
 {
   "errors": [
@@ -74,21 +109,20 @@ ESEMPIO DI INPUT
 
 [
   {
-    "field": { "example.logLevel": [
-      "CRITICAL", "DEBUG", "ERROR", "INFO", "TRACE", "WARN", "WARNING"
-    ]},
-    "operator": "IS_NOT",
+  "field": { "example.logLevel": [
+    "CRITICAL", "DEBUG", "ERROR", "INFO", "TRACE", "WARN", "WARNING"
+  ]},
+  "operator": "IS_NOT",
     "value": ["warn", "ERROR"]
   },
   {
     "field": { "example.service.keyword": [
-      "my.api.backend", "worker-node", "frontend"
-    ]},
+    "my.api.backend", "worker-node", "frontend"
+  ]},
     "operator": "is",
     "value": "worker-node"
   }
 ]
 
 INPUT DA PROCESSARE:
-
 {% endraw %}{{ json_input }}
