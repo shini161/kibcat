@@ -25,3 +25,27 @@
   border-end-start-radius: 0.5rem !important;
   border-end-end-radius: 0.5rem !important;
 }
+
+.btn.btn-primary {
+  background: linear-gradient(
+    to top right,
+    #8b5cf6 20%,
+    #3b82f6 80%
+  ) !important;
+  border: none !important;
+  transition: all 0.5s ease-in-out !important;
+}
+
+.btn.btn-primary:hover {
+  background: linear-gradient(
+    to top right,
+    #b197f8 20%,
+    #90baf8 80%
+  ) !important;
+  transition: all 0.5s ease-in-out !important;
+}
+
+.btn a,
+.btn-primary svg {
+  color: whitesmoke !important;
+}
