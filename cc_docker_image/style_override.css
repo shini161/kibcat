@@ -98,6 +98,15 @@ a.btn,
   pointer-events: none;
 }
 
+.flex.h-full.flex-col.bg-base-300 {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-bottom-left-radius: 20px !important;
+  border-top-left-radius: 20px !important;
+  border-top-right-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
 textarea.textarea.block {
   background: rgba(255, 255, 255, 0.1) !important;
   border-radius: 20px !important;
