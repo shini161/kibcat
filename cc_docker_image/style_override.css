@@ -1,25 +1,25 @@
 .chat-bubble h1 {
-    font-size: 1.8rem !important;
-    font-weight: bold !important;
-    margin-top: 1.5rem !important;
+  font-size: 1.8rem !important;
+  font-weight: bold !important;
+  margin-top: 1.5rem !important;
 }
 
 .chat-bubble h2 {
-    font-size: 1.5rem !important;
-    font-weight: bold !important;
-    margin-top: 1rem !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  margin-top: 1rem !important;
 }
 
 .chat-bubble h3 {
-    font-size: 1.2rem !important;
-    font-weight: bold !important;
-    margin-top: 0.75rem !important;
+  font-size: 1.2rem !important;
+  font-weight: bold !important;
+  margin-top: 0.75rem !important;
 }
 
 .chat-bubble {
-	background: linear-gradient(
+  background: linear-gradient(
     to top right,
-	#8b5cf6 20%,   /* Purple (Tailwind violet-500) */
-    #3b82f6 80%    /* Bright
+    #8b5cf6 20%,
+    /* Purple (Tailwind violet-500) */ #3b82f6 80% /* Bright */
   );
 }
