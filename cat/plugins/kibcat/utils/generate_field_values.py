@@ -1,6 +1,7 @@
 from typing import Any, Type, cast
 
 from elasticsearch import Elasticsearch
+
 from kibapi import NotCertifiedKibana, get_field_properties, group_fields
 from kibfieldvalues import get_initial_part_of_fields
 from kiblog import BaseLogger
@@ -34,21 +35,21 @@ def automated_field_value_extraction(
             msg: str = f"Getting field {keyword_field} possible values using Elastic"
             logger.message(msg)
 
-        keyword_field_values: list[str] = get_initial_part_of_fields(elastic, keyword_field, cast(str, data_view_id))
+        keyword_field_values: list[str] = get_initial_part_of_fields(elastic, keyword_field, data_view_id)
 
         new_key[keyword_field] = keyword_field_values
     else:
         if normal_field:
             if logger:
-                msg: str = f"Getting field {normal_field} possible values using Kibana"
-                logger.message(msg)
+                log_msg: str = f"Getting field {normal_field} possible values using Kibana"
+                logger.message(log_msg)
 
             field_properties: dict[str, Any] = get_field_properties(fields_list, normal_field)
 
             # Get all the field's possible values
             possible_values: list[Any] = kibana.get_field_possible_values(
-                cast(str, space_id),
-                cast(str, data_view_id),
+                space_id,
+                data_view_id,
                 field_properties,
             )
 
@@ -57,7 +58,7 @@ def automated_field_value_extraction(
     return new_key
 
 
-def generate_field_to_group(fields_list: list[dict[str, Any]]):
+def generate_field_to_group(fields_list: list[dict[str, Any]]) -> dict[str, Any]:
     """Automatically generate the field-to-group dict"""
 
     # Group them with keywords if there are
@@ -94,11 +95,11 @@ def verify_data_views_space_id(
 
     # Check if the dataview needed exists, otherwise return the error
     if (not data_views) or (not any(view["id"] == data_view_id for view in data_views)):
-        msg: str = "Specified data view not found"
+        error_msg: str = "Specified data view not found"
 
         if logger:
-            logger.error(msg)
-        return msg
+            logger.error(error_msg)
+        return error_msg
 
     # if the field list cant be loaded, return the error
     if not fields_list:
