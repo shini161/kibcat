@@ -25,8 +25,16 @@ fi
 # Read the file content, parse JSON and convert it to single-line format
 newArray=$(jq -c '.' "$example_messages_file")
 
-# Use sed to replace from 'defaultMessages:[' up to the closing ']'
+# Use sed to replace strings in the JS file
 sed -i "s|defaultMessages:\[[^]]*\]|defaultMessages:$newArray|" "$js_file"
+sed -i 's/"Cheshire Cat":"You"/"KibCat":"User"/g' "$js_file"
+sed -i 's/Cheshire Cat is thinking.../KibCat is thinking.../g' "$js_file"
+sed -i 's/Well, well, well, looks like something has gone amiss/Ask the KibCat.../g' "$js_file"
+sed -i 's/The enigmatic Cheshire cat is pondering.../Ask the KibCat.../g' "$js_file"
+sed -i 's/The curious Cheshire cat is all ears.../Ask the KibCat.../g' "$js_file"
+sed -i 's/Ask the Cheshire Cat.../Ask the KibCat.../g' "$js_file"
+sed -i 's/🙂/🕵️/g' "$js_file"
+sed -i 's/😺/🤖/g' "$js_file"
 
 echo "Replaced defaultMessages array in $js_file"
 
