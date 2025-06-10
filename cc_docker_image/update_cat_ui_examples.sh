@@ -1,7 +1,7 @@
 #!/bin/bash
 
 js_file="/admin/assets/cat.js"
-css_file="/admin/assets/cat.css"
+html_file="/admin/index.html"
 
 absolute_path=$(realpath "$0")
 script_dir=$(dirname "$absolute_path")
@@ -36,24 +36,28 @@ sed -i 's/Ask the Cheshire Cat.../Ask the KibCat.../g' "$js_file"
 sed -i 's/🙂/🕵️/g' "$js_file"
 sed -i 's/😺/🤖/g' "$js_file"
 
-echo "Replaced defaultMessages array in $js_file"
+echo "Replaced strings in $js_file"
 
-### UPDATE CSS ###
+### UPDATE HTML ###
 
-# Check if source CSS file exists
-if [ ! -f "$css_file" ]; then
-    echo "Error: cat.css not found" >&2
+# Check if source HTML file exists
+if [ ! -f "$html_file" ]; then
+    echo "Error: index.html not found" >&2
     exit 1
 fi
 
-style_override_file="${script_dir}/style_override.css"
+style_override_path="/admin/assets/style_override.css"
 
-# Check if the file exists
-if [ ! -f "$style_override_file" ]; then
-    echo "Error: style_override.css not found" >&2
-    exit 1
+# Touch the style_override.css file if it doesn't exist
+if [ ! -f "$style_override_path" ]; then
+    echo "Creating style_override.css at $style_override_path"
+    touch "$style_override_path"
 fi
 
-# Append the content of style_override.css to cat.css
-cat "$style_override_file" >> "$css_file"
-echo "Appended style_override.css to $css_file"
+# Add new style in the HTML file after the original style
+if ! grep -q "style_override.css" "$html_file"; then
+    echo "Adding style_override.css to $html_file"
+    sed -i "s|cat.css\">|cat.css\"><link rel=\"stylesheet\" crossorigin href=\"$style_override_path\">|" "$html_file"
+else
+    echo "style_override.css already exists in $html_file"
+fi

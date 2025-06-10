@@ -25,6 +25,8 @@ services:
       # Requirements
       - ./requirements.txt:/app/cat/plugins/kibcat/requirements.txt
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      # Custom style override
+      - ./cc_docker_image/style_override.css:/admin/assets/style_override.css
     logging:
       driver: json-file
       options:
