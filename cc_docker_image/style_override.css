@@ -62,6 +62,31 @@ a.btn,
   --navbar-padding: 25px;
 
   --p: 0.6353 0.1332 259.81 !important;
+
+  --scrollbar-bg: #444;
+  --scrollbar-thumb: #ffffff;
+  --storage-bar-bg: #444;
+  --bars-height: 8px;
+  --scrollbars-height: 4px;
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbars-height);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+  border-radius: var(--scrollbars-height);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--scrollbars-height);
+}
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+  scrollbar-width: thin;
 }
 
 .navbar.sticky {
