@@ -8,7 +8,7 @@ COPY style_override.css /tmp/style_override.css
 
 # Make the script executable and run it during build
 RUN apt-get update && \
-    apt-get install -y jq && \
+    apt-get install -y jq nano && \
     apt-get clean && \
     chmod +x /tmp/update_cat_ui_examples.sh && \
     /tmp/update_cat_ui_examples.sh && \
