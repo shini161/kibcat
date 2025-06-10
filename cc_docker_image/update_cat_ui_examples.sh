@@ -1,16 +1,30 @@
 #!/bin/bash
 
-# Use the first argument if provided, otherwise use default path
-if [ $# -gt 0 ]; then
-    file="$1"
-else
-    file="/admin/assets/cat.js"
+js_file="/admin/assets/cat.js"
+
+absolute_path=$(realpath "$0")
+script_dir=$(dirname "$absolute_path")
+
+### UPDATE JS ###
+
+# Check if source JS file exists
+if [ ! -f "$js_file" ]; then
+    echo "Error: cat.js not found" >&2
+    exit 1
 fi
 
-# New array value
-newArray='["Filtra per i log di errore sul container di devicehub", "Filtra per tutti i log che sono di warning o di informazione", "Filtra per i container di devicehub"]'
+example_messages_file="${script_dir}/example_messages.json"
+
+# Check if the file exists
+if [ ! -f "$example_messages_file" ]; then
+    echo "Error: example_messages.json not found" >&2
+    exit 1
+fi
+
+# Read the file content, parse JSON and convert it to single-line format
+newArray=$(jq -c '.' "$example_messages_file")
 
 # Use sed to replace from 'defaultMessages:[' up to the closing ']'
-sed -i "s|defaultMessages:\[[^]]*\]|defaultMessages:$newArray|" "$file"
+sed -i "s|defaultMessages:\[[^]]*\]|defaultMessages:$newArray|" "$js_file"
 
-echo "Replaced defaultMessages array in $file"
+echo "Replaced defaultMessages array in $js_file"
