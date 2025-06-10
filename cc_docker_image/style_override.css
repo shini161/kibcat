@@ -56,6 +56,12 @@ a.btn,
   color: whitesmoke !important;
 }
 
+* {
+  --margin-top: 10px;
+  --margin-lateral: 10%;
+  --navbar-padding: 25px;
+}
+
 .navbar.sticky {
   background: rgba(255, 255, 255, 0.1) !important;
   border-radius: 16px !important;
@@ -63,10 +69,15 @@ a.btn,
   -webkit-backdrop-filter: blur(10px) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
-  margin: 15px !important;
-  width: calc(100% - 30px) !important;
+  margin: var(--margin-top) var(--margin-lateral) var(--margin-top)
+    var(--margin-lateral) !important;
+  width: calc(100% - var(--margin-lateral) - var(--margin-lateral)) !important;
   position: sticky !important;
-  top: 15px !important;
+  top: var(--margin-top) !important;
+  padding-left: var(--navbar-padding) !important;
+  padding-right: var(--navbar-padding) !important;
+  padding-bottom: 8px;
+  padding-top: 8px;
   border: none !important;
 }
 
