@@ -22,22 +22,17 @@
   --p: 0.6231 0.188 259.81 !important;
 }
 
+.chat-bubble h3,
+.chat-bubble h2,
 .chat-bubble h1 {
-  font-size: 1.8rem !important;
-  font-weight: bold !important;
-  margin-top: 0.75rem !important;
-}
-
-.chat-bubble h2 {
-  font-size: 1.5rem !important;
-  font-weight: bold !important;
-  margin-top: 1rem !important;
-}
-
-.chat-bubble h3 {
   font-size: 1.2rem !important;
   font-weight: bold !important;
   margin-top: 0.75rem !important;
+}
+
+hr {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .chat-bubble::before {
@@ -55,7 +50,11 @@
 }
 
 .chat-bubble {
-  background: linear-gradient(to top right, var(--color-primary) 20%, var(--color-secondary) 80%);
+  background: linear-gradient(
+    to top right,
+    var(--color-primary) 20%,
+    var(--color-secondary) 80%
+  );
   border-end-start-radius: 0.5rem !important;
   border-end-end-radius: 0.5rem !important;
   position: relative;
@@ -85,6 +84,8 @@
 .chat-bubble a,
 .chat-bubble a:hover {
   color: var(--color-link) !important;
+  font-weight: bolder !important;
+  font-size: 1.15rem !important;
 }
 
 a.btn,

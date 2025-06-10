@@ -451,7 +451,7 @@ class FilterForm(CatForm):  # type: ignore
         )
         ask_confirm_message = self.cat.llm(prompt)
 
-        return {"output": f'<a href="{url}" target="_blank">Kibana URL</a>\n{ask_confirm_message}'}
+        return {"output": f'<a href="{url}" target="_blank">Kibana URL</a>\n<hr/>\n{ask_confirm_message}'}
 
     def check_exit_intent(self) -> bool:
         # Get user message
