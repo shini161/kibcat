@@ -1,0 +1,5 @@
+[
+    "Filtra per i log di errore sul container di devicehub",
+    "Filtra per tutti i log che sono di warning o di informazione",
+    "Filtra per i container di devicehub"
+]
