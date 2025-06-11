@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from typing import Any, cast
@@ -34,7 +35,6 @@ from kibtemplate.builders import build_template
 from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
 from kibtypes.parsed_kibana_url import ParsedKibanaURL
 from kiburl.builders import build_rison_url_from_json
-import re
 
 # Environment Variables
 URL = os.getenv("KIBANA_URL")
