@@ -1,5 +1,8 @@
 [
     "Filtra per i log di errore sul container di devicehub",
     "Filtra per tutti i log che sono di warning o di informazione",
-    "Filtra per i container di devicehub"
+    "Filtra per i container di devicehub",
+    "Filtra per i log di informazione da ieri a oggi.",
+    "Filtra per i log dell'ultima settimana.",
+    "Filtra per i log di kibcat nell'ultimo mese"
 ]
