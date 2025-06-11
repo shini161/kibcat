@@ -1,0 +1,13 @@
+{
+    "extends": [
+        "stylelint-config-standard"
+    ],
+    "rules": {
+        "color-hex-length": "long",
+        "color-function-notation": "legacy",
+        "font-family-name-quotes": null,
+        "property-no-vendor-prefix": null,
+        "declaration-property-value-no-unknown": null,
+        "no-descending-specificity": null
+    }
+}

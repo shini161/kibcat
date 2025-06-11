@@ -9,16 +9,19 @@
   --color-dark-bg: #2f3136;
   --color-dark-bg-hover: #32353b;
   --color-code-text: #dcddde;
-  --color-scrollbar-bg: #444;
+  --color-scrollbar-bg: #444444;
   --color-scrollbar-thumb: #ffffff;
-  --color-storage-bar-bg: #444;
+  --color-storage-bar-bg: #444444;
 
+  /* Margin and padding variables */
   --margin-top: 10px;
   --margin-lateral: 10%;
   --navbar-padding: 25px;
 
+  /* Scrollbar height */
   --scrollbars-height: 4px;
 
+  /* Tailwind theme colors */
   --p: 0.6231 0.188 259.81 !important;
 }
 
@@ -106,25 +109,21 @@ a.btn,
   inset: 0;
   padding: 2px;
   border-radius: 16px;
-  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.3), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(to bottom, rgb(59, 130, 246, 30%), transparent);
+  -webkit-mask: linear-gradient(#ffffff 0 0) content-box, linear-gradient(#ffffff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
-}
-
-.chat-bubble::before {
-  display: none !important;
+  box-shadow: inset 0 0 10px rgb(255, 255, 255, 20%);
 }
 
 .navbar.sticky {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgb(255, 255, 255, 10%) !important;
   border-radius: 16px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
   border: none !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 30px rgb(0, 0, 0, 10%) !important;
   margin: var(--margin-top) var(--margin-lateral) var(--margin-top)
     var(--margin-lateral) !important;
   width: calc(100% - var(--margin-lateral) - var(--margin-lateral)) !important;
@@ -134,7 +133,6 @@ a.btn,
   padding-right: var(--navbar-padding) !important;
   padding-bottom: 8px;
   padding-top: 8px;
-  position: relative;
 }
 
 .flex.h-full.flex-col.bg-base-300::before {
@@ -142,24 +140,18 @@ a.btn,
   position: absolute;
   inset: 0;
   padding: 2px;
-  border-top-left-radius: 20px !important;
-  border-bottom-left-radius: 20px !important;
-  border-top-right-radius: 0px !important;
-  border-bottom-right-radius: 0px !important;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  border-radius: 20px 0 0 20px !important;
+  background: linear-gradient(to bottom, rgb(255, 255, 255, 30%), transparent);
+  -webkit-mask: linear-gradient(#ffffff 0 0) content-box, linear-gradient(#ffffff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 10px rgb(255, 255, 255, 20%);
 }
 
 .flex.h-full.flex-col.bg-base-300 {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-bottom-left-radius: 20px !important;
-  border-top-left-radius: 20px !important;
-  border-top-right-radius: 0px !important;
-  border-bottom-right-radius: 0px !important;
+  background: rgb(255, 255, 255, 10%) !important;
+  border-radius: 20px 0 0 20px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
   position: relative;
@@ -171,16 +163,16 @@ textarea.textarea.block::before {
   inset: 0;
   padding: 2px;
   border-radius: 20px !important;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(to bottom, rgb(255, 255, 255, 30%), transparent);
+  -webkit-mask: linear-gradient(#ffffff 0 0) content-box, linear-gradient(#ffffff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 10px rgb(255, 255, 255, 20%);
 }
 
 textarea.textarea.block {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgb(255, 255, 255, 10%) !important;
   border-radius: 20px !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
@@ -203,7 +195,7 @@ textarea.textarea.block {
   display: block;
   font-size: 13px;
   color: var(--color-code-text);
-  background: transparent;
+  background: transparent !important;
   padding: 0;
   border: none;
   box-shadow: none;
@@ -231,10 +223,6 @@ textarea.textarea.block {
   box-shadow: none;
   transition: background 0.2s ease;
   vertical-align: middle;
-}
-
-.chat-bubble pre code {
-  background: transparent !important;
 }
 
 .chat-bubble code:hover {
