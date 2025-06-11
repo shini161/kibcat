@@ -1,6 +1,7 @@
 from typing import Any
 
 import tiktoken
+from cat.log import log
 from cat.mad_hatter.decorators import hook, tool
 from langchain_core.callbacks.base import BaseCallbackHandler
 from langchain_core.outputs import LLMResult
@@ -29,7 +30,7 @@ class TokenCounterHandler(BaseCallbackHandler):
 def after_cat_bootstrap(cat):
     callback_token_counter = TokenCounterHandler(model_name=cat._llm.model_name)
     cat._llm.callbacks = [callback_token_counter]
-    print("Token counting handler initialized.")
+    log.info("Token counting handler initialized.")
 
 
 @tool(return_direct=True)
