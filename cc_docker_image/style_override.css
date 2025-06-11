@@ -72,6 +72,7 @@ hr {
   color: var(--color-link) !important;
   font-weight: bolder !important;
   font-size: 1.15rem !important;
+  text-decoration: none !important;
 }
 
 a.btn,
