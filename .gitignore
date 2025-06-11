@@ -167,6 +167,7 @@ cat/plugins/cc_vscode_debugpy/
 ollama/
 ollamaui/
 .vscode
+settings.json
 
 elastic/
 kibana/data/

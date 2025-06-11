@@ -1,0 +1,8 @@
+{
+	"name": "TokenCounter",
+	"version": "0.0.1",
+	"description": "Count LLM tokens usage",
+	"author_name": "MatteoGheza",
+	"thumb": "https://i.ibb.co/chn6GK6m/token-counter-plugin-logo.png",
+	"tags": "langchain, token, tokens, cat, cheshire"
+}
