@@ -34,6 +34,7 @@ from kibtemplate.builders import build_template
 from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
 from kibtypes.parsed_kibana_url import ParsedKibanaURL
 from kiburl.builders import build_rison_url_from_json
+import re
 
 # Environment Variables
 URL = os.getenv("KIBANA_URL")
@@ -310,8 +311,12 @@ class FilterForm(CatForm):  # type: ignore
             if "start_time" in self._model and to_timedelta(
                 isodate.parse_duration(format_T_in_date(end_time))
             ) > to_timedelta(isodate.parse_duration(format_T_in_date(self._model["start_time"]))):
-                self._errors.append("end_time: must be less than or equal to start_time")
-                del self._model["end_time"]
+                # self._errors.append("end_time: must be less than or equal to start_time")
+                # del self._model["end_time"]
+                end_time_new = self._model["start_time"]
+
+                self._model["start_time"] = self._model["end_time"]
+                self._model["end_time"] = end_time_new
 
         verify_result: str | None = verify_data_views_space_id(
             kibana=self._kibana,
@@ -451,7 +456,9 @@ class FilterForm(CatForm):  # type: ignore
         )
         ask_confirm_message = self.cat.llm(prompt)
 
-        return {"output": f'<a href="{url}" target="_blank">🔗 Kibana URL</a>\n<hr/>\n{ask_confirm_message}'}
+        output_html = f'<a href="{url}" target="_blank">🔗 Kibana URL</a>\n<hr/>\n{ask_confirm_message}'
+        output_html = re.sub(r"(<hr\s*/?>\s*){2,}", "<hr/>", output_html, flags=re.IGNORECASE)
+        return {"output": output_html}
 
     def check_exit_intent(self) -> bool:
         # Get user message
