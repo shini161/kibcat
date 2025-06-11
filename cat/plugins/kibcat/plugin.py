@@ -369,8 +369,6 @@ class FilterForm(CatForm):  # type: ignore
                 logger=KibCatLogger,
             )
 
-        # TODO: validate ambiguous filters
-        # TODO: move deterministic validation of accepted values out of the cat
         operators_str: str = json.dumps([op.name.lower() for op in FilterOperators], indent=2)
         filter_data: str = build_refine_filter_json(
             json_input=json.dumps(
