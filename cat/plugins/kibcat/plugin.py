@@ -139,11 +139,10 @@ class FilterForm(CatForm):  # type: ignore
     description = "filter logs"
     model_class = FilterData
     start_examples = ["filter logs", "obtain logs", "show logs", "search logs"]
-    stop_examples = [
-        "stop filtering logs",
-        "not interested anymore",
-    ]
+    # stop_examples not needed anymore
     ask_confirm = True
+
+    _state = CatFormState.INCOMPLETE
 
     _kibana: NotCertifiedKibana
     _elastic: Elasticsearch
@@ -225,6 +224,29 @@ class FilterForm(CatForm):  # type: ignore
         MAIN_FIELDS_DICT = new_main_fields
 
         super().__init__(cat)
+
+    def next(self):
+        # If state is WAIT_CONFIRM, check user confirm response..
+        if self._state == CatFormState.WAIT_CONFIRM:
+            if self.check_exit_intent():
+                self._state = CatFormState.CLOSED
+            else:
+                self._state = CatFormState.INCOMPLETE
+
+        if self.check_exit_intent():
+            self._state = CatFormState.CLOSED
+
+        # If the state is INCOMPLETE, execute model update
+        # (and change state based on validation result)
+        if self._state == CatFormState.INCOMPLETE:
+            self.update()
+
+        # If state is COMPLETE, ask confirm (or execute action directly)
+        if self._state == CatFormState.COMPLETE:
+            self._state = CatFormState.WAIT_CONFIRM
+
+        # if state is still INCOMPLETE, recap and ask for new info
+        return self.message()
 
     def _parse_filters(self, filters: list[Any]) -> list[KibCatFilter]:
         if not isinstance(filters, list):
