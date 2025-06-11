@@ -1,7 +1,7 @@
 :root {
   /* Color variables */
-  --color-primary: #8b5cf6;
-  --color-secondary: #3b82f6;
+  --color-primary: #7209b7;
+  --color-secondary: #4361ee;
   --color-primary-light: #b197f8;
   --color-secondary-light: #90baf8;
   --color-link: #c8cfff;
@@ -41,8 +41,8 @@ hr {
 .chat-bubble {
   background: linear-gradient(
     to top right,
-    var(--color-primary) 20%,
-    var(--color-secondary) 80%
+    var(--color-primary) 25%,
+    var(--color-secondary) 75%
   );
   border-end-start-radius: 0.5rem !important;
   border-end-end-radius: 0.5rem !important;
@@ -54,8 +54,8 @@ hr {
 .btn.btn-primary {
   background: linear-gradient(
     to top right,
-    var(--color-primary) 20%,
-    var(--color-secondary) 80%
+    var(--color-primary) 25%,
+    var(--color-secondary) 75%
   ) !important;
   border: none !important;
   transition: all 0.5s ease-in-out !important;
@@ -64,8 +64,8 @@ hr {
 .btn.btn-primary:hover {
   background: linear-gradient(
     to top right,
-    var(--color-primary-light) 20%,
-    var(--color-secondary-light) 80%
+    var(--color-primary-light) 25%,
+    var(--color-secondary-light) 75%
   ) !important;
   transition: all 0.5s ease-in-out !important;
 }
