@@ -14,6 +14,12 @@ from benchmark.cc_bench_utils.models import LLMOpenAIChatConfig, RunResults
 from benchmark.cc_bench_utils.rest_api_client import CCApiClient
 from benchmark.cc_bench_utils.stopwatch import time_ms
 
+try:
+    import colorama
+    from colorama import Fore, Style
+except ImportError:
+    colorama = None
+
 
 class BenchmarkRunner:
     def __init__(self) -> None:
@@ -41,10 +47,57 @@ class BenchmarkRunner:
         return parser.parse_args()
 
     def load_logger(self) -> logging.Logger:
-        # Set up logging
-        log_level = getattr(logging, self.args.log_level.upper(), logging.INFO)
-        logging.basicConfig(level=log_level, format="%(levelname)s %(message)s")
-        return logging.getLogger("benchmark")
+        # Set up logging with colors
+
+        if colorama is not None:
+            colorama.init(autoreset=True)
+
+            class ColoredFormatter(logging.Formatter):
+                FORMATS = {
+                    logging.DEBUG: f"{Fore.CYAN}%(levelname)s{Style.RESET_ALL} %(message)s",
+                    logging.INFO: f"{Fore.GREEN}%(levelname)s{Style.RESET_ALL} %(message)s",
+                    logging.WARNING: f"{Fore.YELLOW}%(levelname)s{Style.RESET_ALL} %(message)s",
+                    logging.ERROR: f"{Fore.RED}%(levelname)s{Style.RESET_ALL} %(message)s",
+                    logging.CRITICAL: f"{Fore.RED}{Style.BRIGHT}%(levelname)s{Style.RESET_ALL} %(message)s",
+                }
+
+                def format(self, record):
+                    log_fmt = self.FORMATS.get(record.levelno)
+                    formatter = logging.Formatter(log_fmt)
+                    return formatter.format(record)
+
+            log_level = getattr(logging, self.args.log_level.upper(), logging.INFO)
+
+            # Configure root logger to avoid duplicate messages
+            logging.basicConfig(level=log_level, handlers=[])
+
+            handler = logging.StreamHandler()
+            handler.setFormatter(ColoredFormatter())
+
+            logger = logging.getLogger("benchmark")
+            logger.setLevel(log_level)
+            logger.propagate = False  # Prevent propagation to root logger
+
+            # Remove any existing handlers to avoid duplicates
+            for hdlr in logger.handlers[:]:
+                logger.removeHandler(hdlr)
+
+            logger.addHandler(handler)
+        else:
+            # Fallback to standard logging if colorama is not available
+            log_level = getattr(logging, self.args.log_level.upper(), logging.INFO)
+            logging.basicConfig(level=log_level, format="%(levelname)s %(message)s", handlers=[])
+
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+
+            logger = logging.getLogger("benchmark")
+            logger.setLevel(log_level)
+            logger.propagate = False  # Prevent propagation to root logger
+            logger.addHandler(handler)
+
+            logger.warning("Colorama not found. Falling back to standard logging without colors.")
+        return logger
 
     def load_config(self) -> dict[str, Any]:
         config_file = self.args.config_file
