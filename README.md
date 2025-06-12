@@ -44,23 +44,32 @@ Il progetto è composto da varie cartelle:
 - **tests**: Test automatici per verificare i moduli all'interno di `src`.
 - **wiki**: Contiene il diario e le conclusioni.
 
-- Nel `.env` mettere le seguenti variabili:
+### Setup iniziale
+
+Per poter utilizzare questo plugin con CheshireCat è necessario creare un file `.env` e il file `main_fields.json`.
+
+Esempio di file `.env`, da posizionare nella root del progetto:
+
 ```env
 KIBANA_URL=http://kibana.localhost.example
 ELASTIC_URL=http://elastic.localhost.example
 KIBANA_BASE_URL_PART=/app/discover
-KIBANA_USERNAME=kibana_username
-KIBANA_PASS=kibana_password
+KIBANA_USERNAME=kibana_username_example
+KIBANA_PASS=kibana_password_example
 KIBANA_SPACE_ID=default
-KIBANA_DATA_VIEW_ID=data-view*
+KIBANA_DATA_VIEW_ID=container-log*
 
 FIELDS_JSON_PATH=/app/cat/plugins/kibcat/main_fields.json
 
+# These values are just for specific cases and probably wont ever be needed
+# They can be removed most of the times
 ELASTIC_URL_PRIVATE=elastic.localhost.example
 KIBANA_URL_PRIVATE=kibana.localhost.example
 IP_PRIVATE=256.256.256.256
 ```
-- Creare un file `main_fields.json` in **FIELDS_JSON_PATH** (`/cat/plugins/kibcat/main_fields.json`):
+
+Esempio di file `main_fields.json` in [`kibcat`](/cat/plugins/kibcat/) (Il percorso è indicato nella variabile globale `FIELDS_JSON_PATH` e può essere cambiato):
+
 ```jsonc
 {
     "field.example.1": "Descrizione del primo field",
@@ -69,3 +78,5 @@ IP_PRIVATE=256.256.256.256
     // ...
 }
 ```
+
+In questo file nella descrizione delle field è possibile indicare che valori contiene la field, a cosa serve, o altre informazioni utili all'LLM per capire che l'utente sta facendo riferimento a quella field.
