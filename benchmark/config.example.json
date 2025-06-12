@@ -15,7 +15,7 @@
                 "temperature": 0.7,
                 "streaming": true
             },
-            "cost_per_milion_tokens": {
+            "cost_per_million_tokens": {
                 "input": 0.15,
                 "output": 0.6
             }
@@ -28,7 +28,7 @@
                 "temperature": 0.4,
                 "streaming": true
             },
-            "cost_per_milion_tokens": {
+            "cost_per_million_tokens": {
                 "input": 0.4,
                 "output": 1.6
             }

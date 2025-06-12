@@ -1,7 +1,16 @@
 import dataclasses
-from typing import Any, TypeAlias
+from typing import Any, Optional, TypeAlias
 
-RunResults: TypeAlias = list[dict[str, float]]
+
+@dataclasses.dataclass
+class ConversationResult:
+    time: float
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+
+
+ConversationResults: TypeAlias = dict[str, ConversationResult]
+RunResults: TypeAlias = list[ConversationResults]
 
 
 @dataclasses.dataclass
