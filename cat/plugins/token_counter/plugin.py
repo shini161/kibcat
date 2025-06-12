@@ -4,7 +4,7 @@ import tiktoken
 from cat.convo.messages import CatMessage
 from cat.log import log
 from cat.mad_hatter.decorators import hook, tool
-from langchain_core.callbacks.base import BaseCallbackHandler # type: ignore
+from langchain_core.callbacks.base import BaseCallbackHandler  # type: ignore
 from langchain_core.outputs import LLMResult
 
 
