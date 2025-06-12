@@ -18,12 +18,18 @@
 
 ---
 
+## 📖 Wiki
+- 📘 **[Diario](https://github.com/shini161/kibcat/blob/main/wiki/DIARY.md)**: Storia del progetto
+- 📕 **[Conclusioni](https://github.com/shini161/kibcat/blob/main/wiki/CONCLUSIONS.md)**: Stato attuale del progetto
+
+---
+
 ## 📜 Descrizione
 
-Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale e correzione errori, tramite LLM.</br>
-Ci sono due plugin su Cheshire Cat:
-- [KibCat](https://github.com/shini161/kibcat/tree/main/cat/plugins/kibcat): Plugin per la generazione di URL Kibana con linguaggio naturale.
-- [Token Counter](https://github.com/shini161/kibcat/tree/main/cat/plugins/token_counter): Plugin per contare i token utilizzati in Input/Output dal LLM.
+Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale con correzione errori, tramite LLM.</br>
+Abbiamo sviluppato due plugin per Cheshire Cat:
+- **[KibCat](https://github.com/shini161/kibcat/tree/main/cat/plugins/kibcat)**: Plugin per la generazione di URL Kibana con linguaggio naturale.
+- **[Token Counter](https://github.com/shini161/kibcat/tree/main/cat/plugins/token_counter)**: Plugin per contare i token utilizzati in Input/Output dal LLM.
 
 ---
 
@@ -54,9 +60,3 @@ IP_PRIVATE=256.256.256.256
     // ...
 }
 ```
-
----
-
-## Wiki
-- 📘 **[Diario](https://github.com/shini161/kibcat/blob/main/wiki/DIARY.md)**
-- 📕 **[Conclusioni](https://github.com/shini161/kibcat/blob/main/wiki/CONCLUSIONS.md)**
