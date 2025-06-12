@@ -127,13 +127,13 @@ class CCApiClient:
         if self.auth_token is None:
             raise AuthenticationException("Authentication token is None after obtain_auth_token.")
         # Create configuration using the Config class from the API
-        config = ccat.Config(  # type: ignore[attr-defined]
+        config = ccat.Config(
             base_url=self.base_url,
             port=self.port,
             user_id=self.user_id,
             auth_key=self.auth_token,
         )
-        self.cat_client = ccat.CatClient(config=config, on_message=self._message_handler)  # type: ignore[attr-defined]
+        self.cat_client = ccat.CatClient(config=config, on_message=self._message_handler)
         self.cat_client.connect_ws()
         self._wait_for_connection()
         return self.auth_token
