@@ -192,3 +192,5 @@ cat/plugins/kibcat/requirements.txt
 
 **/url_jsonifier/data
 **/kiburl/data
+
+benchmark/config.json

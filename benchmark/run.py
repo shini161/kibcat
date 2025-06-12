@@ -1,42 +1,61 @@
 import argparse
+import json
+import os
+import shutil
+import sys
 
-from benchmark.cc_bench_utils import AuthenticationError, CCApiClient, GenericRequestError
+from benchmark.cc_bench_utils import AuthenticationException, CCApiClient, GenericRequestException
 
 
 def main() -> None:
-    # Configure argparse to handle command-line arguments
     parser = argparse.ArgumentParser(description="Cheshire Cat API Chat Script")
-    parser.add_argument("message", type=str, help="The message to send to the server")
-    parser.add_argument("--user_id", type=str, default="testing_user", help="The user ID for authentication")
     parser.add_argument(
-        "--username", type=str, default="admin", help="The username for authentication (default: admin)"
+        "--config-file", type=str, default="benchmark/config.json", help="Path to config file (default: config.json)"
     )
-    parser.add_argument("--password", type=str, default="admin", help="The password for authentication")
-    parser.add_argument(
-        "--base_url", type=str, default="127.0.0.1", help="The base URL of the Cheshire Cat server (default: 127.0.0.1)"
-    )
-    parser.add_argument(
-        "--port", type=int, default=1865, help="The port number of the Cheshire Cat server (default: 1865)"
-    )
-    parser.add_argument("--timeout", type=int, default=60, help="Max wait time for AI response (default: 60s).")
     args = parser.parse_args()
 
-    # Create an instance of the CCApiClient
-    client = CCApiClient(base_url=args.base_url, port=args.port, user_id=args.user_id, timeout=args.timeout)
-    client.connect(username=args.username, password=args.password)
+    config_file = args.config_file
+    example_file = os.path.join(os.path.dirname(config_file), "config.example.json")
+
+    # If config file is missing or empty, copy from example
+    if not os.path.exists(config_file) or os.path.getsize(config_file) == 0:
+        if os.path.exists(example_file):
+            shutil.copyfile(example_file, config_file)
+            print(f"Info: '{config_file}' was missing or empty. Copied from '{example_file}'.")
+        else:
+            print(f"Error: Config file '{config_file}' not found and no example config present.")
+            sys.exit(1)
+
     try:
-        # Send the message to the server and print the response
-        print(client.send_message(message=args.message))
-    except AuthenticationError as e:
+        with open(config_file, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to decode JSON in '{config_file}': {e}")
+        sys.exit(1)
+
+    client = CCApiClient(
+        base_url=config.get("base_url", "127.0.0.1"),
+        port=int(config.get("port", 1865)),
+        user_id=config.get("user_id", "testing_user"),
+        timeout=int(config.get("timeout", 60)),
+    )
+    client.connect(username=config.get("username", "admin"), password=config.get("password", "admin"))
+    try:
+        client.clean_memory()
+    except AuthenticationException as e:
         print(f"Connection error: {e}")
     except ValueError as e:
         print(f"Value error: {e}")
-    except GenericRequestError as e:
-        # Keep this for unexpected errors, but at least we tried to catch specific ones first
+    except GenericRequestException as e:
         print(f"An unexpected error occurred: {e}")
-    finally:
-        # Close the connection
-        client.close()
+
+    for i, conversation in enumerate(config.get("conversations", [])):
+        print(f"Conversation {i + 1}:")
+        for llm_settings in config.get("llm_config", []):
+            client.set_llm(llm_settings)
+            for message in conversation:
+                print(client.send_message(message=message))
+    client.close()
 
 
 if __name__ == "__main__":

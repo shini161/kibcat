@@ -1,3 +1,5 @@
-from .rest_api_client import AuthenticationError, CCApiClient, GenericRequestError
+from .exceptions import AuthenticationException, GenericRequestException
+from .models import LLMOpenAIChatConfig
+from .rest_api_client import CCApiClient
 
-__all__ = ["CCApiClient", "AuthenticationError", "GenericRequestError"]
+__all__ = ["CCApiClient", "AuthenticationException", "GenericRequestException", "LLMOpenAIChatConfig"]

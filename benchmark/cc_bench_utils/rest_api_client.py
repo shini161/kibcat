@@ -6,13 +6,8 @@ from typing import Any, Dict, Optional
 import cheshire_cat_api as ccat
 import requests
 
-
-class AuthenticationError(Exception):
-    """Exception raised for authentication failures."""
-
-
-class GenericRequestError(Exception):
-    """Exception raised for generic request failures."""
+from .exceptions import AuthenticationException, GenericRequestException
+from .models import LLMOpenAIChatConfig
 
 
 class CCApiClient:
@@ -25,7 +20,13 @@ class CCApiClient:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, base_url: str = "localhost", port: int = 1865, user_id: str = "testing_user", timeout: int = 10):
+    def __init__(
+        self,
+        base_url: str = "localhost",
+        port: int = 1865,
+        user_id: str = "testing_user",
+        timeout: int = 10,
+    ):
         """
         Initialize the Cheshire Cat REST API client.
 
@@ -58,7 +59,7 @@ class CCApiClient:
             str: The authentication token if successful
 
         Raises:
-            AuthenticationError: If authentication fails
+            AuthenticationException: If authentication fails
         """
         auth_url = f"{self.base_api_url}/auth/token"
 
@@ -71,10 +72,10 @@ class CCApiClient:
             token_data = response.json()
             self.auth_token = token_data.get("access_token")
             if not self.auth_token:
-                raise AuthenticationError("No access_token received from server.")
+                raise AuthenticationException("No access_token received from server.")
             return self.auth_token
         except requests.exceptions.RequestException as e:
-            raise AuthenticationError(f"Authentication failed: {e}") from e
+            raise AuthenticationException(f"Authentication failed: {e}") from e
 
     def _wait_for_connection(self) -> None:
         """
@@ -124,10 +125,13 @@ class CCApiClient:
         """
         self.auth_token = self.obtain_auth_token(username, password)
         if self.auth_token is None:
-            raise AuthenticationError("Authentication token is None after obtain_auth_token.")
+            raise AuthenticationException("Authentication token is None after obtain_auth_token.")
         # Create configuration using the Config class from the API
         config = ccat.Config(  # type: ignore[attr-defined]
-            base_url=self.base_url, port=self.port, user_id=self.user_id, auth_key=self.auth_token
+            base_url=self.base_url,
+            port=self.port,
+            user_id=self.user_id,
+            auth_key=self.auth_token,
         )
         self.cat_client = ccat.CatClient(config=config, on_message=self._message_handler)  # type: ignore[attr-defined]
         self.cat_client.connect_ws()
@@ -171,7 +175,7 @@ class CCApiClient:
         headers["user_id"] = self.user_id
         return headers
 
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Performs a GET request to the specified endpoint.
 
@@ -183,7 +187,7 @@ class CCApiClient:
             Dict[str, Any]: JSON response from the server
 
         Raises:
-            GenericRequestError: If the request fails
+            GenericRequestException: If the request fails
         """
         url = f"{self.base_api_url}/{endpoint.lstrip('/')}"
         headers = self._get_headers()
@@ -194,10 +198,13 @@ class CCApiClient:
             result: Dict[str, Any] = response.json()
             return result
         except requests.exceptions.RequestException as e:
-            raise GenericRequestError(f"GET request failed: {e}") from e
+            raise GenericRequestException(f"GET request failed: {e}") from e
 
-    def post(
-        self, endpoint: str, data: Optional[Dict[str, Any]] = None, files: Optional[Dict[str, Any]] = None
+    def _post(
+        self,
+        endpoint: str,
+        data: Optional[Dict[str, Any]] = None,
+        files: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Performs a POST request to the specified endpoint.
@@ -211,7 +218,7 @@ class CCApiClient:
             Dict[str, Any]: JSON response from the server
 
         Raises:
-            GenericRequestError: If the request fails
+            GenericRequestException: If the request fails
         """
         url = f"{self.base_api_url}/{endpoint.lstrip('/')}"
         headers = self._get_headers()
@@ -222,4 +229,74 @@ class CCApiClient:
             result: Dict[str, Any] = response.json()
             return result
         except requests.exceptions.RequestException as e:
-            raise GenericRequestError(f"POST request failed: {e}") from e
+            raise GenericRequestException(f"POST request failed: {e}") from e
+
+    def _delete(self, endpoint: str) -> Dict[str, Any]:
+        """
+        Performs a DELETE request to the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint (without the base URL)
+
+        Returns:
+            Dict[str, Any]: JSON response from the server
+
+        Raises:
+            GenericRequestException: If the request fails
+        """
+        url = f"{self.base_api_url}/{endpoint.lstrip('/')}"
+        headers = self._get_headers()
+
+        try:
+            response = requests.delete(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            result: Dict[str, Any] = response.json()
+            return result
+        except requests.exceptions.RequestException as e:
+            raise GenericRequestException(f"DELETE request failed: {e}") from e
+
+    def _put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Performs a PUT request to the specified endpoint.
+
+        Args:
+            endpoint (str): The API endpoint (without the base URL)
+            data (Dict[str, Any], optional): JSON data to send
+
+        Returns:
+            Dict[str, Any]: JSON response from the server
+
+        Raises:
+            GenericRequestException: If the request fails
+        """
+        url = f"{self.base_api_url}/{endpoint.lstrip('/')}"
+        headers = self._get_headers()
+
+        try:
+            response = requests.put(url, headers=headers, json=data, timeout=self.timeout)
+            response.raise_for_status()
+            result: Dict[str, Any] = response.json()
+            return result
+        except requests.exceptions.RequestException as e:
+            raise GenericRequestException(f"PUT request failed: {e}") from e
+
+    def clean_memory(
+        self,
+    ) -> None:
+        self._delete("/memory/conversation_history")
+        self._delete("/memory/collections")
+
+    def set_llm(self, llm_settings: LLMOpenAIChatConfig) -> None:
+        """
+        Sets the LLM settings for the Cheshire Cat server.
+
+        Args:
+            llm_settings (LLMOpenAIChatConfig): The LLM settings to apply
+
+        Raises:
+            GenericRequestException: If the request fails
+        """
+        if not isinstance(llm_settings, LLMOpenAIChatConfig):
+            llm_settings = LLMOpenAIChatConfig.from_json(llm_settings)
+        settings_obj = llm_settings.to_dict()
+        self._put("/llm/settings/LLMOpenAIChatConfig", data=settings_obj)
