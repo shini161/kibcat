@@ -26,8 +26,8 @@
 
 ## 📜 Descrizione
 
-Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale e correzione errori, tramite LLM.</br>
-Ci sono due plugin su Cheshire Cat:
+Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale con correzione errori, tramite LLM.</br>
+Abbiamo sviluppato due plugin per Cheshire Cat:
 - **[KibCat](https://github.com/shini161/kibcat/tree/main/cat/plugins/kibcat)**: Plugin per la generazione di URL Kibana con linguaggio naturale.
 - **[Token Counter](https://github.com/shini161/kibcat/tree/main/cat/plugins/token_counter)**: Plugin per contare i token utilizzati in Input/Output dal LLM.
 
