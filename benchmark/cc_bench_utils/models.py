@@ -1,36 +1,24 @@
+import dataclasses
 from typing import Any, TypeAlias
 
 RunResults: TypeAlias = list[dict[str, float]]
 
 
+@dataclasses.dataclass
 class LLMOpenAIChatConfig:
     """
-    Configuration class for OpenAI Chat LLM settings.
+    Configuration class for CC LLMs settings.
 
-    This class represents the configuration for OpenAI Chat LLM,
-    including API key, model name, temperature, and streaming settings.
+    This class represents the configuration for LLMs in CC,
+    including API key, model name, temperature, streaming settings,
+    and token cost information.
     """
 
-    def __init__(
-        self,
-        openai_api_key: str,
-        model_name: str = "gpt-4o-mini",
-        temperature: float = 0.7,
-        streaming: bool = True,
-    ):
-        """
-        Initialize OpenAI Chat LLM configuration.
-
-        Args:
-        openai_api_key (str): OpenAI API key
-        model_name (str): Name of the OpenAI model to use
-        temperature (float): Temperature setting for generation
-        streaming (bool): Whether to use streaming mode
-        """
-        self.openai_api_key = openai_api_key
-        self.model_name = model_name
-        self.temperature = temperature
-        self.streaming = streaming
+    openai_api_key: str = ""
+    model_name: str = "gpt-4o-mini"
+    temperature: float = 0.7
+    streaming: bool = True
+    cost_per_million_tokens: dict[str, float] = dataclasses.field(default_factory=lambda: {"input": 0.0, "output": 0.0})
 
     @classmethod
     def from_json(cls, json_data: dict[str, Any]) -> "LLMOpenAIChatConfig":
@@ -56,6 +44,7 @@ class LLMOpenAIChatConfig:
                 model_name=config.get("model_name", "gpt-4o-mini"),
                 temperature=config.get("temperature", 0.7),
                 streaming=config.get("streaming", True),
+                cost_per_million_tokens=config.get("cost_per_million_tokens", {"input": 0.0, "output": 0.0}),
             )
         raise ValueError("Invalid JSON data format")
 
@@ -72,4 +61,5 @@ class LLMOpenAIChatConfig:
             "model_name": self.model_name,
             "temperature": self.temperature,
             "streaming": self.streaming,
+            # cost_per_million_tokens is not included in the dict (not required in CC server, only in out benchmark)
         }

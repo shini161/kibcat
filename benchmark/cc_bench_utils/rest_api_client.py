@@ -162,6 +162,48 @@ class CCApiClient:
             raise TimeoutError(f"Response timeout after {self.timeout} seconds for message: {message}")
         return self._last_message
 
+    def _parse_token_count(self, response: str) -> Dict[str, int]:
+        # Response from tool is similar to "Input tokens: #\nOutput tokens: #"
+        try:
+            token_counts = {}
+            lines = response.split("\n")
+            for line in lines:
+                if "Input tokens:" in line:
+                    token_counts["input_tokens"] = int(line.split(":")[1].strip())
+                elif "Output tokens:" in line:
+                    token_counts["output_tokens"] = int(line.split(":")[1].strip())
+            return token_counts
+        except (ValueError, IndexError) as e:
+            raise GenericRequestException(f"Failed to parse token count from response: {response}") from e
+
+    def get_token_count(self) -> Dict[str, int]:
+        """
+        Retrieves the token count from the Cheshire Cat, using custom plugin.
+
+        Returns:
+            Dict[str, int]: A dictionary containing 'input_tokens' and 'output_tokens'
+
+        Raises:
+            GenericRequestException: If the request fails or response is invalid
+        """
+        response = self.send_message("Get tokens")
+        if not response:
+            raise GenericRequestException("No response received from 'Get tokens' endpoint.")
+        return self._parse_token_count(response)
+
+    def check_get_token_installed(self) -> bool:
+        """
+        Checks if the 'token_counter' plugin is active on the Cheshire Cat server.
+
+        Returns:
+            bool: True if the plugin is working, False otherwise
+        """
+        try:
+            self.get_token_count()
+            return True
+        except (RuntimeError, TimeoutError, GenericRequestException):
+            return False
+
     def _get_headers(self) -> Dict[str, str]:
         """
         Constructs the headers for API requests, including authentication if available.

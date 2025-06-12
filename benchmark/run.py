@@ -25,6 +25,7 @@ class BenchmarkRunner:
     def __init__(self) -> None:
         self.args = self.parse_args()
         self.logger = self.load_logger()
+        self.check_tokens_usage = False
         self.config = self.load_config()
         self.client = self.initialize_client()
 
@@ -138,6 +139,14 @@ class BenchmarkRunner:
         )
 
         try:
+            if self.config.get("check_tokens_usage", False):
+                if self.client.check_get_token_installed():
+                    self.logger.debug("Token usage information is available.")
+                    self.check_tokens_usage = True
+                else:
+                    self.logger.warning("Token usage information is not available.")
+                    self.check_tokens_usage = False
+
             self.client.clean_memory()
         except AuthenticationException as e:
             self.logger.error("Connection error: %s", e)
