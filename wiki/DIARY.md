@@ -444,13 +444,36 @@ Per esempio la richiesta di esempio specificata precedentemente porterà alla pa
 
 # 03/06/2025
 
-Purtroppo nel nostro codice iniziale avevamo messo dei riferimenti a CGM e ciò non va bene.</br>
-Anche se modifichiamo il codice, i riferimenti rimangono nei commit precedenti.</br>
-L'approccio più semplice sarebbe stato ripulire il progetto di tutti i suoi commit precedenti, abbiamo dunque optato per l'approccio meno semplice.</br>
-Inizialmente volevamo fare un Rebase Interattivo, funzionalità di git che ci permette di modificare i commit precedenti, poi, dopo aver guardato quanti
-commit avremmo dovuto modificare, 80 circa, abbiamo deciso di cercare qualche strumento che lo facesse al posto nostro.</br>
-Abbiamo trovato [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), strumento che ci ha permesso di sostituire tutti i riferimenti che volevamo con
-una stringa a nostra scelta **"REMOVED"**
+Durante le prime fasi di sviluppo del progetto, abbiamo inserito nel codice alcuni riferimenti interni a **CGM**.</br>
+Anche se si tratta di una **repository privata**, abbiamo comunque ritenuto importante rimuovere ogni traccia di questi riferimenti, 
+sia nel codice attuale sia nella cronologia dei commit, per mantenere una base di codice pulita e conforme a eventuali futuri criteri di riservatezza o portabilità.</br></br>
+Inizialmente avevamo pensato di risolvere il problema tramite un **rebase interattivo**, uno strumento potente di Git che consente di riscrivere i commit passati.</br>
+Tuttavia, dopo aver verificato che i commit da modificare erano circa **80**, abbiamo deciso di optare per una soluzione automatizzata, meno soggetta a errori manuali.</br></br>
+Dopo alcune ricerche, abbiamo individuato [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), un tool pensato proprio per questi scenari: permette di riscrivere rapidamente la cronologia di un repository Git per rimuovere file, dati sensibili o stringhe specifiche in modo semplice ed efficiente.</br>
+Ecco i passaggi seguiti:
+1. **Clonazione del repository in modalità mirror**, per lavorare su una copia completa della cronologia:
+```sh
+git clone --mirror https://github.com/shini161/kib-cat.git
+```
+2. **Creazione di un file** `redacted.txt`, contenente le stringhe da sostituire:
+```txt
+prima stringa da sostituire
+secondo testo che non dovrebbe esserci
+non c'è due senza tre
+```
+3. **Esecuzione di BFG**, con la sostituzione automatica delle stringhe con `"REMOVED"`:
+```sh
+java -jar bfg.jar --replace-text redacted.txt ./kib-cat.git
+```
+4. **Pulizia e aggiornamento del repository**, con forzatura del push:
+```sh
+cd ./kib-cat.git
+git push --force
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+```
+Il risultato finale è stato soddisfacente: **tutti i riferimenti sensibili sono stati rimossi**, senza dover intervenire manualmente su decine di commit.</br>
+Anche se il repository rimane privato, abbiamo preferito seguire una buona prassi di pulizia e igiene del codice, per mantenere il progetto solido e ben strutturato anche nel lungo periodo.
 
 # 04/06/2025 - 05/06/2025
 
