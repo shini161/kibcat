@@ -7,5 +7,5 @@ exclude = '/(venv|\.git)/'
 profile = "black"
 line_length = 120
 skip = ["venv", ".git"]
-src_paths = ["src", "tests", "examples", "cat/plugins/kibcat"]
+src_paths = ["src", "tests", "examples", "cat/plugins/kibcat", "cat/plugins/token_counter", "benchmark"]
 

@@ -1,0 +1,42 @@
+{
+    "base_url": "127.0.0.1",
+    "port": 1865,
+    "user_id": "testing_user",
+    "username": "admin",
+    "password": "admin",
+    "timeout": 60,
+    "check_tokens_usage": false,
+    "llm_config": [
+        {
+            "name": "LLMOpenAIChatConfig",
+            "value": {
+                "openai_api_key": "REPLACE_ME",
+                "model_name": "gpt-4o-mini",
+                "temperature": 0.7,
+                "streaming": true
+            },
+            "cost_per_million_tokens": {
+                "input": 0.15,
+                "output": 0.6
+            }
+        },
+        {
+            "name": "LLMOpenAIChatConfig",
+            "value": {
+                "openai_api_key": "REPLACE_ME",
+                "model_name": "gpt-4.1-mini",
+                "temperature": 0.4,
+                "streaming": true
+            },
+            "cost_per_million_tokens": {
+                "input": 0.4,
+                "output": 1.6
+            }
+        }
+    ],
+    "conversations": [
+        ["How are you?"],
+        ["My name is Luigi", "What's my name?"]
+    ],
+    "num_runs": 2
+}
