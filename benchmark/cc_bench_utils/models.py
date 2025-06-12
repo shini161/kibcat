@@ -1,4 +1,6 @@
-from typing import Any
+from typing import Any, TypeAlias
+
+RunResults: TypeAlias = list[dict[str, float]]
 
 
 class LLMOpenAIChatConfig:
