@@ -46,9 +46,9 @@ IP_PRIVATE=256.256.256.256
 - Creare un file `main_fields.json` in **FIELDS_JSON_PATH** (`/cat/plugins/kibcat/main_fields.json`):
 ```jsonc
 {
-    "field.example.1": "Questa field è il primo esempio",
-    "field.example.2": "Questa field è il secondo esempio",
-    "field.example.3": "Questa field è il terzo esempio",
+    "field.example.1": "Descrizione del primo field",
+    "field.example.2": "Descrizione del secondo field",
+    "field.example.3": "Descrizione del terzo field",
     // ...
 }
 ```
