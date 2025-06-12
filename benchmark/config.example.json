@@ -27,7 +27,7 @@
     ],
     "conversations": [
         ["How are you?"],
-        ["My name is ", "Come mi chiamo?"]
+        ["My name is Luigi", "What's my name?"]
     ],
     "num_runs": 2
 }
