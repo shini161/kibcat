@@ -444,36 +444,215 @@ Per esempio la richiesta di esempio specificata precedentemente porterà alla pa
 
 # 03/06/2025
 
-Durante le prime fasi di sviluppo del progetto, abbiamo inserito nel codice alcuni riferimenti interni a **CGM**.</br>
-Anche se si tratta di una **repository privata**, abbiamo comunque ritenuto importante rimuovere ogni traccia di questi riferimenti, 
-sia nel codice attuale sia nella cronologia dei commit, per mantenere una base di codice pulita e conforme a eventuali futuri criteri di riservatezza o portabilità.</br></br>
-Inizialmente avevamo pensato di risolvere il problema tramite un **rebase interattivo**, uno strumento potente di Git che consente di riscrivere i commit passati.</br>
-Tuttavia, dopo aver verificato che i commit da modificare erano circa **80**, abbiamo deciso di optare per una soluzione automatizzata, meno soggetta a errori manuali.</br></br>
-Dopo alcune ricerche, abbiamo individuato [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), un tool pensato proprio per questi scenari: permette di riscrivere rapidamente la cronologia di un repository Git per rimuovere file, dati sensibili o stringhe specifiche in modo semplice ed efficiente.</br>
-Ecco i passaggi seguiti:
-1. **Clonazione del repository in modalità mirror**, per lavorare su una copia completa della cronologia:
+Durante una revisione del codice, ci siamo accorti che nelle prime fasi di sviluppo avevamo incluso riferimenti sensibili a **CGM** e **StudioFarma**, distribuiti in vari punti del progetto.</br>
+Sebbene la **repository sia privata**, abbiamo deciso di procedere con una **sanificazione completa**, rimuovendo non solo i riferimenti presenti nel codice attuale, ma anche quelli contenuti nella **cronologia dei commit**.
+
+### 🔍 Fase 1 — Individuazione dei riferimenti nei commit
+
+Per avere un'idea chiara della situazione e dell'entità della riscrittura necessaria, abbiamo sviluppato uno script Python `git_log.py`.</br>
+Questo script analizza l'intera cronologia del repository e cerca stringhe sensibili nei diff di tutti i commit.</br>
+**[git_log.py](https://gist.github.com/MatteoGheza/d8bcf375549333217b346a0802265d4b)**
+```py
+#!/usr/bin/env python3
+
+import subprocess
+import sys
+import argparse
+from datetime import datetime
+import os
+
+# python git_log.py --repo /path/to/repo --strings "redacted_string1" "redacted_string2"
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Search git commits for specified redacted strings')
+    parser.add_argument('--repo', type=str, help='Path to git repository', default='.')
+    parser.add_argument('--strings', type=str, nargs='+', help='Strings to search for')
+    parser.add_argument('--file', type=str, help='File containing strings to search for')
+    return parser.parse_args()
+
+def load_strings_from_file(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            return [line.strip() for line in file if line.strip()]
+    except Exception as e:
+        print(f"Error loading strings from file: {e}")
+        sys.exit(1)
+
+def search_git_commits(repo_path, search_strings):
+    # Change to repository directory
+    original_dir = os.getcwd()
+    os.chdir(repo_path)
+
+    results = []
+    try:
+        # Get all commits with their diffs
+        git_log_cmd = [
+            'git', 'log', '-p', '--all', '--full-history', 
+            '--date=iso', '--pretty=format:COMMIT_BOUNDARY%n%H%n%an%n%ad%n%s'
+        ]
+        
+        git_output = subprocess.check_output(git_log_cmd, encoding='utf-8', errors='replace')
+        
+        # Split by commit boundary
+        commits = git_output.split('COMMIT_BOUNDARY\n')[1:]
+        
+        # Process each commit
+        for commit in commits:
+            lines = commit.splitlines()
+            commit_hash = lines[0]
+            author = lines[1]
+            date_str = lines[2]
+            subject = lines[3] if len(lines) > 3 else ""
+            
+            try:
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S %z')
+                formatted_date = date_obj.strftime('%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                formatted_date = date_str
+            
+            # Get the diff content (everything after the commit header)
+            diff_content = '\n'.join(lines[4:])
+            
+            # Check for each search string
+            for search_string in search_strings:
+                if search_string.lower() in diff_content.lower():
+                    # Extract the specific lines containing the string
+                    matches = []
+                    for line in diff_content.split('\n'):
+                        if search_string.lower() in line.lower():
+                            matches.append(line.strip())
+                    
+                    results.append({
+                        'commit_hash': commit_hash,
+                        'author': author,
+                        'date': formatted_date,
+                        'subject': subject,
+                        'redacted_string': search_string,
+                        'matches': matches
+                    })
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing git command: {e}")
+        sys.exit(1)
+    finally:
+        # Return to original directory
+        os.chdir(original_dir)
+        
+    return results
+
+def display_results(results):
+    if not results:
+        print("No matches found.")
+        return
+    
+    print(f"Found {len(results)} matching commits:")
+    print("-" * 70)
+    
+    for result in results:
+        print(f"Commit: {result['commit_hash']}")
+        print(f"Author: {result['author']}")
+        print(f"Date:   {result['date']}")
+        print(f"Subject: {result['subject']}")
+        print(f"Redacted String: {result['redacted_string']}")
+        print("Matches:")
+        for match in result['matches']:
+            print(f"    {match}")
+        print("-" * 70)
+
+def main():
+    args = parse_arguments()
+    
+    search_strings = []
+    if args.strings:
+        search_strings.extend(args.strings)
+    if args.file:
+        search_strings.extend(load_strings_from_file(args.file))
+    
+    if not search_strings:
+        print("No search strings provided. Use --strings or --file options.")
+        sys.exit(1)
+    
+    results = search_git_commits(args.repo, search_strings)
+    display_results(results)
+
+    # Print statistics about authors and occurrences
+    if results:
+        # Count commits per author
+        author_stats = {}
+        for result in results:
+            author = result['author']
+            author_stats[author] = author_stats.get(author, 0) + 1
+        
+        # Print author statistics
+        print("\nAuthor Statistics:")
+        print("-" * 70)
+        for author, count in sorted(author_stats.items(), key=lambda x: x[1], reverse=True):
+            print(f"{author}: {count} commits with redacted strings")
+        
+        # Count occurrences of each redacted string
+        string_stats = {}
+        for result in results:
+            redacted_string = result['redacted_string']
+            if redacted_string not in string_stats:
+                string_stats[redacted_string] = 0
+            
+            # Count actual occurrences in each matching line
+            for match in result['matches']:
+                string_stats[redacted_string] += match.lower().count(redacted_string.lower())
+        
+        # Print string statistics
+        print("\nRedacted String Statistics:")
+        print("-" * 70)
+        for string, count in sorted(string_stats.items(), key=lambda x: x[1], reverse=True):
+            print(f"'{string}': {count} occurrences")
+
+if __name__ == "__main__":
+    main()
+```
+Utilizzo:
+```sh
+python git_log.py --repo /percorso/della/repo --strings "stringa1" "stringa2"
+```
+Il funzionamento è semplice:
+- Estrae tutti i commit, incluse le modifiche (`git log -p --all`)
+- Analizza il contenuto dei diff commit per commit
+- Riporta data, autore, oggetto del commit e righe che contengono le stringhe cercate
+- Produce infine delle statistiche su:
+    - Quanti commit contengono ciascuna stringa
+    - Quali autori hanno introdotto più occorrenze
+    - Quante volte ciascuna stringa è apparsa
+Grazie a questo strumento abbiamo scoperto che le stringhe da redigere erano presenti in circa **80 commit**.</br>
+A quel punto, un **rebase interattivo** si è rivelato poco praticabile, vista la mole di lavoro richiesta.
+
+### 🧹 Fase 2 — Pulizia con BFG Repo-Cleaner
+Abbiamo quindi optato per [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), un tool progettato proprio per riscrivere
+in modo efficiente la storia di un repository Git, rimuovendo file, credenziali, segreti o stringhe non desiderate.</br>
+Passaggi seguiti:
+1. **Clonazione mirror del repository**, per lavorare su una copia completa:
 ```sh
 git clone --mirror https://github.com/shini161/kib-cat.git
 ```
-2. **Creazione di un file** `redacted.txt`, contenente le stringhe da sostituire:
-```txt
-prima stringa da sostituire
-secondo testo che non dovrebbe esserci
-non c'è due senza tre
+2. **Creazione del file** `redacted.txt`, con l'elenco delle stringhe da sostituire:
+```sh
+stringa_sensibile_1
+altro_testo_riservato
+esempio_di_riferimento_CGM
 ```
-3. **Esecuzione di BFG**, con la sostituzione automatica delle stringhe con `"REMOVED"`:
+3. **Esecuzione di BFG**, per sostituire tutte le stringhe con `"REMOVED"`:
 ```sh
 java -jar bfg.jar --replace-text redacted.txt ./kib-cat.git
 ```
-4. **Pulizia e aggiornamento del repository**, con forzatura del push:
+4. **Pulizia della repository e push forzato:**
 ```sh
 cd ./kib-cat.git
 git push --force
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive
 ```
-Il risultato finale è stato soddisfacente: **tutti i riferimenti sensibili sono stati rimossi**, senza dover intervenire manualmente su decine di commit.</br>
-Anche se il repository rimane privato, abbiamo preferito seguire una buona prassi di pulizia e igiene del codice, per mantenere il progetto solido e ben strutturato anche nel lungo periodo.
+### ✅ Risultato
+Tutti i riferimenti sensibili sono stati completamente rimossi sia dal codice attuale che dalla cronologia.</br>
+La repository, pur restando privata, ora rispetta buone pratiche di **igiene del codice**, evitando di lasciare informazioni potenzialmente problematiche nel tempo.</br>
+Grazie allo script `git_log.py`, abbiamo potuto monitorare con precisione cosa andava rimosso, rendendo il processo sicuro, ripetibile e documentabile.
+
 
 # 04/06/2025 - 05/06/2025
 
