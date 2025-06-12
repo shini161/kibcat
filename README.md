@@ -18,7 +18,9 @@
 
 ## 📜 Descrizione
 
-Interrogazione database su elasticsearch tramite kibana, con filtraggio facilitato tramite LLM.
+Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale e correzione errori, tramite LLM.
+
+---
 
 ## ⚙️ Configurazione
 
