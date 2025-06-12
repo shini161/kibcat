@@ -80,3 +80,27 @@ Esempio di file `main_fields.json` in [`kibcat`](/cat/plugins/kibcat/) (Il perco
 ```
 
 In questo file nella descrizione delle field è possibile indicare che valori contiene la field, a cosa serve, o altre informazioni utili all'LLM per capire che l'utente sta facendo riferimento a quella field.
+
+### Aggiornamento UI e cambio delle frasi di default
+
+Per poter applicare questi cambiamenti al Cat è stato creato un [`Dockerfile`](/cc_docker_image/Dockerfile) che si occupa semplicemente di "iniettare" nel codice del gatto i cambiamenti desiderati.
+
+Per quanto riguarda la parte delle **frasi di default** (quelle che appaiono appena si entra sulla chat del Cat) è stato creato un file JSON [`example_messages.json`](/cc_docker_image/example_messages.json) contenente la lista di frasi con cui si vogliono rimpiazzare quelle originali:
+
+```jsonc
+[
+    "Filtra per i log di errore sul container di devicehub",
+    "Filtra per tutti i log che sono di warning o di informazione",
+    "Filtra per i container di devicehub",
+    "Filtra per i log di informazione da ieri a oggi.",
+    "Filtra per i log dell'ultima settimana.",
+    "Filtra per i log di kibcat nell'ultimo mese"
+    // ...
+]
+```
+
+Invece per i cambiamenti alla UI è stato creato un [file `css`](/cc_docker_image/style_override.css) che viene mappato all'interno del container, e successivamente modificando una parte dell'`HTML` del Cat è stato possibile farlo caricare insieme al `css` originale del gatto, per poter apportare le modifiche desiderate alla UI usando la notazione `!important`.
+
+### Uso del plugin Token Counter
+
+Questo [plugin](/cat/plugins/token_counter/) si occupa di tenere conto dell'uso dei token del modello, a causa del fatto che la funzione di token counter integrata nel gatto non funzionava in modo corretto. Maggiori dettagli nel [diario 06/06/2025](/wiki/DIARY.md#06062025).
