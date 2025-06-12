@@ -447,11 +447,13 @@ Per esempio la richiesta di esempio specificata precedentemente porterà alla pa
 Durante una revisione del codice, ci siamo accorti che nelle prime fasi di sviluppo avevamo incluso riferimenti sensibili a **CGM** e **StudioFarma**, distribuiti in vari punti del progetto.</br>
 Sebbene la **repository sia privata**, abbiamo deciso di procedere con una **sanificazione completa**, rimuovendo non solo i riferimenti presenti nel codice attuale, ma anche quelli contenuti nella **cronologia dei commit**.
 
-### 🔍 Fase 1 — Individuazione dei riferimenti nei commit
+### Individuazione dei riferimenti nei commit
 
-Per avere un'idea chiara della situazione e dell'entità della riscrittura necessaria, abbiamo sviluppato uno script Python `git_log.py`.</br>
+Per poter capire quanti riferimenti sensibili ci fossero all'interno della repo, è stato scritto lo script python `git_log.py`.</br>
 Questo script analizza l'intera cronologia del repository e cerca stringhe sensibili nei diff di tutti i commit.</br>
+
 **[git_log.py](https://gist.github.com/MatteoGheza/d8bcf375549333217b346a0802265d4b)**
+
 ```py
 #!/usr/bin/env python3
 
@@ -608,51 +610,60 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
 Utilizzo:
+
 ```sh
 python git_log.py --repo /percorso/della/repo --strings "stringa1" "stringa2"
 ```
-Il funzionamento è semplice:
-- Estrae tutti i commit, incluse le modifiche (`git log -p --all`)
-- Analizza il contenuto dei diff commit per commit
+
+Il funzionamento dello script è diviso in queste parti:
+- Estrae tutti i commit e il loro diff utilizzando il comando `git log -p --all`
+- Controlla nel diff di ogni commit la presenza delle stringhe da cercare
 - Riporta data, autore, oggetto del commit e righe che contengono le stringhe cercate
 - Produce infine delle statistiche su:
     - Quanti commit contengono ciascuna stringa
     - Quali autori hanno introdotto più occorrenze
     - Quante volte ciascuna stringa è apparsa
-Grazie a questo strumento abbiamo scoperto che le stringhe da redigere erano presenti in circa **80 commit**.</br>
-A quel punto, un **rebase interattivo** si è rivelato poco praticabile, vista la mole di lavoro richiesta.
 
-### 🧹 Fase 2 — Pulizia con BFG Repo-Cleaner
-Abbiamo quindi optato per [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), un tool progettato proprio per riscrivere
-in modo efficiente la storia di un repository Git, rimuovendo file, credenziali, segreti o stringhe non desiderate.</br>
-Passaggi seguiti:
+Dopo l'esecuzione dello script ci si è resi conto che un rebase interattivo manuale avrebbe richiesto troppo tempo, quindi si è cercato un tool che lo potesse fare in modo automatico.
+
+### Tool per pulizia della repo
+Abbiamo trovato il tool [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), progettato proprio per riscrivere
+in modo rapido la storia di un repository Git, rimuovendo file, credenziali, o stringhe non desiderate.
+
+Passaggi seguiti _(Anche specificati nella documentazione del tool)_:
+
 1. **Clonazione mirror del repository**, per lavorare su una copia completa:
+
 ```sh
 git clone --mirror https://github.com/shini161/kib-cat.git
 ```
-2. **Creazione del file** `redacted.txt`, con l'elenco delle stringhe da sostituire:
+
+2. **Creazione del file** `redacted.txt`, con l'elenco delle stringhe da sostituire _(esempio)_:
+
 ```sh
 stringa_sensibile_1
 altro_testo_riservato
-esempio_di_riferimento_CGM
+esempio_di_riferimento_da_rimuovere
 ```
-3. **Esecuzione di BFG**, per sostituire tutte le stringhe con `"REMOVED"`:
+
+3. **Esecuzione del tool**, in modo da sostituire all'interno dell'intera repo le stringhe con  `***REMOVED***`:
+
 ```sh
 java -jar bfg.jar --replace-text redacted.txt ./kib-cat.git
 ```
+
 4. **Pulizia della repository e push forzato:**
+
 ```sh
 cd ./kib-cat.git
-git push --force
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive
+git push --force
 ```
-### ✅ Risultato
-Tutti i riferimenti sensibili sono stati completamente rimossi sia dal codice attuale che dalla cronologia.</br>
-La repository, pur restando privata, ora rispetta buone pratiche di **igiene del codice**, evitando di lasciare informazioni potenzialmente problematiche nel tempo.</br>
-Grazie allo script `git_log.py`, abbiamo potuto monitorare con precisione cosa andava rimosso, rendendo il processo sicuro, ripetibile e documentabile.
 
+Successivamente all'esecuzione di questo procedimento tutti i riferimenti sensibili sono stati completamente rimossi sia dal codice attuale che dalla cronologia.
 
 # 04/06/2025 - 05/06/2025
 
