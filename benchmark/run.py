@@ -145,18 +145,19 @@ class BenchmarkRunner:
                         self.logger.info("  %s: %.2f ms", model, avg_time)
 
     def run(self) -> None:
-        self.connect_client()
-
-        results: list[RunResults] = []
-        for i in range(self.config.get("num_runs", 1)):
-            self.logger.info("----- RUN #%i -----", i + 1)
-            results.append(self.execute_run())
-
-        if self.client:
-            self.client.close()
-
-        self.logger.debug(results)
-        self.print_average_run_times(results)
+        try:
+            self.connect_client()
+            results: list[RunResults] = []
+            for i in range(self.config.get("num_runs", 1)):
+                self.logger.info("----- RUN #%i -----", i + 1)
+                results.append(self.execute_run())
+            self.logger.debug(results)
+            self.print_average_run_times(results)
+        except KeyboardInterrupt:
+            self.logger.info("Benchmark interrupted by user")
+        finally:
+            if hasattr(self, "client") and self.client:
+                self.client.close()
 
 
 def main() -> None:
