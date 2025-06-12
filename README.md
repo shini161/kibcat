@@ -19,21 +19,30 @@
 ---
 
 ## 📖 Wiki
-- 📘 **[Diario](https://github.com/shini161/kibcat/blob/main/wiki/DIARY.md)**: Storia del progetto
-- 📕 **[Conclusioni](https://github.com/shini161/kibcat/blob/main/wiki/CONCLUSIONS.md)**: Stato attuale del progetto
+- 📘 **[Diario](https://github.com/shini161/kibcat/blob/main/wiki/DIARY.md)**: Storia del progetto e informazioni principali
+- 📕 **[Conclusioni](https://github.com/shini161/kibcat/blob/main/wiki/CONCLUSIONS.md)**: Stato attuale del progetto e obiettivi raggiunti
 
 ---
 
 ## 📜 Descrizione
 
-Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale con correzione errori, tramite LLM.</br>
+Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale con correzione errori e validazione, tramite LLM ma nel modo più deterministico possibile.</br>
+
 Abbiamo sviluppato due plugin per Cheshire Cat:
-- **[KibCat](https://github.com/shini161/kibcat/tree/main/cat/plugins/kibcat)**: Plugin per la generazione di URL Kibana con linguaggio naturale.
-- **[Token Counter](https://github.com/shini161/kibcat/tree/main/cat/plugins/token_counter)**: Plugin per contare i token utilizzati in Input/Output dal LLM.
+- **[KibCat](https://github.com/shini161/kibcat/tree/main/cat/plugins/kibcat)**: Plugin per la generazione di URL Kibana con linguaggio naturale - Il progetto principale.
+- **[Token Counter](https://github.com/shini161/kibcat/tree/main/cat/plugins/token_counter)**: Plugin per contare i token utilizzati in Input/Output dall'LLM.
 
----
+## ⚙️ Configurazione e struttura
 
-## ⚙️ Configurazione
+Il progetto è composto da varie cartelle:
+
+- **assets**: Contiene immagini relative al progetto, come il logo o la demo.
+- **cat**: Cartella che contiene i volumi mappati con docker del CheshireCat. Contiene i file dei plugin e le varie utils relative.
+- **cc_docker_image**: L'immagine Docker del CheshireCat che consente i cambiamenti all'UI tramite iniezione di `css` e `js` esterno.
+- **examples**: Esempi pratici di uso del codice contenuto nella cartella `src`.
+- **src**: Cartella principale contenente la logica del progetto e tutte le funzioni.
+- **tests**: Test automatici per verificare i moduli all'interno di `src`.
+- **wiki**: Contiene il diario e le conclusioni.
 
 - Nel `.env` mettere le seguenti variabili:
 ```env
