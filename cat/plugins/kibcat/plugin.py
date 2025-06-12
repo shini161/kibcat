@@ -413,8 +413,7 @@ class FilterForm(CatForm):  # type: ignore
         Generates URL with the provided information, sends it to the user and asks for confirmation.
         This function is called after the validation is successful (no errors or missing fields).
         If the user:
-        - confirms: the conversation will continue with the submit method.
-        - does not confirm: the form continues to call this method
+        - confirms or does not confirm: the form continues to call this method
           or the one that does the extraction (+validation) if new data is provided.
         """
 
@@ -493,18 +492,9 @@ class FilterForm(CatForm):  # type: ignore
         )
         return "true" in response.lower()
 
-    def submit(self, form_data: FilterData | None) -> dict[str, str]:
-        """
-        Handles the form submission.
-        This function will be called when user wants to exit the form, since the URL generation
-        logic is already implemented in the confirm method.
-        """
-
+    def message_closed(self):
         prompt = build_form_end_message(self.cat.working_memory.stringify_chat_history())
 
         return {
             "output": self.cat.llm(prompt),
         }
-
-    def message_closed(self):
-        return self.submit(form_data=None)
