@@ -16,9 +16,42 @@
 
 ---
 
-## Descrizione
+## 📜 Descrizione
 
-Interrogazione database su elasticsearch tramite kibana, con filtraggio facilitato tramite LLM.
+Generazione di URL Kibana per interrogazione database ElasticSearch e filtraggio di log in linguaggio naturale e correzione errori, tramite LLM.</br>
+Ci sono due plugin su Cheshire Cat:
+- [KibCat](https://github.com/shini161/kibcat/tree/main/cat/plugins/kibcat): Plugin per la generazione di URL Kibana con linguaggio naturale.
+- [Token Counter](https://github.com/shini161/kibcat/tree/main/cat/plugins/token_counter): Plugin per contare i token utilizzati in Input/Output dal LLM.
+
+---
+
+## ⚙️ Configurazione
+
+- Nel `.env` mettere le seguenti variabili:
+```env
+KIBANA_URL=http://kibana.localhost.example
+ELASTIC_URL=http://elastic.localhost.example
+KIBANA_BASE_URL_PART=/app/discover
+KIBANA_USERNAME=kibana_username
+KIBANA_PASS=kibana_password
+KIBANA_SPACE_ID=default
+KIBANA_DATA_VIEW_ID=data-view*
+
+FIELDS_JSON_PATH=/app/cat/plugins/kibcat/main_fields.json
+
+ELASTIC_URL_PRIVATE=elastic.localhost.example
+KIBANA_URL_PRIVATE=kibana.localhost.example
+IP_PRIVATE=256.256.256.256
+```
+- Creare un file `main_fields.json` in **FIELDS_JSON_PATH** (`/cat/plugins/kibcat/main_fields.json`):
+```jsonc
+{
+    "field.example.1": "Questa field è il primo esempio",
+    "field.example.2": "Questa field è il secondo esempio",
+    "field.example.3": "Questa field è il terzo esempio",
+    // ...
+}
+```
 
 ---
 
