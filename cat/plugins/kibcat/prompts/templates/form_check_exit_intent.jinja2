@@ -5,13 +5,13 @@
 }}
 ```
 
-Exit ONLY if the user *explicitly states* they want to exit the form.
+Exit if the user *explicitly states* they want to exit the form.
 Example phrases that indicate the user wants to exit include:
 - "I want to exit the form"
 - "Stop this conversation"
 - "End this chat"
 If the user does not mention exiting, return `false`.
 
-User said "{% endraw %}{user_message}{% raw %}"
+User said "{% endraw %}{{ last_message }}{% raw %}"
 
 Now return a JSON response:{% endraw %}
