@@ -6,7 +6,9 @@ Inizio analisi dell'URL di Kibana, encoder e decoder.
 
 *Ora non esistente, in quanto non funzionante correttamente e sostituito da quello svolto nel [giorno 27/05/2025](#27052025).*
 
-[kibana-url-encode/main.py](https://github.com/shini161/kibcat/blob/4cdde65917956da75fb754c5048ab9603e11831c/kibana-url-encode/main.py)
+<details>
+<summary> <a href="https://github.com/shini161/kibcat/blob/4cdde65917956da75fb754c5048ab9603e11831c/kibana-url-encode/main.py" target="_blank">kibana-url-encode/main.py</a> </summary>
+
 ```python
 import os
 import json
@@ -54,6 +56,8 @@ if __name__ == "__main__":
         print(f"Parts saved to {folder_path}")
 
 ```
+
+</details>
 
 L'URL di kibana è composto da un URL base, in questo caso: `https://kibana_example/app/discover`, e successivamente si hanno due parti codificate in `rison` indicate con `_g` e `_a`, che possono essere decodificate in un JSON:
 
