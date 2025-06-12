@@ -4,6 +4,8 @@
 
 ![Tests](https://github.com/shini161/kibcat/actions/workflows/python-ci.yml/badge.svg?branch=main)
 <br>
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![Jinja](https://img.shields.io/badge/jinja-white.svg?style=for-the-badge&logo=jinja&logoColor=black)
@@ -46,9 +48,9 @@ IP_PRIVATE=256.256.256.256
 - Creare un file `main_fields.json` in **FIELDS_JSON_PATH** (`/cat/plugins/kibcat/main_fields.json`):
 ```jsonc
 {
-    "field.example.1": "Questa field è il primo esempio",
-    "field.example.2": "Questa field è il secondo esempio",
-    "field.example.3": "Questa field è il terzo esempio",
+    "field.example.1": "Descrizione del primo field",
+    "field.example.2": "Descrizione del secondo field",
+    "field.example.3": "Descrizione del terzo field",
     // ...
 }
 ```
