@@ -25,9 +25,7 @@ class TokenCounterHandler(BaseCallbackHandler):
         """Count the number of tokens in a given text."""
         return len(self.encoding.encode(text))
 
-    def on_llm_start(
-        self, serialized: dict[str, Any], prompts: list[str], **kwargs: Any
-    ) -> None:
+    def on_llm_start(self, serialized: dict[str, Any], prompts: list[str], **kwargs: Any) -> None:
         # Get corresponding encoding for the model
         self.input_tokens += self._count_tokens(prompts[0])
 
