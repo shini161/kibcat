@@ -444,11 +444,11 @@ Per esempio la richiesta di esempio specificata precedentemente porterà alla pa
 
 # 03/06/2025
 
-Purtroppo nel nostro codice iniziale avevamo messo dei riferimenti a CGM e ciò non va bene.
-Anche se modifichiamo il codice, i riferimenti rimangono nei commit precedenti.
-L'approccio più semplice sarebbe stato ripulire il progetto di tutti i suoi commit precedenti, abbiamo dunque optato per l'approccio meno semplice.
+Purtroppo nel nostro codice iniziale avevamo messo dei riferimenti a CGM e ciò non va bene.</br>
+Anche se modifichiamo il codice, i riferimenti rimangono nei commit precedenti.</br>
+L'approccio più semplice sarebbe stato ripulire il progetto di tutti i suoi commit precedenti, abbiamo dunque optato per l'approccio meno semplice.</br>
 Inizialmente volevamo fare un Rebase Interattivo, funzionalità di git che ci permette di modificare i commit precedenti, poi, dopo aver guardato quanti
-commit avremmo dovuto modificare, 80 circa, abbiamo deciso di cercare qualche strumento che lo facesse al posto nostro.
+commit avremmo dovuto modificare, 80 circa, abbiamo deciso di cercare qualche strumento che lo facesse al posto nostro.</br>
 Abbiamo trovato [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/), strumento che ci ha permesso di sostituire tutti i riferimenti che volevamo con
 una stringa a nostra scelta **"REMOVED"**
 
