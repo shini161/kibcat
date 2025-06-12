@@ -61,7 +61,10 @@ if __name__ == "__main__":
 
 L'URL di kibana è composto da un URL base, in questo caso: `https://kibana_example/app/discover`, e successivamente si hanno due parti codificate in `rison` indicate con `_g` e `_a`, che possono essere decodificate in un JSON:
 
-Esempio _a:
+<details>
+<summary>
+Esempio _a </summary>
+
 ```json
 {
   "columns": [
@@ -104,6 +107,8 @@ Esempio _a:
   ]
 }
 ```
+
+</details>
 
 # 27/05/2025
 
@@ -180,7 +185,11 @@ Inoltre per poter ottenere la lista delle field per il filtraggio dei dati (quel
 
 È stata utilizzata la libreria [`prison`](https://pypi.org/project/prison/) per parsare il rison, regex per identificare gli argomenti dell'URL (ovvero la parte `_g` e la parte `_a`)
 
-[url_jsonifier/utils.py](https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier/utils.py)
+<details>
+<summary>
+<a href="https://github.com/shini161/kibcat/blob/71af1fec733497c02523e3e8594e6e49282eddd5/url_jsonifier/utils.py" target="_blank">url_jsonifier/utils.py</a>
+</summary>
+
 ```py
 def parse_rison_url_to_json(url: str, path: str | None = None) -> Dict:
     """
@@ -213,6 +222,8 @@ def build_rison_url_from_json(path: str | None = None, json_dict: Dict | None = 
         ValueError: If neither path nor json_dict is provided or if they contain invalid data.
     """
 ```
+
+</details>
 
 Sono stati aggiunti [test automatici](https://github.com/shini161/kibcat/tree/71af1fec733497c02523e3e8594e6e49282eddd5/tests) di workflow su github sul modulo di `url_jsonifier`
 
@@ -360,6 +371,11 @@ In questo caso il gatto estrae la richiesta dell'utente in formato JSON
 
 Successivamente si usa l'API di Kibana sviluppata nei giorni precedenti per poter ottenere le varie keyword e i possibili valori di ogni field richiesta dall'utente, scrivendo il risultato in una stringa JSON.
 
+<details>
+<summary>
+JSON
+</summary>
+
 ```json
 [
   {
@@ -421,6 +437,8 @@ Successivamente si usa l'API di Kibana sviluppata nei giorni precedenti per pote
 ]
 ```
 
+</details>
+
 Tutto questo JSON viene poi passato a una chiamata all'LLM con la richiesta di separarli in query di filtraggio e query di kibana. Il risultato di questa chiamata LLM sarà un ulteriore JSON.
 
 ```json
@@ -456,7 +474,10 @@ Sebbene la **repository sia privata**, abbiamo deciso di procedere con una **san
 Per poter capire quanti riferimenti sensibili ci fossero all'interno della repo, è stato scritto lo script python `git_log.py`.</br>
 Questo script analizza l'intera cronologia del repository e cerca stringhe sensibili nei diff di tutti i commit.</br>
 
-**[git_log.py](https://gist.github.com/MatteoGheza/d8bcf375549333217b346a0802265d4b)**
+<details>
+<summary>
+<a href="https://gist.github.com/MatteoGheza/d8bcf375549333217b346a0802265d4b" target="_blank"><strong>git_log.py</strong></a>
+</summary>
 
 ```py
 #!/usr/bin/env python3
@@ -614,6 +635,8 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+</details>
 
 Utilizzo:
 
@@ -822,8 +845,12 @@ Di default, nel core del Cat, per la funzione `extract` viene utilizzato [un pro
 Nel nostro caso specifico, questo non era sufficiente, in quanto ci serviva una struttura più complessa _(soprattutto per gestire la validazione e il controllo automatico delle "typo" grazie al controllo dei possibili valori delle field)_.  
 È stata quindi, prima di tutto, sovrascritta la funzione `extract` per poter estrarre i dati dal messaggio dell'utente con un prompt personalizzato.
 
-[form_data_extractor.jinja2](https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/prompts/templates/form_data_extractor.jinja2)
-```
+<details>
+<summary>
+Prompt - <a href="https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/prompts/templates/form_data_extractor.jinja2" target="_blank">form_data_extractor.jinja2</a>
+</summary>
+
+```jinja2
 {% raw %}Estrai dalla conversazione dei filtri deterministici da applicare alla ricerca su Kibana, e restituisci un JSON strutturato.
 
 I filtri sono strutturati in questo modo:
@@ -866,7 +893,12 @@ output: "{
 }"{% endraw %}
 ```
 
-[plugin.py](https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/plugin.py#L311-L327)
+</details>
+<details>
+<summary>
+<a href="https://github.com/shini161/kibcat/blob/02b80334585068a222d8779993d890ac06531c46/cat/plugins/kibcat/plugin.py#L311-L327" target="_blank">plugin.py</a>
+</summary>
+
 ```python
 def extract(self):
     """Extracts the filter data from the form."""
@@ -886,6 +918,8 @@ def extract(self):
         "filters": response.get("filters", [])
     }
 ```
+
+</details>
 
 ---
 
