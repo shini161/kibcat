@@ -7,4 +7,3 @@ pylint==3.3.7
 pytest-cov==6.1.1
 types-requests==2.32.0.20250515
 pydantic==2.11.5
-cheshire_cat_api==1.4.9

@@ -1,11 +1,18 @@
 import json
+import sys
 import threading
 import time
 from typing import Any, Dict, Optional
 
 import requests
-from cheshire_cat_api.cat_client import CatClient
-from cheshire_cat_api.config import Config as CatClientConfig
+
+try:
+    from cheshire_cat_api.cat_client import CatClient
+    from cheshire_cat_api.config import Config as CatClientConfig
+except ImportError:
+    print("Cheshire Cat API client not found. Please install the cheshire_cat_api package.")
+    print("You can install it using: pip install -r benchmark/requirements.txt")
+    sys.exit(1)
 
 from .exceptions import AuthenticationException, GenericRequestException
 from .models import LLMOpenAIChatConfig
