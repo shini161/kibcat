@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import shutil
 import sys
 from datetime import datetime
@@ -142,8 +143,17 @@ class BenchmarkRunner:
                 sys.exit(1)
 
         try:
+            # Load config with support for comments (JSONC)
             with open(config_file, "r", encoding="utf-8") as f:
-                return dict(json.load(f))
+                config_content = f.read()
+
+            # Strip comments (both // and /* */ style)
+            # Remove // comments
+            config_content = re.sub(r"//.*?$", "", config_content, flags=re.MULTILINE)
+            # Remove /* */ comments
+            config_content = re.sub(r"/\*.*?\*/", "", config_content, flags=re.DOTALL)
+
+            return dict(json.loads(config_content))
         except json.JSONDecodeError as e:
             self.logger.error("Failed to decode JSON in '%s': %s", config_file, e)
             sys.exit(1)
@@ -291,11 +301,10 @@ class BenchmarkRunner:
         return f"benchmark_{now.strftime('%Y%m%d_%H%M%S')}"
 
     def run(self) -> None:
+        results: list[RunResults] = []
+        self.logger.info("Starting benchmark runs. Results will be saved to '%s'.", self.output_filename)
         try:
-            self.logger.info("Starting benchmark runs. Results will be saved to '%s'.", self.output_filename)
-
             self.connect_client()
-            results: list[RunResults] = []
 
             for i in range(self.config.get("num_runs", 1)):
                 self.logger.info("----- RUN #%i -----", i + 1)
