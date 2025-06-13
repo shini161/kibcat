@@ -4,13 +4,20 @@ import logging
 import os
 import shutil
 import sys
+from datetime import datetime
 from typing import Any
 
 from benchmark.cc_bench_utils.exceptions import (
     AuthenticationException,
     GenericRequestException,
 )
-from benchmark.cc_bench_utils.models import ConversationResult, ConversationResults, LLMOpenAIChatConfig, RunResults
+from benchmark.cc_bench_utils.models import (
+    ConversationResult,
+    ConversationResultEncoder,
+    ConversationResults,
+    LLMOpenAIChatConfig,
+    RunResults,
+)
 from benchmark.cc_bench_utils.rest_api_client import CCApiClient
 from benchmark.cc_bench_utils.stopwatch import time_ms
 
@@ -24,7 +31,14 @@ except ImportError:
 class BenchmarkRunner:
     def __init__(self) -> None:
         self.args = self.parse_args()
-        self.logger = self.load_logger()
+
+        self.output_filename = self.generate_savefile_name()
+        # Check if output directory exists, if not create it
+        self.output_dir = os.path.join("benchmark", "output")
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+
+        self.logger = self.load_logger(os.path.join(self.output_dir, f"{self.output_filename}.log"))
         self.check_tokens_usage = False
         self.config = self.load_config()
         self.client = self.initialize_client()
@@ -47,7 +61,7 @@ class BenchmarkRunner:
         )
         return parser.parse_args()
 
-    def load_logger(self) -> logging.Logger:
+    def load_logger(self, log_file_path: str) -> logging.Logger:
         # Set up logging with colors
 
         if colorama is not None:
@@ -98,6 +112,16 @@ class BenchmarkRunner:
             logger.addHandler(handler)
 
             logger.warning("Colorama not found. Falling back to standard logging without colors.")
+
+        # Set up file logging in addition to console
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setLevel(logging.DEBUG)  # Always write debug level to file
+        if colorama is not None:
+            file_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+        else:
+            file_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+        logger.addHandler(file_handler)
+
         return logger
 
     def load_config(self) -> dict[str, Any]:
@@ -179,6 +203,7 @@ class BenchmarkRunner:
                         message_text, elapsed_time_message = time_ms(self.client.send_message, message=message)
 
                         conversation_results[model_name].time += elapsed_time_message
+                        conversation_results[model_name].response.append(message_text or "")
                         self.logger.debug("Response (%.2f ms): %s", elapsed_time_message, message_text)
 
                     if self.check_tokens_usage:
@@ -257,10 +282,21 @@ class BenchmarkRunner:
 
                         self.logger.info("  %s: %.2f ms%s", model, avg_time, token_info)
 
+    def generate_savefile_name(self) -> str:
+        """
+        Generate a save file name based on the current date and time.
+        The format is 'benchmark_YYYYMMDD_HHMMSS'.
+        """
+        now = datetime.now()
+        return f"benchmark_{now.strftime('%Y%m%d_%H%M%S')}"
+
     def run(self) -> None:
         try:
+            self.logger.info("Starting benchmark runs. Results will be saved to '%s'.", self.output_filename)
+
             self.connect_client()
             results: list[RunResults] = []
+
             for i in range(self.config.get("num_runs", 1)):
                 self.logger.info("----- RUN #%i -----", i + 1)
                 results.append(self.execute_run())
@@ -271,6 +307,15 @@ class BenchmarkRunner:
         finally:
             if hasattr(self, "client") and self.client:
                 self.client.close()
+
+            # If results is not empty, save to file
+            if results:
+                output_file = os.path.join(self.output_dir, f"{self.output_filename}.json")
+                with open(output_file, "w", encoding="utf-8") as f:
+                    json.dump(results, f, indent=4, cls=ConversationResultEncoder)
+                self.logger.info("Results saved to '%s'", output_file)
+            else:
+                self.logger.warning("No results to save.")
 
 
 def main() -> None:

@@ -194,3 +194,4 @@ cat/plugins/kibcat/requirements.txt
 **/kiburl/data
 
 benchmark/config.json
+benchmark/output

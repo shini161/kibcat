@@ -1,4 +1,5 @@
 import dataclasses
+import json
 from typing import Any, Optional, TypeAlias
 
 
@@ -7,6 +8,23 @@ class ConversationResult:
     time: float
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
+    response: list[str] = dataclasses.field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the ConversationResult to a dictionary for JSON serialization."""
+        return {
+            "time": self.time,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "response": self.response,
+        }
+
+
+class ConversationResultEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ConversationResult):
+            return o.to_dict()
+        return super().default(o)
 
 
 ConversationResults: TypeAlias = dict[str, ConversationResult]
