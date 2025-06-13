@@ -4,8 +4,8 @@ import tiktoken
 from cat.convo.messages import CatMessage
 from cat.log import log
 from cat.mad_hatter.decorators import hook, tool
-from langchain.callbacks.base import BaseCallbackHandler
-from langchain.schema import LLMResult
+from langchain_core.callbacks.base import BaseCallbackHandler
+from langchain_core.outputs import LLMResult
 
 
 class TokenCounterHandler(BaseCallbackHandler):
