@@ -65,6 +65,8 @@ class BenchmarkRunner:
     def load_logger(self, log_file_path: str) -> logging.Logger:
         # Set up logging with colors
 
+        log_level = getattr(logging, self.args.log_level.upper(), logging.INFO)
+
         if colorama is not None:
             colorama.init(autoreset=True)
 
@@ -82,16 +84,14 @@ class BenchmarkRunner:
                     formatter = logging.Formatter(log_fmt)
                     return formatter.format(record)
 
-            log_level = getattr(logging, self.args.log_level.upper(), logging.INFO)
-
             # Configure root logger to avoid duplicate messages
-            logging.basicConfig(level=log_level, handlers=[])
+            logging.basicConfig(level=logging.DEBUG, handlers=[])
 
             handler = logging.StreamHandler()
             handler.setFormatter(ColoredFormatter())
+            handler.setLevel(log_level)
 
             logger = logging.getLogger("benchmark")
-            logger.setLevel(log_level)
             logger.propagate = False  # Prevent propagation to root logger
 
             # Remove any existing handlers to avoid duplicates
@@ -101,14 +101,13 @@ class BenchmarkRunner:
             logger.addHandler(handler)
         else:
             # Fallback to standard logging if colorama is not available
-            log_level = getattr(logging, self.args.log_level.upper(), logging.INFO)
-            logging.basicConfig(level=log_level, format="%(levelname)s %(message)s", handlers=[])
+            logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(message)s", handlers=[])
 
             handler = logging.StreamHandler()
             handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+            handler.setLevel(log_level)
 
             logger = logging.getLogger("benchmark")
-            logger.setLevel(log_level)
             logger.propagate = False  # Prevent propagation to root logger
             logger.addHandler(handler)
 
@@ -116,11 +115,7 @@ class BenchmarkRunner:
 
         # Set up file logging in addition to console
         file_handler = logging.FileHandler(log_file_path)
-        file_handler.setLevel(logging.DEBUG)  # Always write debug level to file
-        if colorama is not None:
-            file_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
-        else:
-            file_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+        file_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
         logger.addHandler(file_handler)
 
         return logger
