@@ -114,7 +114,7 @@ class BenchmarkRunner:
             logger.warning("Colorama not found. Falling back to standard logging without colors.")
 
         # Set up file logging in addition to console
-        file_handler = logging.FileHandler(log_file_path)
+        file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
         file_handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
         logger.addHandler(file_handler)
 
