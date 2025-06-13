@@ -3,8 +3,9 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-import cheshire_cat_api as ccat
 import requests
+from cheshire_cat_api.cat_client import CatClient
+from cheshire_cat_api.config import Config as CatClientConfig
 
 from .exceptions import AuthenticationException, GenericRequestException
 from .models import LLMOpenAIChatConfig
@@ -127,13 +128,13 @@ class CCApiClient:
         if self.auth_token is None:
             raise AuthenticationException("Authentication token is None after obtain_auth_token.")
         # Create configuration using the Config class from the API
-        config = ccat.Config(
+        config = CatClientConfig(
             base_url=self.base_url,
             port=self.port,
             user_id=self.user_id,
             auth_key=self.auth_token,
         )
-        self.cat_client = ccat.CatClient(config=config, on_message=self._message_handler)
+        self.cat_client = CatClient(config=config, on_message=self._message_handler)
         self.cat_client.connect_ws()
         self._wait_for_connection()
         return self.auth_token
@@ -186,7 +187,7 @@ class CCApiClient:
         Raises:
             GenericRequestException: If the request fails or response is invalid
         """
-        response = self.send_message("Get tokens")
+        response = self.send_message("Get token count")
         if not response:
             raise GenericRequestException("No response received from 'Get tokens' endpoint.")
         return self._parse_token_count(response)
