@@ -173,16 +173,19 @@ class BenchmarkRunner:
                 conversation_results[model_name] = ConversationResult(time=0.0)
                 elapsed_time_message = 0.0
                 for message in conversation:
-                    message_text, elapsed_time_message = time_ms(self.client.send_message, message=message)
+                    if "%%END_FORM%%" in message:
+                        self.client.send_message("Exit from form")
+                    else:
+                        message_text, elapsed_time_message = time_ms(self.client.send_message, message=message)
 
-                    conversation_results[model_name].time += elapsed_time_message
+                        conversation_results[model_name].time += elapsed_time_message
+                        self.logger.debug("Response (%.2f ms): %s", elapsed_time_message, message_text)
 
                     if self.check_tokens_usage:
                         token_info = self.client.get_token_count()
                         conversation_results[model_name].input_tokens = token_info.get("input_tokens", None)
                         conversation_results[model_name].output_tokens = token_info.get("output_tokens", None)
 
-                    self.logger.debug("Response (%.2f ms): %s", elapsed_time_message, message_text)
                 self.logger.debug("Total time: %.2f ms", conversation_results[model_name].time)
                 self.client.clean_memory()
 
