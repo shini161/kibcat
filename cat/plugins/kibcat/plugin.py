@@ -8,7 +8,7 @@ from typing import Any, cast
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
-from cat.plugins.kibcat.costants import DEFAULT_END_TIME, DEFAULT_START_TIME
+from cat.plugins.kibcat.defaults import DEFAULT_END_TIME, DEFAULT_START_TIME
 from cat.plugins.kibcat.prompts.builders import (
     build_agent_prefix,
     build_form_check_exit_intent,
