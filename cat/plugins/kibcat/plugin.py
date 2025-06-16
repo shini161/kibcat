@@ -376,9 +376,6 @@ class FilterForm(CatForm):  # type: ignore
             logger=KibCatLogger,
         )
 
-        # Call the cat using the query
-        cat_response: str = self.cat.llm(filter_data).replace("```json", "").replace("`", "")
-
         try:
             # Call the cat using the query
             json_cat_response: dict[Any, Any] = parse_json(self.cat.llm(filter_data))
