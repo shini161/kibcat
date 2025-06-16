@@ -1107,3 +1107,46 @@ def parse_json(json_string: str, pydantic_model: BaseModel = None) -> dict:
 Da notare che questa introduce vari miglioramenti rispetto alla precedente implementazione:
 - Utilizza [`JsonOutputParser` di Langchain](https://python.langchain.com/api_reference/core/output_parsers/langchain_core.output_parsers.json.JsonOutputParser.html#langchain_core.output_parsers.json.JsonOutputParser) per il parsing del JSON, che è progettato per gestire in modo più robusto le risposte JSON.
 - Rimuove automaticamente i caratteri di escape e altri caratteri non necessari, che alcuni LLM più piccoli potrebbero includere nelle loro risposte.
+
+# 10/06/2025
+
+Abbiamo riscritto il codice per rilevare quando l'utente vuole uscire dal form, in modo da poterlo rendere più robusto e meno soggetto a errori di interpretazione (che ha causato varie volte la chiusura del form quando l'utente chiede di modificare i dati inseriti).
+
+[plugin.py](https://github.com/shini161/kibcat/blob/4e2dc220288cf29590bdf9261e083d0a77cfb100/cat/plugins/kibcat/plugin.py#L456-L467)
+```python
+def check_exit_intent(self) -> bool:
+    # Get user message
+    last_message = self.cat.working_memory.user_message_json.text
+
+    # Queries the LLM and check if user is agree or not
+    response = self.cat.llm(
+        build_form_check_exit_intent(
+            last_message=last_message,
+            logger=KibCatLogger,
+        )
+    )
+    return "true" in response.lower()
+```
+[form_check_exit_intent.jinja2](https://github.com/shini161/kibcat/blob/4e2dc220288cf29590bdf9261e083d0a77cfb100/cat/plugins/kibcat/prompts/templates/form_check_exit_intent.jinja2)
+````jinja2
+{% raw %}Your task is return a JSON that indicates whether the user wants to exit the form or not. The JSON should be structured as follows:
+```json
+{
+    "exit": // type boolean, must be `true` or `false`
+}
+```
+
+Exit ONLY if the user *explicitly states* they want to exit the form.
+Example phrases that indicate the user wants to exit include:
+- "I want to exit the form"
+- "Stop this conversation"
+- "End this chat"
+If the user does not mention exiting, return `false`.
+
+User said "{% endraw %}{{ last_message }}{% raw %}"
+
+Now return a JSON response:{% endraw %}
+````
+> [!NOTE]
+> Nel commit inserito in questa riga c'è un errore di battitura nel prompt, che è stato corretto in seguito.
+> `{user_message}` dovrebbe essere `{{ last_message }}`.
