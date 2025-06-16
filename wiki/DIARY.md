@@ -1054,5 +1054,56 @@ def get_token_usage(input, cat):
     input_tokens = cat.working_memory.model_interactions[1].input_tokens
     return f"Input tokens: {input_tokens}"
 ```
-Il grosso problema che abbiamo riscontrato, però, è che gli `output_tokens` non vengono aggiornati correttamente, e rimangono fissi a 22. Gli `input_tokens`, invece, vengono aggiornati correttamente, ma un tool che restituisce solamente i token di input non è molto utile.  
+Il grosso problema che abbiamo riscontrato, però, è che gli `output_tokens` non vengono aggiornati correttamente, e rimangono fissi a 22.  
+Gli `input_tokens`, invece, vengono aggiornati correttamente, ma un tool che restituisce solamente i token di input non è molto utile.  
 Nelle successive modifiche al codice lo abbiamo quindi rimosso, in quanto non pienamente funzionante.
+
+# 07/06/2025
+
+Per migliorare la leggibilità del codice e per rispettare le convenzioni dei plugin per il Cheshire Cat, abbiamo deciso di utilizzare la funzione `parse_json` per il parsing del JSON restituito da LLM, invece di utilizzare `json.loads` insieme a varie funzioni per la manipolazione di stringhe.
+
+```python
+# PRIMA
+json_str = self.cat.llm(
+    prompt
+).replace("```json", "").replace("`", "")
+response = json.loads(json_str)
+```
+```python
+# DOPO
+response = parse_json(
+    self.cat.llm(prompt)
+)
+```
+
+Il codice della funzione `parse_json` implementata nel core del CC è il seguente:
+[cheshire-cat-ai\core\core\cat\utils.py](https://github.com/cheshire-cat-ai/core/blob/abafac5cf0aba5dcb7bc3ce7b4d5ae981da15ed7/core/cat/utils.py#L168)
+```python
+def parse_json(json_string: str, pydantic_model: BaseModel = None) -> dict:
+    # instantiate parser
+    parser = JsonOutputParser(pydantic_object=pydantic_model)
+
+    # clean to help small LLMs
+    replaces = {
+        "\_": "_",
+        "\-": "-",
+        "None": "null",
+        "{{": "{",
+        "}}": "}",
+    }
+    for k, v in replaces.items():
+        json_string = json_string.replace(k, v)
+
+    # first "{" occurrence (required by parser)
+    start_index = json_string.index("{")
+
+    # parse
+    parsed = parser.parse(json_string[start_index:])
+    
+    if pydantic_model:
+        return pydantic_model(**parsed)
+    return parsed
+```
+Da notare che questa introduce vari miglioramenti rispetto alla precedente implementazione:
+- Utilizza [`JsonOutputParser` di Langchain](https://python.langchain.com/api_reference/core/output_parsers/langchain_core.output_parsers.json.JsonOutputParser.html#langchain_core.output_parsers.json.JsonOutputParser) per il parsing del JSON, che è progettato per gestire in modo più robusto le risposte JSON.
+- Rimuove automaticamente i caratteri di escape e altri caratteri non necessari, che alcuni LLM più piccoli potrebbero includere nelle loro risposte.
