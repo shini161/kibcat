@@ -6,6 +6,13 @@ dove [field] indica la chiave, ovvero il valore o variabile per cui filtrare
 [operator] indica la relazione tra i valori. Gli operatori possibili sono: {% endraw %}{{ operators_str }}{% raw %}.
 e infine [value] indica il valore a cui si sta comparando.
 
+SOLO se l'utente lo chiede esplicitamente, puoi compilare l'attributo "query", che rappresenta una stringa di ricerca *opzionale*.  
+Questa stringa può essere in formato Kibana Query Language (KQL) oppure un campo di testo libero, in base a cosa chiede l'utente.
+L'utente può specificare anche di inserire come query un determinato filtro.
+
+*NOTA BENE:* di default, i filtri devono essere aggiunti alla lista "filters" e non come parte della query, a meno che l'utente non richieda esplicitamente di farlo.
+*NOTA BENE:* se hai applicato uno specifico filtraggio tramite query, e questo corrispnonde esattamente a un filtro, allora non devi aggiungere quel filtro alla lista "filters", ma solo alla query.
+
 FORMATO:
 L'output che devi ritornare è un dict JSON contenente tre elementi, "filters", "start_time" e "end_time":
 # "filters"
@@ -14,6 +21,9 @@ Ogni dizionario ha varie proprietà:
 "field": la [field] da comparare
 "operator": l' [operator] da usare. Usa il *NOME ESATTO* dell'operatore che vuoi usare, tra quelli indicati in precedenza.
 "value": il [value] per l'operatore
+# "query"
+"query": una stringa che rappresenta la query di ricerca, in formato Kibana Query Language (KQL) oppure un campo di testo libero.  
+Questa stringa è opzionale e può essere omessa se non è presente nella conversazione.
 # "start_time" 
 "start_time": indica fino a quanto tempo fa estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
 # "end_time"
@@ -50,7 +60,7 @@ Alcune [field] possono essere sottointese dall'utente, ecco la lista di esse e d
 {% endraw %}{{ main_fields_str }}{% raw %}
 
 ESEMPIO:
-conversazione: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti"
+conversazione: "Aggiungi un filtraggio in modo che example.test.kubernetes.num sia uguale a 8 e log.level sia di errore negli ultimi 50 minuti e aggiungi 'Luigi' come query di ricerca."
 output: "{
 "filters": [{
 "field":"example.test.kubernetes.num",
@@ -63,7 +73,8 @@ output: "{
 "value":"error"
 }],
 "start_time": "PT50M",
-"end_time": "PT0S"
+"end_time": "PT0S",
+"query": "Luigi"
 }"
 
 CONVERSAZIONE:

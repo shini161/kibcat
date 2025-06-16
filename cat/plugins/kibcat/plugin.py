@@ -117,18 +117,13 @@ def agent_prompt_prefix(prefix, cat):
 
 
 ######################## FORMS #######################
-# The query isnt used right now, maybe it will be implemented later
-class QueryItem(BaseModel):
-    key: str
-    operator: str = "is"  # TODO: support other query operators
-    value: str
 
 
 class FilterData(BaseModel):
     start_time: str = DEFAULT_START_TIME
     end_time: str = DEFAULT_END_TIME
     filters: list[KibCatFilter] = []
-    query: list[QueryItem] = []
+    query: str = ""
 
 
 @form
@@ -279,10 +274,13 @@ class FilterForm(CatForm):  # type: ignore
         return {
             "start_time": response.get("start_time", DEFAULT_START_TIME),
             "end_time": response.get("end_time", DEFAULT_END_TIME),
-            # Query is not used, only filters are
-            "query": [],  # TODO: extract query from conversation using extractor template
+            "query": response.get("query", ""),
             "filters": self._parse_filters(response.get("filters", [])),
         }
+
+    def sanitize(self, model):
+        """Not needed, but called by the CatForm base class."""
+        return model
 
     def _generate_base_message(self) -> str:
         """Generates the base message for form incomplete response."""
@@ -413,7 +411,7 @@ class FilterForm(CatForm):  # type: ignore
 
         # Extract the requested fields that actually exist, to be showed
         form_data_filters: dict[Any, KibCatFilter] = self._model.get("filters", [])
-        form_data_kql = ""  # TODO: implement support for queries from scratch, from the form data for queries
+        form_data_kql = self._model.get("query", "")
 
         requested_keys: set[str] = {element.field for element in form_data_filters}
         fields_to_visualize: list[str] = [
@@ -465,6 +463,7 @@ class FilterForm(CatForm):  # type: ignore
         prompt = build_form_confirm_message(
             conversation_history=self.cat.working_memory.stringify_chat_history(),
             applied_filters=applied_filters,
+            query=form_data_kql,
             logger=KibCatLogger,
         )
         ask_confirm_message = self.cat.llm(prompt)

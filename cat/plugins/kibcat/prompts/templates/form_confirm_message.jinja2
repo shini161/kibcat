@@ -35,6 +35,16 @@ Se ti vengono dati dei valori in formato **iso8601Duration** convertili in lingu
   <br/>
   ...
 </ul>
+- Se c'è una query di ricerca, includila nella lista dei filtri secondo il seguente formato:
+<ul>
+  ...
+  <br/>
+  <li><strong>Query di ricerca:</strong> <code>testo_query</code></li>
+</ul>
+- Se non è stata specificata una query di ricerca, non scrivere nulla a riguardo.
+
+# QUERY:
+{% endraw %}{{ query }}{% raw %}
 
 # FILTRI APPLICATI:
 {% endraw %}{{ applied_filters }}{% raw %}

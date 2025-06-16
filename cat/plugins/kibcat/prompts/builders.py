@@ -90,6 +90,7 @@ def build_form_data_extractor(
 def build_form_confirm_message(
     conversation_history: str,
     applied_filters: str,
+    query: str,
     logger: Optional[Type[BaseLogger]] = None,
 ) -> str:
     """
@@ -98,6 +99,7 @@ def build_form_confirm_message(
     Args:
         conversation_history (str): The conversation history loaded as string
         main_fields_str (str): The main fields JSON loaded as string
+        query (str): The query string to be confirmed.
         logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
 
     Returns:
@@ -110,6 +112,7 @@ def build_form_confirm_message(
         logger=logger,
         conversation_history=conversation_history,
         applied_filters=applied_filters,
+        query=query,
     )
 
     return result
