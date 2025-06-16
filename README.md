@@ -99,7 +99,7 @@ Per quanto riguarda la parte delle **frasi di default** (quelle che appaiono app
 ]
 ```
 
-Invece per i cambiamenti alla UI è stato creato un [file `css`](/cc_docker_image/style_override.css) che viene mappato all'interno del container, e successivamente modificando una parte dell'`HTML` del Cat è stato possibile farlo caricare insieme al `css` originale del gatto, per poter apportare le modifiche desiderate alla UI usando la notazione `!important`.
+Invece per i cambiamenti alla UI è stato creato uno [`style_override.css`](/cc_docker_image/style_override.css) che viene mappato all'interno del container, e successivamente modificando una parte dell'`HTML` del Cat è stato possibile farlo caricare insieme al `css` originale del gatto, per poter apportare le modifiche desiderate alla UI usando la notazione `!important`.
 
 ### Uso del plugin Token Counter
 
