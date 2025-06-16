@@ -8,8 +8,19 @@ from typing import Any, cast
 import isodate
 from cat.experimental.form import CatForm, CatFormState, form
 from cat.mad_hatter.decorators import hook
-from cat.plugins.kibcat.defaults import DEFAULT_END_TIME, DEFAULT_START_TIME
-from cat.plugins.kibcat.prompts.builders import (
+from cat.utils import parse_json
+from elastic_transport import NodeConfig
+from elasticsearch import Elasticsearch
+from langchain_core.exceptions import OutputParserException
+from pydantic import BaseModel
+
+from kibapi import NotCertifiedKibana
+from kibtemplate import FilterOperators, KibCatFilter, build_template
+from kibtypes import ParsedKibanaURL
+from kiburl import build_rison_url_from_json
+
+from .defaults import DEFAULT_END_TIME, DEFAULT_START_TIME
+from .prompts.builders import (
     build_agent_prefix,
     build_form_check_exit_intent,
     build_form_confirm_message,
@@ -18,24 +29,16 @@ from cat.plugins.kibcat.prompts.builders import (
     build_form_print_message,
     build_refine_filter_json,
 )
-from cat.plugins.kibcat.utils import check_env_vars, format_T_in_date
-from cat.plugins.kibcat.utils.generate_field_values import (
+from .utils import (
+    KibCatLogger,
     automated_field_value_extraction,
+    check_env_vars,
+    format_T_in_date,
+    format_time_kibana,
     generate_field_to_group,
+    get_main_fields_dict,
     verify_data_views_space_id,
 )
-from cat.plugins.kibcat.utils.kib_cat_logger import KibCatLogger
-from cat.utils import parse_json
-from elastic_transport import NodeConfig
-from elasticsearch import Elasticsearch
-from langchain_core.exceptions import OutputParserException
-from pydantic import BaseModel
-
-from kibapi import NotCertifiedKibana
-from kibtemplate.builders import build_template
-from kibtemplate.kibcat_filter import FilterOperators, KibCatFilter
-from kibtypes.parsed_kibana_url import ParsedKibanaURL
-from kiburl.builders import build_rison_url_from_json
 
 # Environment Variables
 URL = os.getenv("KIBANA_URL")
@@ -48,49 +51,7 @@ DATA_VIEW_ID = os.getenv("KIBANA_DATA_VIEW_ID")
 
 FIELDS_JSON_PATH = os.getenv("FIELDS_JSON_PATH")
 
-
-def get_main_fields_dict() -> dict[str, Any]:
-    """
-    Load the main fields dictionary from the JSON file specified by the FIELDS_JSON_PATH environment variable.
-
-    Returns:
-        A dictionary parsed from the JSON file, or an empty dict if the path is not set or an error occurs.
-    """
-    fields_json_path: str | None = os.getenv("FIELDS_JSON_PATH")
-
-    if not fields_json_path:
-        KibCatLogger.error("FIELDS_JSON_PATH environment variable is not set.")
-        return {}
-
-    try:
-        with open(fields_json_path, "r", encoding="utf-8") as f:
-            return cast(dict[str, Any], json.load(f))
-
-    except (OSError, json.JSONDecodeError) as e:
-        # OSError covers file not found, permission issues, etc.
-        # JSONDecodeError covers invalid JSON structure
-        KibCatLogger.error(f"Error reading or parsing main fields JSON file: {e}")
-        return {}
-
-
 MAIN_FIELDS_DICT: dict[str, Any] | None = None
-
-###################################
-
-############## Utils ##############
-
-
-def format_time_kibana(dt: datetime) -> str:
-    """
-    Format a datetime object to a Kibana-compatible ISO 8601 string with milliseconds.
-
-    Args:
-        dt: A datetime object.
-
-    Returns:
-        A string formatted as 'YYYY-MM-DDTHH:MM:SS.mmmZ'.
-    """
-    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
 ######################## Hooks #######################
@@ -189,7 +150,7 @@ class FilterForm(CatForm):  # type: ignore
         field_to_group: dict[str, Any] = generate_field_to_group(self._fields_list)
 
         global MAIN_FIELDS_DICT
-        MAIN_FIELDS_DICT = get_main_fields_dict()
+        MAIN_FIELDS_DICT = get_main_fields_dict(fields_json_path=FIELDS_JSON_PATH, logger=KibCatLogger)
 
         new_main_fields: dict[str, Any] = {}
 
