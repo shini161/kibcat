@@ -36,13 +36,13 @@ Abbiamo sviluppato due plugin per Cheshire Cat:
 
 Il progetto è composto da varie cartelle:
 
-- **assets**: Contiene immagini relative al progetto, come il logo o la demo.
-- **cat**: Cartella che contiene i volumi mappati con docker del CheshireCat. Contiene i file dei plugin e le varie utils relative.
-- **cc_docker_image**: L'immagine Docker del CheshireCat che consente i cambiamenti all'UI tramite iniezione di `css` e `js` esterno.
-- **examples**: Esempi pratici di uso del codice contenuto nella cartella `src`.
-- **src**: Cartella principale contenente la logica del progetto e tutte le funzioni.
-- **tests**: Test automatici per verificare i moduli all'interno di `src`.
-- **wiki**: Contiene il diario e le conclusioni.
+- **[/assets](https://github.com/shini161/kibcat/tree/main/assets)**: Contiene immagini relative al progetto, come il logo o la demo.
+- **[/cat](https://github.com/shini161/kibcat/tree/main/cat)**: Cartella che contiene i volumi mappati con docker del CheshireCat. Contiene i file dei plugin e le varie utils relative.
+- **[/cc_docker_image](https://github.com/shini161/kibcat/tree/main/cc_docker_image)**: L'immagine Docker del CheshireCat che consente i cambiamenti all'UI tramite iniezione di `css` e `js` esterno.
+- **[/examples](https://github.com/shini161/kibcat/tree/main/examples)**: Esempi pratici di uso del codice contenuto nella cartella `src`.
+- **[/src](https://github.com/shini161/kibcat/tree/main/src)**: Cartella principale contenente la logica del progetto e tutte le funzioni.
+- **[/tests](https://github.com/shini161/kibcat/tree/main/tests)**: Test automatici per verificare i moduli all'interno di `src`.
+- **[/wiki](https://github.com/shini161/kibcat/tree/main/wiki)**: Contiene il diario e le conclusioni.
 
 ### Setup iniziale
 
@@ -99,7 +99,7 @@ Per quanto riguarda la parte delle **frasi di default** (quelle che appaiono app
 ]
 ```
 
-Invece per i cambiamenti alla UI è stato creato un [file `css`](/cc_docker_image/style_override.css) che viene mappato all'interno del container, e successivamente modificando una parte dell'`HTML` del Cat è stato possibile farlo caricare insieme al `css` originale del gatto, per poter apportare le modifiche desiderate alla UI usando la notazione `!important`.
+Invece per i cambiamenti alla UI è stato creato uno [`style_override.css`](/cc_docker_image/style_override.css) che viene mappato all'interno del container, e successivamente modificando una parte dell'`HTML` del Cat è stato possibile farlo caricare insieme al `css` originale del gatto, per poter apportare le modifiche desiderate alla UI usando la notazione `!important`.
 
 ### Uso del plugin Token Counter
 
