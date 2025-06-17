@@ -121,3 +121,159 @@ Invece per i cambiamenti alla UI è stato creato uno [`style_override.css`](/cc_
 ### Uso del plugin Token Counter
 
 Questo [plugin](/cat/plugins/token_counter/) si occupa di tenere conto dell'uso dei token del modello, a causa del fatto che la funzione di token counter integrata nel gatto non funzionava in modo corretto. Maggiori dettagli nel [diario 06/06/2025](https://github.com/shini161/kibcat/wiki/2025%E2%80%9006%E2%80%9006) e nel [diario 11/06/2025](https://github.com/shini161/kibcat/wiki/2025%E2%80%9006%E2%80%9011).
+
+Per utilizzare questo plugin, una volta attivato dalle impostazioni del Cat, è sufficiente scrivere un messaggio simile a `Ottieni conteggio token` o `Get token count`, e il plugin risponderà con il conteggio dei token utilizzati in input e output dall'LLM:
+```
+Input tokens: 790
+Output tokens: 392
+```
+
+> [!WARNING]
+> Se si esegue questo comando mentre si sta interagendo con un form (ad esempio il nostro form per la generazione di URL Kibana), il plugin non funzionerà correttamente, in quanto i tool vengono disabilitati in quel caso.
+> Per poter utilizzare questo o altri plugin, è necessario inviare prima un altro messaggio per interrompere l'interazione con il form, ad esempio `Exit form` o `Esci dal form`, e poi inviare il comando per il conteggio dei token.
+
+### Uso dello strumento di benchmark
+
+Per poter decidere in maniera più accurata quale modello utilizzare, è stato creato [uno strumento di benchmark](/benchmark/) che permette di testare le performance dei vari modelli LLM.
+
+Per poterlo utilizzare, seguire i seguenti passaggi:
+1. Creare un file `config.json` nella cartella `benchmark/`, utilizzando il formato contenuto nel [file di esempio `config_example.json`](/benchmark/config.example.json).
+
+<details>
+<summary>Spiegazione impostazioni del file `config.json`</summary>
+
+#### Configurazione `config.json` per Benchmark LLM su CheshireCat
+
+Il file `config.json` contiene tutte le configurazioni necessarie per eseguire i benchmark sui modelli **LLM** tramite la piattaforma **CheshireCat**.  
+Di seguito sono descritte nel dettaglio tutte le impostazioni disponibili.
+
+---
+
+##### 📦 Configurazione Generale
+
+|Chiave|Descrizione|Default/Esempio|
+|-----|-----|-----|
+|`base_url`|L'indirizzo del server su cui eseguire il benchmark.|`"127.0.0.1"`|
+|`port`|La porta da utilizzare per la connessione al server.|`1865`|
+|`user_id`|Identificativo dell'utente che esegue il test.|`"testing_user"`|
+|`username`|Nome utente per l'autenticazione (se richiesta).|`"admin"`|
+|`password`|Password per l'autenticazione (se richiesta).|`"admin"`|
+|`timeout`|Tempo massimo di attesa (in secondi) per una risposta dal modello.|`60`|
+|`check_tokens_usage`|Attiva/disattiva il controllo del numero di token utilizzati durante l'esecuzione (`true/false`).|`true` o `false`|
+
+---
+
+##### 🤖 Configurazione dei Modelli LLM
+
+Il campo `llm_config` contiene un array di configurazioni dedicate ai modelli **LLM** che si vogliono testare.  
+
+Gli oggetti da inserire all'interno di questo array devono seguire lo stesso schema utilizzato nelle chiamate HTTP PUT a `http://cheshirecatserver/llm/settings/LLMOpenAIChatConfig`:
+
+![screenshot interfaccia admin per modificare LLM](assets/example_cc-llm-settings.png)
+
+Di seguito un esempio di configurazione per LLM di tipo `OpenAI ChatGPT`:
+
+```json
+{
+  "name": "LLMOpenAIChatConfig",
+  "value": {
+    "openai_api_key": "REPLACE_ME",
+    "model_name": "gpt-4o-mini",
+    "temperature": 0.7,
+    "streaming": false
+  },
+  "cost_per_million_tokens": {
+    "input": 5.0,
+    "output": 15.0
+  }
+}
+```
+
+|Chiave|Descrizione|
+|-----|-----|
+|`name`|Tipo di configurazione per il modello (es. `"LLMOpenAIChatConfig"`).|
+|`openai_api_key`|Chiave API per accedere al modello specificato.|
+|`model_name`|Nome del modello da utilizzare (es. `"gpt-4o-mini"`, `"gpt-4.1-mini"`).|
+|`temperature`|Controllo della casualità delle risposte (valore compreso tra `0.0` e `1.0`).|
+|`streaming`|Abilita (`true`) o disabilita (`false`) la modalità streaming delle risposte nel CC.|
+
+> [!NOTE]
+> Per attivare il conteggio dei token e il calcolo del costo medio di ogni conversazione, è necessario specificare i campi `cost_per_million_tokens` con i valori di costo per milione di token in input e output.
+
+---
+
+## 📝 Configurazione dei Test
+
+| Chiave         | Descrizione                                                                                                     |
+|:---------------|:----------------------------------------------------------------------------------------------------------------|
+| `conversations`| Array di conversazioni da utilizzare per il benchmark. Ogni conversazione è un array di messaggi che la compongono.|
+| `num_runs`     | Numero di volte che ogni configurazione deve essere eseguita nel benchmark.                                      |
+
+> [!NOTE]
+> Se nel benchmark è necessario interagire con un form, è possibile inserire un messaggio fittizzio `%%END_FORM%%` per permettere il conteggio dei token prima di continuare con il test.
+
+> [!WARNING]
+> Per utilizzare la funzione di conteggio dei token e di calcolo del costo medio di ogni conversazione, è necessario che il plugin **Token Counter** sia attivo nel CheshireCat.
+
+---
+
+## 📎 Esempio Completo di `config.json`
+
+```json
+{
+  "base_url": "127.0.0.1",
+  "port": 1865,
+  "user_id": "testing_user",
+  "username": "admin",
+  "password": "admin",
+  "timeout": 60,
+  "check_tokens_usage": false,
+  "llm_config": [
+    {
+      "name": "LLMOpenAIChatConfig",
+      "value": {
+        "openai_api_key": "REPLACE_ME",
+        "model_name": "gpt-4o-mini",
+        "temperature": 0.7,
+        "streaming": true
+      },
+      "cost_per_million_tokens": {
+        "input": 0.15,
+        "output": 0.6
+      }
+    },
+    {
+      "name": "LLMOpenAIChatConfig",
+      "value": {
+        "openai_api_key": "REPLACE_ME",
+        "model_name": "gpt-4.1-mini",
+        "temperature": 0.4,
+        "streaming": true
+      },
+      "cost_per_million_tokens": {
+        "input": 0.4,
+        "output": 1.6
+      }
+    }
+  ],
+  "conversations": [
+    [
+      "How are you?"
+    ],
+    [
+      "My name is Luigi",
+      "What's my name?"
+    ],
+    [
+      "Order me a pizza with mushrooms and ham",
+      "Deliver it to Via Da Qui 25, BS",
+      "%%END_FORM%%"
+    ]
+  ],
+  "num_runs": 2
+}
+```
+</details>
+
+2. Eseguire il comando `pip install -r benchmark/requirements.txt` per installare le dipendenze necessarie.
+3. Eseguire il comando `python -m benchmark.run` per avviare il benchmark. I risultati verranno salvati nella cartella `benchmark/output/` in un file JSON _(e i log in un file .log)_.
