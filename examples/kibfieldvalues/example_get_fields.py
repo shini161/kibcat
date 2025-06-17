@@ -27,6 +27,7 @@ def run_example(
         host=base_url.split("://")[-1].split(":")[0],
         port=443,
         verify_certs=False,
+        ssl_show_warn=False,
     )
 
     es: Elasticsearch = Elasticsearch([node_config], basic_auth=(username, password))

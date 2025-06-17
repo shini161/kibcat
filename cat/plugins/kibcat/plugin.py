@@ -114,6 +114,7 @@ class FilterForm(CatForm):  # type: ignore
             host=ELASTIC_URL.split("://")[-1].split(":")[0],
             port=443,
             verify_certs=False,
+            ssl_show_warn=False,
         )
 
         self._elastic: Elasticsearch = Elasticsearch(
