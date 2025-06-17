@@ -197,23 +197,20 @@ Di seguito un esempio di configurazione per LLM di tipo `OpenAI ChatGPT`:
 |`temperature`|Controllo della casualità delle risposte (valore compreso tra `0.0` e `1.0`).|
 |`streaming`|Abilita (`true`) o disabilita (`false`) la modalità streaming delle risposte nel CC.|
 
-> [!NOTE]
-> Per attivare il conteggio dei token e il calcolo del costo medio di ogni conversazione, è necessario specificare i campi `cost_per_million_tokens` con i valori di costo per milione di token in input e output.
+> Per attivare il **conteggio dei token** e il **calcolo del costo medio di ogni conversazione**, è necessario specificare i campi `cost_per_million_tokens` con i valori di costo per milione di token in input e output.
 
 ---
 
 ## 📝 Configurazione dei Test
 
-| Chiave         | Descrizione                                                                                                     |
-|:---------------|:----------------------------------------------------------------------------------------------------------------|
-| `conversations`| Array di conversazioni da utilizzare per il benchmark. Ogni conversazione è un array di messaggi che la compongono.|
-| `num_runs`     | Numero di volte che ogni configurazione deve essere eseguita nel benchmark.                                      |
+|Chiave|Descrizione|
+|-----|-----|
+|`conversations`|Array di conversazioni da utilizzare per il benchmark. Ogni conversazione è un array di messaggi che la compongono.|
+|`num_runs`|Numero di volte che ogni configurazione deve essere eseguita nel benchmark.|
 
-> [!NOTE]
 > Se nel benchmark è necessario interagire con un form, è possibile inserire un messaggio fittizzio `%%END_FORM%%` per permettere il conteggio dei token prima di continuare con il test.
 
-> [!WARNING]
-> Per utilizzare la funzione di conteggio dei token e di calcolo del costo medio di ogni conversazione, è necessario che il plugin **Token Counter** sia attivo nel CheshireCat.
+> Per utilizzare la funzione di **conteggio dei token** e di **calcolo del costo medio di ogni conversazione**, è necessario che il plugin **Token Counter** sia attivo nel CheshireCat.
 
 ---
 
