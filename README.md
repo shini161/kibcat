@@ -20,7 +20,7 @@
 
 ## 📖 Wiki
 - 📘 **[Diario](https://github.com/shini161/kibcat/wiki)**: Storia del progetto e informazioni principali
-- 📕 **[Conclusioni](https://github.com/shini161/kibcat/wiki/Conclusions)**: Stato attuale del progetto e obiettivi raggiunti
+- 📕 **[Conclusioni](https://github.com/shini161/kibcat/wiki/Conclusioni)**: Stato attuale del progetto e obiettivi raggiunti
 
 ---
 
