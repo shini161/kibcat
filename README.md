@@ -19,8 +19,8 @@
 ---
 
 ## 📖 Wiki
-- 📘 **[Diario](https://github.com/shini161/kibcat/blob/main/wiki/DIARY.md)**: Storia del progetto e informazioni principali
-- 📕 **[Conclusioni](https://github.com/shini161/kibcat/blob/main/wiki/CONCLUSIONS.md)**: Stato attuale del progetto e obiettivi raggiunti
+- 📘 **[Diario](https://github.com/shini161/kibcat/wiki)**: Storia del progetto e informazioni principali
+- 📕 **[Conclusioni](https://github.com/shini161/kibcat/wiki/Conclusions)**: Stato attuale del progetto e obiettivi raggiunti
 
 ---
 
@@ -120,4 +120,4 @@ Invece per i cambiamenti alla UI è stato creato uno [`style_override.css`](/cc_
 
 ### Uso del plugin Token Counter
 
-Questo [plugin](/cat/plugins/token_counter/) si occupa di tenere conto dell'uso dei token del modello, a causa del fatto che la funzione di token counter integrata nel gatto non funzionava in modo corretto. Maggiori dettagli nel [diario 06/06/2025](/wiki/DIARY.md#06062025).
+Questo [plugin](/cat/plugins/token_counter/) si occupa di tenere conto dell'uso dei token del modello, a causa del fatto che la funzione di token counter integrata nel gatto non funzionava in modo corretto. Maggiori dettagli nel [diario 06/06/2025](https://github.com/shini161/kibcat/wiki/2025%E2%80%9006%E2%80%9006) e nel [diario 11/06/2025](https://github.com/shini161/kibcat/wiki/2025%E2%80%9006%E2%80%9011).
