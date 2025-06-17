@@ -8,7 +8,7 @@ from langchain_core.callbacks.base import BaseCallbackHandler
 from langchain_core.outputs import LLMResult
 
 
-class TokenCounterHandler(BaseCallbackHandler):  # type: ignore
+class TokenCounterHandler(BaseCallbackHandler):
     def __init__(self, model_name: str = "gpt-4o-mini"):
         self.input_tokens = 0
         self.output_tokens = 0

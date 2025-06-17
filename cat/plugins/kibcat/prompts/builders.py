@@ -3,6 +3,7 @@ from typing import Optional, Type
 
 from kiblog import BaseLogger
 from kibtemplate.builders import generic_template_renderer
+
 from ..defaults import DEFAULT_END_TIME, DEFAULT_START_TIME
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
