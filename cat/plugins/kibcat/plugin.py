@@ -1,7 +1,6 @@
 import json
 import os
 import re
-from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from typing import Any, cast
 
@@ -26,7 +25,6 @@ from .prompts.builders import (
     build_form_confirm_message,
     build_form_data_extractor,
     build_form_end_message,
-    build_form_print_message,
     build_refine_filter_json,
 )
 from .utils import (
@@ -55,6 +53,8 @@ MAIN_FIELDS_DICT: dict[str, Any] | None = None
 
 
 ######################## Hooks #######################
+
+
 @hook
 def after_cat_bootstrap(cat):
     check_env_vars(
@@ -77,7 +77,7 @@ def agent_prompt_prefix(prefix, cat):
     return prefix
 
 
-######################## FORMS #######################
+######################## FORM #######################
 
 
 class FilterData(BaseModel):
@@ -179,6 +179,15 @@ class FilterForm(CatForm):  # type: ignore
 
         super().__init__(cat)
 
+    def _parse_filters(self, filters: list[Any]) -> list[KibCatFilter]:
+        if not isinstance(filters, list):
+            filters = []
+
+        for index, filter_item in enumerate(filters):
+            filter_item["operator"] = FilterOperators[filter_item.get("operator", "is").upper()]
+            filters[index] = KibCatFilter(**filter_item)
+        return filters
+
     def next(self):
         # If state is WAIT_CONFIRM, check user confirm response..
         if self._state == CatFormState.WAIT_CONFIRM:
@@ -202,14 +211,18 @@ class FilterForm(CatForm):  # type: ignore
         # if state is still INCOMPLETE, recap and ask for new info
         return self.message()
 
-    def _parse_filters(self, filters: list[Any]) -> list[KibCatFilter]:
-        if not isinstance(filters, list):
-            filters = []
+    def check_exit_intent(self) -> bool:
+        # Get user message
+        last_message = self.cat.working_memory.user_message_json.text
 
-        for index, filter_item in enumerate(filters):
-            filter_item["operator"] = FilterOperators[filter_item.get("operator", "is").upper()]
-            filters[index] = KibCatFilter(**filter_item)
-        return filters
+        # Queries the LLM and check if user is agree or not
+        response = self.cat.llm(
+            build_form_check_exit_intent(
+                last_message=last_message,
+                logger=KibCatLogger,
+            )
+        )
+        return "true" in response.lower()
 
     def extract(self):
         """Extracts the filter data from the form."""
@@ -241,28 +254,12 @@ class FilterForm(CatForm):  # type: ignore
         }
 
     def sanitize(self, model):
-        """Not needed, but called by the CatForm base class."""
+        """
+        Not needed, but called by the CatForm base class.
+        Overwritten because the default implementation removes model fields if there are values like None or empty strings.
+        For queries, we want to keep the empty string since it is a valid value, and it's easier to handle in validate().
+        """
         return model
-
-    def _generate_base_message(self) -> str:
-        """Generates the base message for form incomplete response."""
-        dump_obj = deepcopy(self._model)
-        dump_obj["filters"] = [filter_element.model_dump() for filter_element in dump_obj["filters"]]
-
-        input_data = json.dumps(
-            {
-                "errors": self._errors,
-                "form_data": dump_obj,
-            },
-            indent=2,
-            ensure_ascii=False,
-        ).replace("`", "")
-
-        prompt = build_form_print_message(
-            conversation_history=self.cat.working_memory.stringify_chat_history(),
-            input_data_str=input_data,
-        )
-        return cast(str, self.cat.llm(prompt))
 
     def validate(self):
         """Validate form data"""
@@ -307,16 +304,17 @@ class FilterForm(CatForm):  # type: ignore
         if verify_result:
             return verify_result
 
-        filters: dict[Any, Any] = deepcopy(self._model.get("filters", {}))
+        # Extract the filters and create a shallow copy of the list
+        filters = list([filter_element.model_dump() for filter_element in self._model.get("filters", [])])
 
         # Associate a group to every field in this dict
         field_to_group: dict[str, Any] = generate_field_to_group(self._fields_list)
 
         # Replace the key names with the possible keys in the input
         for element in filters:
-            key: str = element.field
+            key: str = element["field"]
             element_field_group = field_to_group.get(key, [key])
-            element.field = automated_field_value_extraction(
+            element["field"] = automated_field_value_extraction(
                 element_field=element_field_group,
                 data_view_id=cast(str, DATA_VIEW_ID),
                 space_id=cast(str, SPACE_ID),
@@ -328,10 +326,7 @@ class FilterForm(CatForm):  # type: ignore
 
         operators_str: str = json.dumps([op.name.lower() for op in FilterOperators], indent=2)
         filter_data: str = build_refine_filter_json(
-            json_input=json.dumps(
-                [filter_element.model_dump() for filter_element in filters],
-                indent=2,
-            ),
+            json_input=json.dumps(filters, indent=2),
             operators_str=operators_str,
             logger=KibCatLogger,
         )
@@ -348,7 +343,7 @@ class FilterForm(CatForm):  # type: ignore
                 return
             else:
                 # Update model with the filtered data
-                self._model["filters"] = self._parse_filters(deepcopy(json_cat_response)["filters"])
+                self._model["filters"] = self._parse_filters(json_cat_response["filters"])
 
         except OutputParserException as e:
             msg = f"Cannot decode cat's JSON filtered - {e}"
@@ -433,19 +428,6 @@ class FilterForm(CatForm):  # type: ignore
         output_html = f'<a href="{url}" target="_blank">🔗 Kibana URL</a>\n<hr/>\n{ask_confirm_message}'
         output_html = re.sub(r"(<hr\s*/?>\s*){2,}", "<hr/>", output_html, flags=re.IGNORECASE)
         return {"output": output_html}
-
-    def check_exit_intent(self) -> bool:
-        # Get user message
-        last_message = self.cat.working_memory.user_message_json.text
-
-        # Queries the LLM and check if user is agree or not
-        response = self.cat.llm(
-            build_form_check_exit_intent(
-                last_message=last_message,
-                logger=KibCatLogger,
-            )
-        )
-        return "true" in response.lower()
 
     def message_closed(self):
         prompt = build_form_end_message(self.cat.working_memory.stringify_chat_history())
