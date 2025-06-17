@@ -3,6 +3,7 @@ from typing import Optional, Type
 
 from kiblog import BaseLogger
 from kibtemplate.builders import generic_template_renderer
+from ..defaults import DEFAULT_END_TIME, DEFAULT_START_TIME
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_FILE_PATH = os.path.join(BASE_DIR, "templates")
@@ -113,6 +114,8 @@ def build_form_confirm_message(
         conversation_history=conversation_history,
         applied_filters=applied_filters,
         query=query,
+        DEFAULT_START_TIME=DEFAULT_START_TIME,
+        DEFAULT_END_TIME=DEFAULT_END_TIME,
     )
 
     return result
