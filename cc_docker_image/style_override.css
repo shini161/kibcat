@@ -234,3 +234,7 @@ textarea.textarea.block {
     color: var(--color-text-light) !important;
   }
 }
+
+#app div.fixed.bottom-0.w-full.items-center.justify-center > div button:nth-child(3) {
+  background: #e55454 !important;
+}

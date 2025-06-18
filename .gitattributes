@@ -1,1 +1,1 @@
-cc_docker_image/update_cat_ui_examples.sh text eol=lf
+cc_docker_image/update_cat_ui.sh text eol=lf
