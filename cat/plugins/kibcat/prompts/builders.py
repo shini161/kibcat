@@ -149,6 +149,35 @@ def build_form_check_exit_intent(
     return result
 
 
+def build_form_incomplete_message(
+    conversation_history: str,
+    input_data_str: str,
+    logger: Optional[Type[BaseLogger]] = None,
+) -> str:
+    """
+    Returns the form incomplete message from the template.
+
+    Args:
+        conversation_history (str): The conversation history loaded as string
+        main_fields_str (str): The main fields JSON loaded as string
+        input_data_str (str): The form data and errors JSON loaded as string
+        logger (Optional[Type[BaseLogger]]): Optional logger instance for messaging.
+
+    Returns:
+        str: The form incomplete message.
+    """
+
+    result: str = generic_template_renderer(
+        templates_path=TEMPLATES_FILE_PATH,
+        template_name="form_incomplete_message.jinja2",
+        logger=logger,
+        conversation_history=conversation_history,
+        input_data=input_data_str,
+    )
+
+    return result
+
+
 def build_form_end_message(
     conversation_history: str,
     logger: Optional[Type[BaseLogger]] = None,

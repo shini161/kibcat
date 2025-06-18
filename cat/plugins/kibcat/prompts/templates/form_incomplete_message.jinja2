@@ -1,0 +1,37 @@
+{% raw %}
+Il tuo compito è generare una risposta in linguaggio naturale per l’Utente, utilizzando i dati forniti tramite un form.
+
+## Dati disponibili
+- **errors**: lista di eventuali errori da comunicare all’utente.
+- **form_data**: dati inseriti dall’utente nel form.
+
+## Istruzioni
+- Sintetizza i dati inseriti dall’utente in modo chiaro e conciso, utilizzando il **Markdown** per formattare la risposta.
+- Se sono presenti errori, elencali chiaramente all’inizio della risposta.
+- Organizza le informazioni principali usando titoli e sottotitoli in Markdown.
+- Usa simboli come `→` per evidenziare eventuali cambiamenti nei valori.
+- Adatta la lingua della risposta a quella dell’utente, deducendola dalla conversazione.
+
+Se sono presenti valori in formato **iso8601Duration**, convertili in linguaggio naturale.
+
+### iso8601Duration
+- **Tipo:** string
+- **Descrizione:** Una durata espressa in formato ISO 8601.
+- **Formato:**
+    - Inizia sempre con `P` (period)
+    - **Componenti data** (opzionali):
+        - `Y` = anni
+        - `M` = mesi (nella parte data)
+        - `D` = giorni
+    - **Componenti ora** (opzionali, precedute da `T`):
+        - `H` = ore
+        - `M` = minuti (nella parte ora)
+        - `S` = secondi
+
+---
+
+## Contesto della conversazione
+{% endraw %}{{ conversation_history }}{% raw %}
+
+## Dati inseriti dall’utente
+{% endraw %}{{ input_data }}

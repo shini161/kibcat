@@ -25,6 +25,7 @@ from .prompts.builders import (
     build_form_confirm_message,
     build_form_data_extractor,
     build_form_end_message,
+    build_form_incomplete_message,
     build_refine_filter_json,
 )
 from .utils import (
@@ -428,6 +429,32 @@ class FilterForm(CatForm):  # type: ignore
         output_html = f'<a href="{url}" target="_blank">🔗 Kibana URL</a>\n<hr/>\n{ask_confirm_message}'
         output_html = re.sub(r"(<hr\s*/?>\s*){2,}", "<hr/>", output_html, flags=re.IGNORECASE)
         return {"output": output_html}
+
+    def message_incomplete(self):
+        """Generates the base message for form incomplete response."""
+        filters = list([filter_element.model_dump() for filter_element in self._model.get("filters", [])])
+
+        input_data = json.dumps(
+            {
+                "errors": self._errors,
+                "input_data": {
+                    "filters": filters,
+                    "query": self._model.get("query", ""),
+                    "start_time": self._model.get("start_time", DEFAULT_START_TIME),
+                    "end_time": self._model.get("end_time", DEFAULT_END_TIME),
+                },
+            },
+            indent=2,
+            ensure_ascii=False,
+        ).replace("`", "")
+
+        prompt = build_form_incomplete_message(
+            conversation_history=self.cat.working_memory.stringify_chat_history(),
+            input_data_str=input_data,
+        )
+        return {
+            "output": cast(str, self.cat.llm(prompt)),
+        }
 
     def message_closed(self):
         prompt = build_form_end_message(self.cat.working_memory.stringify_chat_history())
