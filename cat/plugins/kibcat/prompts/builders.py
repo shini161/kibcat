@@ -84,6 +84,8 @@ def build_form_data_extractor(
         conversation_history=conversation_history,
         main_fields_str=main_fields_str,
         operators_str=operators_str,
+        DEFAULT_START_TIME=DEFAULT_START_TIME,
+        DEFAULT_END_TIME=DEFAULT_END_TIME,
     )
 
     return result

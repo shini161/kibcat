@@ -25,9 +25,9 @@ Ogni dizionario ha varie proprietà:
 "query": una stringa che rappresenta la query di ricerca, in formato Kibana Query Language (KQL) oppure un campo di testo libero.  
 Questa stringa è opzionale e può essere omessa se non è presente nella conversazione.
 # "start_time" 
-"start_time": indica fino a quanto tempo fa estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "P10DT0H0M"__.
+"start_time": indica fino a quanto tempo fa estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "{% endraw %}{{ DEFAULT_START_TIME }}{% raw %}"__.
 # "end_time"
-"end_time": indica fino a quanto tempo estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "PT0S"__.
+"end_time": indica fino a quanto tempo estendere la ricerca in *iso8601Duration* __se l'utente non specifica questo parametro, è "{% endraw %}{{ DEFAULT_END_TIME }}{% raw %}"__.
 
 **iso8601Duration**  
 *Type:* `string`  

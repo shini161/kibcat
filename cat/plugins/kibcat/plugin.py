@@ -385,10 +385,10 @@ class FilterForm(CatForm):  # type: ignore
 
         # Calculate time start and end
         end_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
-            format_T_in_date(duration=self._model.get("end_time", "PT0S"))
+            format_T_in_date(duration=self._model.get("end_time", DEFAULT_END_TIME))
         )
         start_time: datetime = datetime.now(timezone.utc) - isodate.parse_duration(
-            format_T_in_date(duration=self._model.get("start_time", "PT0S"))
+            format_T_in_date(duration=self._model.get("start_time", DEFAULT_START_TIME))
         )
 
         start_time_str: str = format_time_kibana(dt=start_time)
