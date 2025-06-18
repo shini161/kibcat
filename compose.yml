@@ -10,7 +10,6 @@ services:
     ports:
       - 1865:80
       - 5678:5678
-      - 443:443
     env_file:
       - .env
     environment:
