@@ -77,7 +77,7 @@ def agent_fast_reply(fast_reply, cat):
 @tool(return_direct=True)
 def get_token_count(tool_input, cat):
     """
-    Get the total number of output tokens used by the LLM. Input is always None.
+    When users asks the total number of input and output tokens used by the LLM or to count tokens (e.g. "conta token"). Input is always None.
     """
     try:
         return (
