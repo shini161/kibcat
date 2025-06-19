@@ -205,10 +205,6 @@ class FilterForm(CatForm):  # type: ignore
         if self._state == CatFormState.INCOMPLETE:
             self.update()
 
-        # If state is COMPLETE, ask confirm (or execute action directly)
-        if self._state == CatFormState.COMPLETE:
-            self._state = CatFormState.WAIT_CONFIRM
-
         # if state is still INCOMPLETE, recap and ask for new info
         return self.message()
 
@@ -354,7 +350,7 @@ class FilterForm(CatForm):  # type: ignore
             return
 
         if not self._errors and not self._missing_fields:
-            self._state = CatFormState.COMPLETE
+            self._state = CatFormState.WAIT_CONFIRM
         else:
             self._state = CatFormState.INCOMPLETE
 
