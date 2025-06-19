@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="auto" height="auto" src="assets/kib-cat-logo.png">
+  <img width="75%" height="75%" src="assets/kib-cat-logo.png">
 </p>
 
 ![Tests](https://github.com/shini161/kibcat/actions/workflows/python-ci.yml/badge.svg?branch=main)
