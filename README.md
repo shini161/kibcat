@@ -140,7 +140,7 @@ Per poterlo utilizzare, seguire i seguenti passaggi:
 1. Creare un file `config.json` nella cartella `benchmark/`, utilizzando il formato contenuto nel [file di esempio `config_example.json`](/benchmark/config.example.json).
 
 <details>
-<summary>Spiegazione impostazioni del file `config.json`</summary>
+<summary>Spiegazione impostazioni del file <code>config.json</code></summary>
 
 #### Configurazione `config.json` per Benchmark LLM su CheshireCat
 
