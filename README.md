@@ -273,4 +273,4 @@ Di seguito un esempio di configurazione per LLM di tipo `OpenAI ChatGPT`:
 </details>
 
 2. Eseguire il comando `pip install -r benchmark/requirements.txt` per installare le dipendenze necessarie.
-3. Eseguire il comando `python -m benchmark.run` per avviare il benchmark. I risultati verranno salvati nella cartella `benchmark/output/` in un file JSON _(e i log in un file .log)_.
+3. Eseguire il comando `python -m benchmark.run` per avviare il benchmark. I risultati verranno salvati nella cartella `benchmark/output/` in un file `.json` _(e i log in un file `.log`)_.
